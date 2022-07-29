@@ -29,6 +29,7 @@ class leadController extends Controller
 			return response()->json("Lead Email Already Exist", 400);
 		}
 		$validate = Validator::make($request->all(), [ 
+	      'role_id' 			=> 'required',
 	      'lead_name' 			=> 'required',
 	      'lead_email'			=> 'required',
 	    ]);
@@ -51,6 +52,7 @@ class leadController extends Controller
 		'lead_bussinessphone' 	=> $request->lead_bussinessphone,
 		'lead_otherdetails' 	=> $request->lead_otherdetails,
 		'brand_id'		 		=> $request->brand_id,
+		'leadtype_id'	 		=> $request->role_id == 5 ? 2 : 1,
 		'status_id'		 		=> 1,
 		'created_by'	 		=> $request->user_id,
 		'created_at'	 		=> date('Y-m-d h:i:s'),
@@ -187,6 +189,26 @@ class leadController extends Controller
 			return response()->json(['message' => 'Lead Deleted Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function forwardedleadlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'brand_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$getleadlist = DB::table('lead')
+		->select('*')
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->user_id)
+		->where('leadtype_id','=',1)
+		->where('status_id','=',1)
+		->get();
+		if(isset($getleadlist)){
+			return response()->json(['data' => $getleadlist,'message' => 'Lead List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Lead List'],200);
 		}
 	}
 }

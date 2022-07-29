@@ -37,6 +37,7 @@ class orderController extends Controller
 		'order_description' 	=> $request->order_description,
 		'order_token' 			=> $order_token,
 		'ordertype_id'			=> $request->ordertype_id,
+		'orderstatus_id'		=> 1,
 		'status_id'				=> 1,
 		'created_by'			=> $request->user_id,
 		'created_at'			=> date('Y-m-d h:i:s'),
@@ -288,6 +289,40 @@ class orderController extends Controller
 		]);
 		if($delete){
 			return response()->json(['message' => 'Order Deleted Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function removefromorder(Request $request){
+		if (isset($request->orderattachment_id)) {
+			$delete  = DB::table('orderattachment')
+			->where('orderattachment_id','=',$request->orderattachment_id)
+			->update([
+			'status_id' 	=> 2,
+			]);
+		}else if (isset($request->orderpayment_id)) {
+			$delete  = DB::table('orderpayment')
+			->where('orderpayment_id','=',$request->orderpayment_id)
+			->update([
+			'status_id' 	=> 2,
+			]);
+		}else if (isset($request->orderqa_id)) {
+			$delete  = DB::table('orderqa')
+			->where('orderqa_id','=',$request->orderqa_id)
+			->update([
+			'status_id' 	=> 2,
+			]);
+		}else if (isset($request->orderrefrence_id)) {
+			$delete  = DB::table('orderrefrence')
+			->where('orderrefrence_id','=',$request->orderrefrence_id)
+			->update([
+			'status_id' 	=> 2,
+			]);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+		if($delete){
+			return response()->json(['message' => 'Successfully Removed From Order'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

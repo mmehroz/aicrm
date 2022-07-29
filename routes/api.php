@@ -8,6 +8,7 @@ use App\Http\Controllers\brandController;
 use App\Http\Controllers\userController;
 use App\Http\Controllers\leadController;
 use App\Http\Controllers\orderController;
+use App\Http\Controllers\taskController;
 /*
 |---------------------------------------------------------------------	-----
 | API Routes
@@ -57,11 +58,21 @@ Route::any('/updatelead', [leadController::class, 'updatelead']);
 Route::any('/leadlist', [leadController::class, 'leadlist']);
 Route::any('/leaddetails', [leadController::class, 'leaddetails']);
 Route::any('/deletelead', [leadController::class, 'deletelead']);
+Route::any('/forwardedleadlist', [leadController::class, 'forwardedleadlist']);
 
 Route::any('/createorder', [orderController::class, 'createorder']);
 Route::any('/updateorder', [orderController::class, 'updateorder']);
 Route::any('/orderlist', [orderController::class, 'orderlist']);
 Route::any('/orderdetail', [orderController::class, 'orderdetail']);
 Route::any('/deleteorder', [orderController::class, 'deleteorder']);
+Route::any('/removefromorder', [orderController::class, 'removefromorder']);
+
+Route::any('/creattask', [taskController::class, 'creattask']);
+Route::any('/updatetask', [taskController::class, 'updatetask']);
+Route::any('/tasklist', [taskController::class, 'tasklist']);
+Route::any('/taskdetail', [taskController::class, 'taskdetail']);
+Route::any('/deletetask', [taskController::class, 'deletetask']);
+Route::any('/removefromtask', [taskController::class, 'removefromtask']);
+Route::any('/orderwisetasklist', [taskController::class, 'orderwisetasklist']);
 });
 });
