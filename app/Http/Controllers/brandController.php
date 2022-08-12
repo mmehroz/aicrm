@@ -161,7 +161,7 @@ class brandController extends Controller
         }
 		$brandlogo;
     	if ($request->has('brand_logo')) {
-        		if( $request->logo->isValid()){
+        		if($request->brand_logo->isValid()){
 		            $number = rand(1,999);
 			        $numb = $number / 7 ;
 					$name = "brand_logo";
@@ -228,7 +228,7 @@ class brandController extends Controller
      	if ($validate->fails()) {    
 			return response()->json("Brand Id Required", 400);
 		}
-		$branddetail = DB::table('brand')
+		$branddetail = DB::table('branddetail')
 		->select('*')
 		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
@@ -236,7 +236,7 @@ class brandController extends Controller
 		$logopath = URL::to('/')."/public/brand_logo/";
 		$coverpath = URL::to('/')."/public/brand_cover/";
 		if($branddetail){
-			return response()->json(['data' => $branddetail, 'logopath' => $logopath, 'coverpath' => $coverpath,'message' => 'Brand Detail'],200);
+			return response()->json(['data' => $branddetail,'logopath' => $logopath, 'coverpath' => $coverpath,'message' => 'Brand Detail'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
@@ -252,6 +252,8 @@ class brandController extends Controller
 		->where('brand_id','=',$request->brand_id)
 		->update([
 		'status_id' 	=> 2,
+		'deleted_by'	=> $request->user_id,
+		'deleted_at'	=> date('Y-m-d h:i:s'),
 		]); 
 		if($delete){
 			return response()->json(['message' => 'Brand Deleted Successfully'],200);

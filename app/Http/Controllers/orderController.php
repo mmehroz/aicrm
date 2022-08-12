@@ -271,21 +271,29 @@ class orderController extends Controller
 		->where('order_id','=',$request->order_id)
 		->update([
 		'status_id' 	=> 2,
+		'deleted_by'	=> $request->user_id,
+		'deleted_at'	=> date('Y-m-d h:i:s'),
 		]);
 		DB::table('orderpayment')
 		->where('order_id','=',$request->order_id)
 		->update([
 		'status_id' 	=> 2,
+		'deleted_by'	=> $request->user_id,
+		'deleted_at'	=> date('Y-m-d h:i:s'),
 		]);
 		DB::table('orderrefrence')
 		->where('order_id','=',$request->order_id)
 		->update([
 		'status_id' 	=> 2,
+		'deleted_by'	=> $request->user_id,
+		'deleted_at'	=> date('Y-m-d h:i:s'),
 		]);
 		DB::table('orderqa')
 		->where('order_id','=',$request->order_id)
 		->update([
 		'status_id' 	=> 2,
+		'deleted_by'	=> $request->user_id,
+		'deleted_at'	=> date('Y-m-d h:i:s'),
 		]);
 		if($delete){
 			return response()->json(['message' => 'Order Deleted Successfully'],200);
@@ -299,24 +307,32 @@ class orderController extends Controller
 			->where('orderattachment_id','=',$request->orderattachment_id)
 			->update([
 			'status_id' 	=> 2,
+			'deleted_by'	=> $request->user_id,
+			'deleted_at'	=> date('Y-m-d h:i:s'),
 			]);
 		}else if (isset($request->orderpayment_id)) {
 			$delete  = DB::table('orderpayment')
 			->where('orderpayment_id','=',$request->orderpayment_id)
 			->update([
 			'status_id' 	=> 2,
+			'deleted_by'	=> $request->user_id,
+			'deleted_at'	=> date('Y-m-d h:i:s'),
 			]);
 		}else if (isset($request->orderqa_id)) {
 			$delete  = DB::table('orderqa')
 			->where('orderqa_id','=',$request->orderqa_id)
 			->update([
 			'status_id' 	=> 2,
+			'deleted_by'	=> $request->user_id,
+			'deleted_at'	=> date('Y-m-d h:i:s'),
 			]);
 		}else if (isset($request->orderrefrence_id)) {
 			$delete  = DB::table('orderrefrence')
 			->where('orderrefrence_id','=',$request->orderrefrence_id)
 			->update([
 			'status_id' 	=> 2,
+			'deleted_by'	=> $request->user_id,
+			'deleted_at'	=> date('Y-m-d h:i:s'),
 			]);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);

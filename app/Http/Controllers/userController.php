@@ -342,7 +342,9 @@ class userController extends Controller
 		$updateuserstatus  = DB::table('user')
 		->where('user_id','=',$request->edituser_id)
 		->update([
-			'status_id' 		=> 2,
+			'status_id' 	=> 2,
+			'deleted_by'	=> $request->user_id,
+			'deleted_at'	=> date('Y-m-d h:i:s'),
 		]); 
 		if($updateuserstatus){
 			return response()->json(['message' => 'User Deleted Successfully'],200);

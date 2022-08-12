@@ -165,6 +165,24 @@ class taskController extends Controller
 			return response()->json(['data' => $emptyarray, 'message' => 'Task List'],200);
 		}
 	}
+	public function statuswisetasklist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'taskstatus_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Task Status Id Required", 400);
+		}
+		$tasklist = DB::table('task')
+		->select('task_id','task_title','task_description','task_token','taskstatus_id')
+		->where('taskstatus_id','=',$request->taskstatus_id)
+		->where('status_id','=',1)
+		->paginate(30);
+		if(isset($tasklist)){
+			return response()->json(['data' => $tasklist, 'message' => 'Task List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Task List'],200);
+		}
+	}
 	public function taskdetail(Request $request){
 		$validate = Validator::make($request->all(), [ 
 	      'task_id'	=> 'required',
@@ -265,6 +283,43 @@ class taskController extends Controller
 			return response()->json(['data' => $tasklist, 'message' => 'Task List'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'Task List'],200);
+		}
+	}
+	public function addmembertotask(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'task_id' 			=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		if (isset($request->member)) {
+			foreach ($request->member as $members) {
+				$checkmember = DB::table('taskmember')
+				->select('user_id')
+				->where('task_id','=',$request->task_id)
+				->where('user_id','=',$members['user_id'])
+				->where('status_id','=',1)
+				->count();
+				if ($checkmember > 0) {
+					return response()->json(['message' => 'Member Already Exist'],200);		
+				}else{
+					$member = array(
+					'task_id'		=> $request->task_id,
+					'user_id'		=> $members['user_id'],
+					'status_id' 	=> 1,
+					'created_by'	=> $request->user_id,
+					'created_at'	=> date('Y-m-d h:i:s'),
+					);
+					$save = DB::table('taskmember')->insert($member);
+				}
+			}
+		}else{
+			return response()->json(['message' => 'Please Select Member To Add'],400);
+		}
+		if($save){
+			return response()->json(['message' => 'Members Added Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
 }
