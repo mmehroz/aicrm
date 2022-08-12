@@ -253,7 +253,7 @@ class orderController extends Controller
 		->where('order_id','=',$request->order_id)
 		->where('status_id','=',1)
 		->get();
-		$orderpath = URL::to('/')."/public/order/";
+		$orderpath = URL::to('/')."/public/order/".$basicdetail->order_token.'/';
 		if($basicdetail){
 			return response()->json(['basicdetail' => $basicdetail, 'paymentdetail' => $paymentdetail, 'refrencedetail' => $refrencedetail, 'qadetail' => $qadetail, 'attachmentdetail' => $attachmentdetail, 'orderpath' => $orderpath,'message' => 'Order Detail'],200);
 		}else{
