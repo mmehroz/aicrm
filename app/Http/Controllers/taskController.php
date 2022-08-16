@@ -159,8 +159,9 @@ class taskController extends Controller
 		->select('task_id','task_title','task_description','task_token','taskstatus_id')
 		->where('status_id','=',1)
 		->paginate(30);
+		$taskpath = URL::to('/')."/public/task/".$basicdetail->task_token."/";
 		if(isset($tasklist)){
-			return response()->json(['data' => $tasklist, 'message' => 'Task List'],200);
+			return response()->json(['data' => $tasklist, 'taskpath' => $taskpath, 'message' => 'Task List'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'Task List'],200);
 		}
@@ -177,8 +178,9 @@ class taskController extends Controller
 		->where('taskstatus_id','=',$request->taskstatus_id)
 		->where('status_id','=',1)
 		->paginate(30);
+		$taskpath = URL::to('/')."/public/task/".$basicdetail->task_token."/";
 		if(isset($tasklist)){
-			return response()->json(['data' => $tasklist, 'message' => 'Task List'],200);
+			return response()->json(['data' => $tasklist, 'taskpath' => $taskpath, 'message' => 'Task List'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'Task List'],200);
 		}
@@ -214,7 +216,7 @@ class taskController extends Controller
 		->where('task_id','=',$request->task_id)
 		->where('status_id','=',1)
 		->get();
-		$taskpath = URL::to('/')."/public/task/";
+		$taskpath = URL::to('/')."/public/task/".$basicdetail->task_token."/";
 		if($basicdetail){
 			return response()->json(['basicdetail' => $basicdetail, 'memberdetail' => $memberdetail, 'attachmentdetail' => $attachmentdetail, 'taskpath' => $taskpath,'message' => 'Task Detail'],200);
 		}else{
