@@ -215,8 +215,9 @@ class taskController extends Controller
 		->where('status_id','=',1)
 		->get();
 		$taskpath = URL::to('/')."/public/task/".$basicdetail->task_token."/";
+		$memberpath = URL::to('/')."/public/user_picture/";
 		if($basicdetail){
-			return response()->json(['basicdetail' => $basicdetail, 'memberdetail' => $memberdetail, 'attachmentdetail' => $attachmentdetail, 'taskpath' => $taskpath,'message' => 'Task Detail'],200);
+			return response()->json(['basicdetail' => $basicdetail,'membersid' => $sorttaskmember, 'memberdetail' => $memberdetail, 'attachmentdetail' => $attachmentdetail, 'taskpath' => $taskpath, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
@@ -288,36 +289,31 @@ class taskController extends Controller
 	public function addmembertotask(Request $request){
 		$validate = Validator::make($request->all(), [ 
 	      'task_id' 			=> 'required',
+	      'member_id' 			=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
-		if (isset($request->member)) {
-			foreach ($request->member as $members) {
-				$checkmember = DB::table('taskmember')
-				->select('user_id')
-				->where('task_id','=',$request->task_id)
-				->where('user_id','=',$members['user_id'])
-				->where('status_id','=',1)
-				->count();
-				if ($checkmember > 0) {
-					return response()->json(['message' => 'Member Already Exist'],200);		
-				}else{
-					$member = array(
-					'task_id'		=> $request->task_id,
-					'user_id'		=> $members['user_id'],
-					'status_id' 	=> 1,
-					'created_by'	=> $request->user_id,
-					'created_at'	=> date('Y-m-d h:i:s'),
-					);
-					$save = DB::table('taskmember')->insert($member);
-				}
-			}
+		$checkmember = DB::table('taskmember')
+		->select('user_id')
+		->where('task_id','=',$request->task_id)
+		->where('user_id','=',$request->member_id)
+		->where('status_id','=',1)
+		->count();
+		if ($checkmember > 0) {
+			return response()->json(['message' => 'Member Already Exist'],200);		
 		}else{
-			return response()->json(['message' => 'Please Select Member To Add'],400);
+			$member = array(
+			'task_id'		=> $request->task_id,
+			'user_id'		=> $request->member_id,
+			'status_id' 	=> 1,
+			'created_by'	=> $request->user_id,
+			'created_at'	=> date('Y-m-d h:i:s'),
+			);
+			$save = DB::table('taskmember')->insert($member);
 		}
 		if($save){
-			return response()->json(['message' => 'Members Added Successfully'],200);
+			return response()->json(['message' => 'Member Added Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

@@ -142,38 +142,77 @@ class orderController extends Controller
 		]);
 		if (isset($request->payment)) {
 			foreach ($request->payment as $payments) {
-				DB::table('orderpayment')
-				->where('orderpayment_id','=',$payments['orderpayment_id'])
-				->update([
-				'orderpayment_title'	=> $payments['orderpayment_title'],
-				'orderpayment_amount'	=> $payments['orderpayment_amount'],
-				'updated_by'			=> $request->user_id,
-				'updated_at'			=> date('Y-m-d h:i:s'),
-				]);
+				if ($payments['orderpayment_id'] ==  "-") {
+					$payment = array(
+					'orderpayment_title'	=> $payments['orderpayment_title'],
+					'orderpayment_amount'	=> $payments['orderpayment_amount'],
+					'order_id'				=> $request->order_id,
+					'order_token' 			=> $request->order_token,
+					'status_id' 			=> 1,
+					'created_by'			=> $request->user_id,
+					'created_at'			=> date('Y-m-d h:i:s'),
+					);
+					DB::table('orderpayment')->insert($payment);	
+				}else{
+					DB::table('orderpayment')
+					->where('orderpayment_id','=',$payments['orderpayment_id'])
+					->update([
+					'orderpayment_title'	=> $payments['orderpayment_title'],
+					'orderpayment_amount'	=> $payments['orderpayment_amount'],
+					'updated_by'			=> $request->user_id,
+					'updated_at'			=> date('Y-m-d h:i:s'),
+					]);
+				}
 			}
 		}
 		if (isset($request->refrence)) {
 			foreach ($request->refrence as $refrences) {
-				DB::table('orderrefrence')
-				->where('orderrefrence_id','=',$refrences['orderrefrence_id'])
-				->update([
-				'orderrefrence_title'	=> $refrences['orderrefrence_title'],
-				'orderrefrence_link'	=> $refrences['orderrefrence_link'],
-				'updated_by'			=> $request->user_id,
-				'updated_at'			=> date('Y-m-d h:i:s'),
-				]);
+				if ($refrences['orderrefrence_id'] ==  "-") {
+					$refrence = array(
+					'orderrefrence_title'	=> $refrences['orderrefrence_title'],
+					'orderrefrence_link'	=> $refrences['orderrefrence_link'],
+					'order_id'				=> $request->order_id,
+					'order_token' 			=> $request->order_token,
+					'status_id' 			=> 1,
+					'created_by'			=> $request->user_id,
+					'created_at'			=> date('Y-m-d h:i:s'),
+					);
+					DB::table('orderrefrence')->insert($refrence);
+				}else{
+					DB::table('orderrefrence')
+					->where('orderrefrence_id','=',$refrences['orderrefrence_id'])
+					->update([
+					'orderrefrence_title'	=> $refrences['orderrefrence_title'],
+					'orderrefrence_link'	=> $refrences['orderrefrence_link'],
+					'updated_by'			=> $request->user_id,
+					'updated_at'			=> date('Y-m-d h:i:s'),
+					]);
+				}
 			}
 		}
 		if (isset($request->question)) {
 			foreach ($request->question as $questions) {
-				DB::table('orderqa')
-				->where('orderqa_id','=',$questions['orderqa_id'])
-				->update([
-				'orderqa_answer'	=> $questions['orderqa_answer'],
-				'orderquestion_id'	=> $questions['orderquestion_id'],
-				'updated_by'		=> $request->user_id,
-				'updated_at'		=> date('Y-m-d h:i:s'),
-				]);
+				if ($questions['orderqa_id'] ==  "-") {
+					$question = array(
+					'orderqa_answer'	=> $questions['orderqa_answer'],
+					'orderquestion_id'	=> $questions['orderquestion_id'],
+					'order_id'			=> $request->order_id,
+					'order_token' 		=> $request->order_token,
+					'status_id' 		=> 1,
+					'created_by'		=> $request->user_id,
+					'created_at'		=> date('Y-m-d h:i:s'),
+					);
+					DB::table('orderqa')->insert($question);
+				}else{
+					DB::table('orderqa')
+					->where('orderqa_id','=',$questions['orderqa_id'])
+					->update([
+					'orderqa_answer'	=> $questions['orderqa_answer'],
+					'orderquestion_id'	=> $questions['orderquestion_id'],
+					'updated_by'		=> $request->user_id,
+					'updated_at'		=> date('Y-m-d h:i:s'),
+					]);
+				}
 			}
 		}
 		if (isset($request->attachment)) {
