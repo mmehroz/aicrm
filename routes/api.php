@@ -44,6 +44,7 @@ Route::any('/updatebrand', [brandController::class, 'updatebrand']);
 Route::any('/brandlist', [brandController::class, 'brandlist']);
 Route::any('/branddetail', [brandController::class, 'branddetail']);
 Route::any('/deletebrand', [brandController::class, 'deletebrand']);
+Route::any('/userbrandlist', [brandController::class, 'userbrandlist']);
 
 Route::any('/adduser', [userController::class, 'adduser']);
 Route::any('/updateuser', [userController::class, 'updateuser']);

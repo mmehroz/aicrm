@@ -259,8 +259,6 @@ class taskController extends Controller
 			'updated_by'	=> $request->user_id,
 			'updared_at'	=> date('Y-m-d h:i:s'),
 			]);
-		}else{
-			return response()->json("Oops! Something Went Wrong", 400);
 		}
 		if($delete){
 			return response()->json(['message' => 'Successfully Removed From Task'],200);

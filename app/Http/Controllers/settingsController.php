@@ -139,16 +139,15 @@ class settingsController extends Controller
 		}
 	}
 	public function orderquestion(Request $request){
-		// $validate = Validator::make($request->all(), [ 
-	 //      'ordertype_id'			=> 'required',
-	 //    ]);
-  //    	if ($validate->fails()) {    
-		// 	return response()->json("Fields Required", 400);
-		// }
+		$validate = Validator::make($request->all(), [ 
+	      'ordertype_id'			=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Fields Required", 400);
+		}
 		$orderquestionlist = DB::table('orderquestion')
 		->select('*')
-		// ->where('ordertype_id','=',$request->ordertype_id)
-		->where('ordertype_id','=',1)
+		->where('ordertype_id','=',$request->ordertype_id)
 		->where('status_id','=',1)
 		->get();
 		if($orderquestionlist){

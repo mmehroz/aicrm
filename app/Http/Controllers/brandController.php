@@ -261,4 +261,26 @@ class brandController extends Controller
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
+	public function userbrandlist(Request $request){
+		$brandid = DB::table('userbarnd')
+		->select('brand_id')
+		->where('user_id','=',$request->user_id)
+		->where('status_id','=',1)
+		->get();
+		// dd($brandid);
+		$sortbrandid = array();
+		foreach ($brandid as $brandids) {
+			$sortbrandid[] = $brandids->brand_id;
+		}
+		$brandlist = DB::table('brand')
+		->select('brand_id','brand_name')
+		->whereIn('brand_id',$sortbrandid)
+		->where('status_id','=',1)
+		->get();
+		if(isset($brandlist)){
+			return response()->json(['data' => $brandlist, 'message' => 'User Brand List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Brand List'],200);
+		}
+	}
 }
