@@ -77,5 +77,6 @@ Route::any('/deletetask', [taskController::class, 'deletetask']);
 Route::any('/removefromtask', [taskController::class, 'removefromtask']);
 Route::any('/orderwisetasklist', [taskController::class, 'orderwisetasklist']);
 Route::any('/addmembertotask', [taskController::class, 'addmembertotask']);
+Route::any('/sendcommenttotask', [taskController::class, 'sendcommenttotask']);
 });
 });

@@ -209,6 +209,31 @@ class taskController extends Controller
 		->whereIn('user_id',$sorttaskmember)
 		->where('status_id','=',1)
 		->get();
+		$commentdetail = DB::table('taskcommentdetails')
+		->select('*')
+		->where('task_id','=',$request->task_id)
+		->where('status_id','=',1)
+		->get();
+		$taskcommentdetails = array();
+		$dindex = 0;
+		if (isset($commentdetail)) {
+			foreach ($commentdetail as $commentdetails) {
+				$tagdetails = DB::table('taguserdetail')
+				->select('user_name')
+				->where('taskcomment_id','=',$commentdetails->taskcomment_id)
+				->where('status_id','=',1)
+				->get();
+				if (isset($tagdetails)) {
+					$index = 0;
+					foreach ($tagdetails as $tagdetailss) {
+						$commentdetails->taguser_name[$index] = $tagdetailss->user_name;
+						$index++;
+					}
+				}
+				$taskcommentdetails[$dindex] = $commentdetails;
+				$dindex++;
+			}
+		}
 		$attachmentdetail = DB::table('taskattachment')
 		->select('*')
 		->where('task_id','=',$request->task_id)
@@ -217,7 +242,7 @@ class taskController extends Controller
 		$taskpath = URL::to('/')."/public/task/".$basicdetail->task_token."/";
 		$memberpath = URL::to('/')."/public/user_picture/";
 		if($basicdetail){
-			return response()->json(['basicdetail' => $basicdetail,'membersid' => $sorttaskmember, 'memberdetail' => $memberdetail, 'attachmentdetail' => $attachmentdetail, 'taskpath' => $taskpath, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
+			return response()->json(['basicdetail' => $basicdetail,'membersid' => $sorttaskmember, 'memberdetail' => $memberdetail, 'taskcommentdetails' => $taskcommentdetails, 'attachmentdetail' => $attachmentdetail, 'taskpath' => $taskpath, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
@@ -312,6 +337,54 @@ class taskController extends Controller
 		}
 		if($save){
 			return response()->json(['message' => 'Member Added Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function sendcommenttotask(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'taskcomment_comment'	=> 'required',
+	      'task_id' 			=> 'required',
+	      'task_token' 			=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$send = array(
+		'taskcomment_comment'	=> $request->taskcomment_comment,
+		'task_id'				=> $request->task_id,
+		'task_token'			=> $request->task_token,
+		'status_id' 			=> 1,
+		'taskcomment_date'		=> date('Y-m-d'),
+		'created_by'			=> $request->user_id,
+		'created_at'			=> date('Y-m-d h:i:s'),
+		);
+		$save = DB::table('taskcomment')->insert($send);
+		$taskcomment_id = DB::getPdo()->lastInsertId();
+		if (isset($request->taguser)) {
+			foreach ($request->taguser as $tagusers) {
+				$checktag = DB::table('taguser')
+				->select('taguser_id')
+				->where('taskcomment_id','=',$taskcomment_id)
+				->where('taguser_userid','=',$tagusers['user_id'])
+				->where('status_id','=',1)
+				->count();
+				if ($checktag > 0) {
+					return response()->json(['message' => 'Already Taged'],200);		
+				}else{
+					$tag = array(
+					'taguser_userid'	=> $tagusers['user_id'],
+					'taskcomment_id'	=> $taskcomment_id,
+					'status_id' 		=> 1,
+					'created_by'		=> $request->user_id,
+					'created_at'		=> date('Y-m-d h:i:s'),
+					);
+					DB::table('taguser')->insert($tag);
+				}
+			}
+		}
+		if($save){
+			return response()->json(['message' => 'Comment Posted Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
