@@ -86,6 +86,7 @@ class orderController extends Controller
 				DB::table('orderqa')->insert($question);
 			}
 		}
+		if (isset($request->attachment)) {
 		$attachment = $request->attachment;
     	$index = 0 ;
     	$filename = array();
@@ -111,6 +112,7 @@ class orderController extends Controller
 				return response()->json("Invalid File", 400);
 			}
     	DB::table('orderattachment')->insert($saveattachment);
+    	}
     	}
 		if($save){
 			return response()->json(['message' => 'Order Created Successfully'],200);

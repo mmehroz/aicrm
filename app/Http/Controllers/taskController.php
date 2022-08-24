@@ -166,19 +166,20 @@ class taskController extends Controller
 		}
 	}
 	public function statuswisetasklist(Request $request){
-		$validate = Validator::make($request->all(), [ 
-	      'taskstatus_id'	=> 'required',
-	    ]);
-     	if ($validate->fails()) {    
-			return response()->json("Task Status Id Required", 400);
-		}
-		$tasklist = DB::table('task')
-		->select('task_id','task_title','task_description','task_token','taskstatus_id')
-		->where('taskstatus_id','=',$request->taskstatus_id)
+		$taskstatus = DB::table('taskstatus')
+		->select('*')
 		->where('status_id','=',1)
-		->paginate(30);
-		if(isset($tasklist)){
-			return response()->json(['data' => $tasklist, 'message' => 'Task List'],200);
+		->get();
+		$task = array();
+		foreach ($taskstatus as $taskstatuss) {
+			$task[$taskstatuss->taskstatus_name] =  DB::table('task')
+			->select('task_id','task_title','task_description','task_token','taskstatus_id')
+			->where('taskstatus_id','=',$taskstatuss->taskstatus_id)
+			->where('status_id','=',1)
+			->paginate(30);
+		}
+		if(isset($task)){
+			return response()->json(['data' => $task, 'message' => 'Task List'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'Task List'],200);
 		}
@@ -195,6 +196,26 @@ class taskController extends Controller
 		->where('task_id','=',$request->task_id)
 		->where('status_id','=',1)
 		->first();
+		$attachmentdetail = DB::table('taskattachment')
+		->select('*')
+		->where('task_id','=',$request->task_id)
+		->where('status_id','=',1)
+		->get();
+		$taskpath = URL::to('/')."/public/task/".$basicdetail->task_token."/";
+		$memberpath = URL::to('/')."/public/user_picture/";
+		if($basicdetail){
+			return response()->json(['basicdetail' => $basicdetail, 'attachmentdetail' => $attachmentdetail, 'taskpath' => $taskpath, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function taskmemberdetail(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'task_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Task Id Required", 400);
+		}
 		$taskmember = DB::table('taskmember')
 		->select('user_id')
 		->where('task_id','=',$request->task_id)
@@ -209,6 +230,20 @@ class taskController extends Controller
 		->whereIn('user_id',$sorttaskmember)
 		->where('status_id','=',1)
 		->get();
+		$memberpath = URL::to('/')."/public/user_picture/";
+		if($memberdetail){
+			return response()->json(['membersid' => $sorttaskmember, 'memberdetail' => $memberdetail, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
+		}else{
+			return response()->json(['membersid' => $emptyarray, 'memberdetail' => $emptyarray,'message' => 'Task Detail'],200);
+		}
+	}
+	public function taskcommentdetail(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'task_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Task Id Required", 400);
+		}
 		$commentdetail = DB::table('taskcommentdetails')
 		->select('*')
 		->where('task_id','=',$request->task_id)
@@ -234,17 +269,10 @@ class taskController extends Controller
 				$dindex++;
 			}
 		}
-		$attachmentdetail = DB::table('taskattachment')
-		->select('*')
-		->where('task_id','=',$request->task_id)
-		->where('status_id','=',1)
-		->get();
-		$taskpath = URL::to('/')."/public/task/".$basicdetail->task_token."/";
-		$memberpath = URL::to('/')."/public/user_picture/";
-		if($basicdetail){
-			return response()->json(['basicdetail' => $basicdetail,'membersid' => $sorttaskmember, 'memberdetail' => $memberdetail, 'taskcommentdetails' => $taskcommentdetails, 'attachmentdetail' => $attachmentdetail, 'taskpath' => $taskpath, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
+		if($taskcommentdetails){
+			return response()->json(['taskcommentdetails' => $taskcommentdetails,'message' => 'Task Comment Detail'],200);
 		}else{
-			return response()->json("Oops! Something Went Wrong", 400);
+			return response()->json(['taskcommentdetails' => $emptyarray,'message' => 'Task Comment Detail'],200);
 		}
 	}
 	public function deletetask(Request $request){

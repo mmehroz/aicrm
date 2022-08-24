@@ -208,9 +208,58 @@ class leadController extends Controller
 		->where('status_id','=',1)
 		->get();
 		if(isset($getleadlist)){
-			return response()->json(['data' => $getleadlist,'message' => 'Lead List'],200);
+			return response()->json(['data' => $getleadlist,'message' => 'Forwarded Lead List'],200);
 		}else{
-			return response()->json(['data' => $emptyarray, 'message' => 'Lead List'],200);
+			return response()->json(['data' => $emptyarray, 'message' => 'Forwarded Lead List'],200);
+		}
+	}
+	public function pickedleadlist(Request $request){
+		$getleadlist = DB::table('lead')
+		->select('*')
+		->where('lead_pickby','=',$request->user_id)
+		->where('leadtype_id','=',1)
+		->where('status_id','=',1)
+		->get();
+		if(isset($getleadlist)){
+			return response()->json(['data' => $getleadlist,'message' => 'Picked Lead List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Picked Lead List'],200);
+		}
+	}
+	public function picklead(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'lead_id'			=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Lead Id Required", 400);
+		}
+		$update  = DB::table('lead')
+		->where('lead_id','=',$request->lead_id)
+		->update([
+			'lead_pickby'	=> $request->user_id,
+		]); 
+		if($update){
+			return response()->json(['message' => 'Lead Pick Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function unpicklead(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'lead_id'			=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Lead Id Required", 400);
+		}
+		$update  = DB::table('lead')
+		->where('lead_id','=',$request->lead_id)
+		->update([
+			'lead_pickby'	=> null,
+		]); 
+		if($update){
+			return response()->json(['message' => 'Lead Un-Pick Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
 }

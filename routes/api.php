@@ -60,6 +60,9 @@ Route::any('/leadlist', [leadController::class, 'leadlist']);
 Route::any('/leaddetails', [leadController::class, 'leaddetails']);
 Route::any('/deletelead', [leadController::class, 'deletelead']);
 Route::any('/forwardedleadlist', [leadController::class, 'forwardedleadlist']);
+Route::any('/pickedleadlist', [leadController::class, 'pickedleadlist']);
+Route::any('/picklead', [leadController::class, 'picklead']);
+Route::any('/unpicklead', [leadController::class, 'unpicklead']);
 
 Route::any('/createorder', [orderController::class, 'createorder']);
 Route::any('/updateorder', [orderController::class, 'updateorder']);
@@ -73,6 +76,8 @@ Route::any('/updatetask', [taskController::class, 'updatetask']);
 Route::any('/tasklist', [taskController::class, 'tasklist']);
 Route::any('/statuswisetasklist', [taskController::class, 'statuswisetasklist']);
 Route::any('/taskdetail', [taskController::class, 'taskdetail']);
+Route::any('/taskmemberdetail', [taskController::class, 'taskmemberdetail']);
+Route::any('/taskcommentdetail', [taskController::class, 'taskcommentdetail']);
 Route::any('/deletetask', [taskController::class, 'deletetask']);
 Route::any('/removefromtask', [taskController::class, 'removefromtask']);
 Route::any('/orderwisetasklist', [taskController::class, 'orderwisetasklist']);
