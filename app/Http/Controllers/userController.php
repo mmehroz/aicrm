@@ -319,8 +319,8 @@ class userController extends Controller
 				$sortbrands[] = $brands->brand_name;
 			}
 		}
-		$getuserdetails = DB::table('user')
-		->select('user_id','user_name','user_email','user_username','user_target','user_loginstatus','user_picture','user_coverpicture','role_id')
+		$getuserdetails = DB::table('userdetail')
+		->select('*')
 		->where('user_id','=',$request->edituser_id)
 		->where('status_id','=',1)
 		->first();

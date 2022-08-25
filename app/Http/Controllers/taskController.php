@@ -225,9 +225,9 @@ class taskController extends Controller
 		foreach ($taskmember as $taskmembers) {
 			$sorttaskmember[] = $taskmembers->user_id;
 		}
-		$memberdetail = DB::table('user')
-		->select('user_id','user_name','user_email','user_picture')
-		->whereIn('user_id',$sorttaskmember)
+		$memberdetail = DB::table('taskmemberdetail')
+		->select('user_id','user_name','user_email','user_picture','taskmember_id')
+		->where('task_id','=',$request->task_id)
 		->where('status_id','=',1)
 		->get();
 		$memberpath = URL::to('/')."/public/user_picture/";
@@ -304,6 +304,7 @@ class taskController extends Controller
 			'deleted_by'	=> $request->user_id,
 			'deleted_at'	=> date('Y-m-d h:i:s'),
 			]);
+			$member_id = $request->user_id;
 		}else if (isset($request->taskmember_id)) {
 			$delete  = DB::table('taskmember')
 			->where('taskmember_id','=',$request->taskmember_id)
@@ -312,9 +313,14 @@ class taskController extends Controller
 			'updated_by'	=> $request->user_id,
 			'updared_at'	=> date('Y-m-d h:i:s'),
 			]);
+			$member = DB::table('taskmember')
+			->select('user_id')
+			->where('taskmember_id','=',$request->taskmember_id)
+			->first();
+			$member_id = $member->user_id;
 		}
 		if($delete){
-			return response()->json(['message' => 'Successfully Removed From Task'],200);
+			return response()->json(['member_id' => $member_id,'message' => 'Successfully Removed From Task'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
@@ -364,7 +370,7 @@ class taskController extends Controller
 			$save = DB::table('taskmember')->insert($member);
 		}
 		if($save){
-			return response()->json(['message' => 'Member Added Successfully'],200);
+			return response()->json(['member_id' => $request->member_id,'message' => 'Member Added Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

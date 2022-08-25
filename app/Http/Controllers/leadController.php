@@ -204,6 +204,7 @@ class leadController extends Controller
 		->select('*')
 		->where('brand_id','=',$request->brand_id)
 		// ->where('created_by','=',$request->user_id)
+		->where('lead_pickby','=',null)
 		->where('leadtype_id','=',1)
 		->where('status_id','=',1)
 		->get();
