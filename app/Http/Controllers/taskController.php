@@ -306,18 +306,24 @@ class taskController extends Controller
 			]);
 			$member_id = $request->user_id;
 		}else if (isset($request->taskmember_id)) {
+			$getmemberid = DB::table('taskmember')
+			->select('taskmember_id')
+			->where('task_id','=',$request->task_id)
+			->where('user_id','=',$request->taskmember_id)
+			->where('status_id','=',1)
+			->get();
+			$sortmember = array();
+			foreach ($getmemberid as $getmemberids) {
+				$sortmember[] = $getmemberids->taskmember_id;
+			}
 			$delete  = DB::table('taskmember')
-			->where('taskmember_id','=',$request->taskmember_id)
+			->whereIn('taskmember_id',$sortmember)
 			->update([
 			'status_id' 	=> 2,
 			'updated_by'	=> $request->user_id,
 			'updared_at'	=> date('Y-m-d h:i:s'),
 			]);
-			$member = DB::table('taskmember')
-			->select('user_id')
-			->where('taskmember_id','=',$request->taskmember_id)
-			->first();
-			$member_id = $member->user_id;
+			$member_id = $request->taskmember_id;
 		}
 		if($delete){
 			return response()->json(['member_id' => $member_id,'message' => 'Successfully Removed From Task'],200);

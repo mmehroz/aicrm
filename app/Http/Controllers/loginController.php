@@ -47,11 +47,12 @@ class loginController extends Controller
 			->where('status_id','=',1)
 			->where('user_id','=',$getprofileinfo->user_id)
 			->get();
-			$brand = array();
+			$index='brand1';
 			foreach ($getbrandid as $getbrandids) {
-				$brand[] = $getbrandids->brand_id;
+				$getinfo->$index = $getbrandids->brand_id;
+				$index++;
 			}
-			return response()->json(['data' => $getinfo,'brand' => $brand,'message' => 'Login Successfully'],200);
+			return response()->json(['data' => $getinfo,'message' => 'Login Successfully'],200);
 		}else{
 			return response()->json("Invalid Email Or Password", 400);
 		}

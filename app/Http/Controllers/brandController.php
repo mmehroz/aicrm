@@ -272,11 +272,18 @@ class brandController extends Controller
 		foreach ($brandid as $brandids) {
 			$sortbrandid[] = $brandids->brand_id;
 		}
-		$brandlist = DB::table('brand')
-		->select('brand_id','brand_name')
-		->whereIn('brand_id',$sortbrandid)
-		->where('status_id','=',1)
-		->get();
+		if ($request->role_id <= 2) {
+			$brandlist = DB::table('brand')
+			->select('brand_id','brand_name','brand_email','created_at')
+			->where('status_id','=',1)
+			->get();
+		}else{
+			$brandlist = DB::table('brand')
+			->select('brand_id','brand_name','brand_email','created_at')
+			->whereIn('brand_id',$sortbrandid)
+			->where('status_id','=',1)
+			->get();
+		}
 		if(isset($brandlist)){
 			return response()->json(['data' => $brandlist, 'message' => 'User Brand List'],200);
 		}else{
