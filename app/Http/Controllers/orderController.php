@@ -37,6 +37,7 @@ class orderController extends Controller
 		'order_description' 	=> $request->order_description,
 		'order_token' 			=> $order_token,
 		'ordertype_id'			=> $request->ordertype_id,
+		'lead_id'				=> $request->lead_id,
 		'orderstatus_id'		=> 1,
 		'status_id'				=> 1,
 		'created_by'			=> $request->user_id,
@@ -252,8 +253,15 @@ class orderController extends Controller
 		}
 	}
 	public function orderlist(Request $request){
-		$orderlist = DB::table('order')
-		->select('order_id','order_title','order_deadlinedate','order_description','order_token')
+		$validate = Validator::make($request->all(), [ 
+	      'brand_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Brand Id Required", 400);
+		}
+		$orderlist = DB::table('basicorderdetail')
+		->select('*')
+		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
 		->paginate(30);
 		if(isset($orderlist)){

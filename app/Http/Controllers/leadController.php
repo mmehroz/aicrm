@@ -137,13 +137,13 @@ class leadController extends Controller
 			return response()->json($validate->errors(), 400);
 		}
 		if ($request->role_id == 1) {
-			$getleadlist = DB::table('lead')
+			$getleadlist = DB::table('leaddetail')
 			->select('*')
 			->where('brand_id','=',$request->brand_id)
 			->where('status_id','=',1)
 			->get();
 		}else{
-			$getleadlist = DB::table('lead')
+			$getleadlist = DB::table('leaddetail')
 			->select('*')
 			->where('brand_id','=',$request->brand_id)
 			->where('created_by','=',$request->user_id)
@@ -163,7 +163,7 @@ class leadController extends Controller
      	if ($validate->fails()) {    
 			return response()->json("Lead Id Required", 400);
 		}
-		$getdetails = DB::table('lead')
+		$getdetails = DB::table('leaddetail')
 		->select('*')
 		->where('lead_id','=',$request->lead_id)
 		->where('status_id','=',1)
@@ -203,7 +203,7 @@ class leadController extends Controller
 		}
 		if ($request->role_id == 3 || $request->role_id == 4) {
 			if ($request->leadtype_id == 1) {
-				$getleadlist = DB::table('lead')
+				$getleadlist = DB::table('leaddetail')
 				->select('*')
 				->where('brand_id','=',$request->brand_id)
 				->where('lead_pickby','=',null)
@@ -211,7 +211,7 @@ class leadController extends Controller
 				->where('status_id','=',1)
 				->get();
 			}else{
-				$getleadlist = DB::table('lead')
+				$getleadlist = DB::table('leaddetail')
 				->select('*')
 				->where('brand_id','=',$request->brand_id)
 				->where('lead_pickby','=',null)
@@ -234,7 +234,7 @@ class leadController extends Controller
 		}
 	}
 	public function pickedleadlist(Request $request){
-		$getleadlist = DB::table('lead')
+		$getleadlist = DB::table('leaddetail')
 		->select('*')
 		->where('lead_pickby','=',$request->user_id)
 		->where('leadtype_id','=',1)
