@@ -272,7 +272,7 @@ class brandController extends Controller
 		foreach ($brandid as $brandids) {
 			$sortbrandid[] = $brandids->brand_id;
 		}
-		if ($request->role_id <= 2) {
+		if ($request->role_id == 1 || $request->role_id == 2 || $request->role_id == 6) {
 			$brandlist = DB::table('brand')
 			->select('brand_id','brand_name','brand_email','created_at')
 			->where('status_id','=',1)

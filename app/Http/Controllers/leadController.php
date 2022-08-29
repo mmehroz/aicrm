@@ -257,6 +257,7 @@ class leadController extends Controller
 		->where('lead_id','=',$request->lead_id)
 		->update([
 			'lead_pickby'	=> $request->user_id,
+			'leadstatus_id'	=> 2,
 		]); 
 		if($update){
 			return response()->json(['message' => 'Lead Pick Successfully'],200);
@@ -275,6 +276,7 @@ class leadController extends Controller
 		->where('lead_id','=',$request->lead_id)
 		->update([
 			'lead_pickby'	=> null,
+			'leadstatus_id'	=> 1,
 		]); 
 		if($update){
 			return response()->json(['message' => 'Lead Un-Pick Successfully'],200);
