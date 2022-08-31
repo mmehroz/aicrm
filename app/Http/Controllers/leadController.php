@@ -52,7 +52,8 @@ class leadController extends Controller
 		'lead_bussinessphone' 	=> $request->lead_bussinessphone,
 		'lead_otherdetails' 	=> $request->lead_otherdetails,
 		'lead_pickby' 			=> $request->role_id == 5 ? $request->user_id : null,
-		'leadstatus_id'		 	=> 1,
+		'lead_date' 			=> date('Y-m-d'),
+		'leadstatus_id'		 	=> $request->role_id == 5 ? 2 : 1,
 		'brand_id'		 		=> $request->brand_id,
 		'leadtype_id'	 		=> 2,
 		'status_id'		 		=> 1,
@@ -142,6 +143,7 @@ class leadController extends Controller
 			->select('*')
 			->where('brand_id','=',$request->brand_id)
 			->where('status_id','=',1)
+			->orderBy('lead_id','DESC')
 			->get();
 		}else{
 			$getleadlist = DB::table('leaddetail')
@@ -149,6 +151,7 @@ class leadController extends Controller
 			->where('brand_id','=',$request->brand_id)
 			->where('created_by','=',$request->user_id)
 			->where('status_id','=',1)
+			->orderBy('lead_id','DESC')
 			->get();
 		}
 		if(isset($getleadlist)){
@@ -164,7 +167,7 @@ class leadController extends Controller
      	if ($validate->fails()) {    
 			return response()->json("Lead Id Required", 400);
 		}
-		$getdetails = DB::table('leaddetail')
+		$getdetails = DB::table('leadcompletedetails')
 		->select('*')
 		->where('lead_id','=',$request->lead_id)
 		->where('status_id','=',1)
@@ -202,23 +205,14 @@ class leadController extends Controller
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
-		if ($request->leadtype_id == 1) {
-			$getleadlist = DB::table('leaddetail')
-			->select('*')
-			->where('brand_id','=',$request->brand_id)
-			->where('lead_pickby','=',null)
-			->where('leadtype_id','=',1)
-			->where('status_id','=',1)
-			->get();
-		}else{
-			$getleadlist = DB::table('leaddetail')
-			->select('*')
-			->where('brand_id','=',$request->brand_id)
-			->where('lead_pickby','=',null)
-			->where('leadtype_id','=',2)
-			->where('status_id','=',1)
-			->get();
-		}
+		$getleadlist = DB::table('leaddetail')
+		->select('*')
+		->where('brand_id','=',$request->brand_id)
+		->where('lead_pickby','=',null)
+		->where('leadstatus_id','=',1)
+		->where('status_id','=',1)
+		->orderBy('lead_id','DESC')
+		->get();
 		if(isset($getleadlist)){
 			return response()->json(['data' => $getleadlist,'message' => 'Forwarded Lead List'],200);
 		}else{
@@ -230,13 +224,34 @@ class leadController extends Controller
 		->select('*')
 		->where('lead_pickby','=',$request->user_id)
 		->where('leadstatus_id','=',$request->leadstatus_id)
-		->where('leadtype_id','=',1)
 		->where('status_id','=',1)
+		->orderBy('lead_id','DESC')
 		->get();
 		if(isset($getleadlist)){
 			return response()->json(['data' => $getleadlist,'message' => 'Picked Lead List'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'Picked Lead List'],200);
+		}
+	}
+	public function automanualleadlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'brand_id'	=> 'required',
+	      'leadtype_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$getleadlist = DB::table('leaddetail')
+		->select('*')
+		->where('brand_id','=',$request->brand_id)
+		->where('leadtype_id','=',$request->leadtype_id)
+		->where('status_id','=',1)
+		->orderBy('lead_id','DESC')
+		->paginate(30);
+		if(isset($getleadlist)){
+			return response()->json(['data' => $getleadlist,'message' => 'Forwarded Lead List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Forwarded Lead List'],200);
 		}
 	}
 	public function picklead(Request $request){

@@ -36,6 +36,7 @@ class orderController extends Controller
 		'order_deadlinedate' 	=> $request->order_deadlinedate,
 		'order_description' 	=> $request->order_description,
 		'order_token' 			=> $order_token,
+		'order_date' 			=> date('Y-m-d'),
 		'ordertype_id'			=> $request->ordertype_id,
 		'lead_id'				=> $request->lead_id,
 		'orderstatus_id'		=> 1,
@@ -268,6 +269,7 @@ class orderController extends Controller
 		->select('*')
 		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
+		->orderBy('order_id','DESC')
 		->paginate(30);
 		if(isset($orderlist)){
 			return response()->json(['data' => $orderlist, 'message' => 'Order List'],200);

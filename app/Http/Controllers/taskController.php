@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\File;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Image;
 use DB;
 use Input;
@@ -35,6 +38,7 @@ class taskController extends Controller
 		'task_title' 		=> $request->task_title,
 		'task_description' 	=> $request->task_description,
 		'task_token' 		=> $task_token,
+		'task_date' 		=> date('Y-m-d'),
 		'taskstatus_id'		=> 1,
 		'order_id'			=> $request->order_id,
 		'order_token'		=> $request->order_token,
@@ -158,6 +162,7 @@ class taskController extends Controller
 		$tasklist = DB::table('task')
 		->select('task_id','task_title','task_description','task_token','taskstatus_id')
 		->where('status_id','=',1)
+		->orderBy('task_id','DESC')
 		->paginate(30);
 		if(isset($tasklist)){
 			return response()->json(['data' => $tasklist, 'message' => 'Task List'],200);
@@ -176,6 +181,7 @@ class taskController extends Controller
 			->select('task_id','task_title','task_description','task_token','taskstatus_id')
 			->where('taskstatus_id','=',$taskstatuss->taskstatus_id)
 			->where('status_id','=',1)
+			->orderBy('task_id','DESC')
 			->paginate(30);
 		}
 		if(isset($task)){
@@ -248,6 +254,7 @@ class taskController extends Controller
 		->select('*')
 		->where('task_id','=',$request->task_id)
 		->where('status_id','=',1)
+		->orderBy('taskcomment_id','DESC')
 		->get();
 		$taskcommentdetails = array();
 		$dindex = 0;
@@ -269,6 +276,7 @@ class taskController extends Controller
 				$dindex++;
 			}
 		}
+		$taskcommentdetails = $this->paginate($taskcommentdetails);
 		$path = URL::to('/')."/public/user_picture/";
 		if($taskcommentdetails){
 			return response()->json(['taskcommentdetails' => $taskcommentdetails, 'path' => $path,'message' => 'Task Comment Detail'],200);
@@ -433,4 +441,52 @@ class taskController extends Controller
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
+	public function sendreply(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'taskreply_reply'	=> 'required',
+	      'taskcomment_id' 	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$send = array(
+		'taskreply_reply'	=> $request->taskreply_reply,
+		'taskreply_date'	=> date('Y-m-d'),
+		'taskcomment_id'	=> $request->taskcomment_id,
+		'status_id' 		=> 1,
+		'created_by'		=> $request->user_id,
+		'created_at'		=> date('Y-m-d h:i:s'),
+		);
+		$save = DB::table('taskreply')->insert($send);
+		if($save){
+			return response()->json(['message' => 'Reply Posted Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function commentreplydetail(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'taskcomment_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Task Id Required", 400);
+		}
+		$replydetail = DB::table('taskreply')
+		->select('*')
+		->where('taskcomment_id','=',$request->taskcomment_id)
+		->where('status_id','=',1)
+		->orderBy('taskreply_id','DESC')
+		->paginate(20);
+		$path = URL::to('/')."/public/user_picture/";
+		if($replydetail){
+			return response()->json(['replydetail' => $replydetail, 'path' => $path,'message' => 'Comment Reply Detail'],200);
+		}else{
+			return response()->json(['replydetail' => $emptyarray,'message' => 'Comment Reply Detail'],200);
+		}
+	}
+	public function paginate($items, $perPage = 30, $page = null, $options = []){
+        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
+        $items = $items instanceof Collection ? $items : Collection::make($items);
+        return  new  LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
+    }
 }

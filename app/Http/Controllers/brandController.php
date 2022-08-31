@@ -94,6 +94,7 @@ class brandController extends Controller
 			'brand_website' 	=> $request->brand_website,
 			'brandtype_id' 		=> $request->brandtype_id,
 			'brand_description' => $request->brand_description,
+			'brand_date' 		=> date('Y-m-d'),
 			'status_id'			=> 1,
 			'created_by'		=> $request->user_id,
 			'created_at'		=> date('Y-m-d h:i:s'),
