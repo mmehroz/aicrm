@@ -115,6 +115,11 @@ class orderController extends Controller
     	DB::table('orderattachment')->insert($saveattachment);
     	}
     	}
+    	DB::table('lead')
+		->where('lead_id','=',$request->lead_id)
+		->update([
+		'leadstatus_id'	=> 3,
+		]); 
 		if($save){
 			return response()->json(['message' => 'Order Created Successfully'],200);
 		}else{

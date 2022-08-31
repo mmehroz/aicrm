@@ -14,6 +14,7 @@ use App\Item;
 use Session;
 use Response;
 use Validator;
+use URL;
 
 class loginController extends Controller
 {
@@ -52,7 +53,8 @@ class loginController extends Controller
 				$getinfo->$index = $getbrandids->brand_id;
 				$index++;
 			}
-			return response()->json(['data' => $getinfo,'message' => 'Login Successfully'],200);
+			$path = URL::to('/')."/public/user_picture/";
+			return response()->json(['data' => $getinfo, 'path' => $path, 'message' => 'Login Successfully'],200);
 		}else{
 			return response()->json("Invalid Email Or Password", 400);
 		}

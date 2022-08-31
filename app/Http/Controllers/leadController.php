@@ -52,6 +52,7 @@ class leadController extends Controller
 		'lead_bussinessphone' 	=> $request->lead_bussinessphone,
 		'lead_otherdetails' 	=> $request->lead_otherdetails,
 		'lead_pickby' 			=> $request->role_id == 5 ? $request->user_id : null,
+		'leadstatus_id'		 	=> 1,
 		'brand_id'		 		=> $request->brand_id,
 		'leadtype_id'	 		=> 2,
 		'status_id'		 		=> 1,
@@ -201,29 +202,20 @@ class leadController extends Controller
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
-		if ($request->role_id == 3 || $request->role_id == 4) {
-			if ($request->leadtype_id == 1) {
-				$getleadlist = DB::table('leaddetail')
-				->select('*')
-				->where('brand_id','=',$request->brand_id)
-				->where('lead_pickby','=',null)
-				->where('leadtype_id','=',1)
-				->where('status_id','=',1)
-				->get();
-			}else{
-				$getleadlist = DB::table('leaddetail')
-				->select('*')
-				->where('brand_id','=',$request->brand_id)
-				->where('lead_pickby','=',null)
-				->where('leadtype_id','=',2)
-				->where('status_id','=',1)
-				->get();
-			}
-		}else{
-			$getleadlist = DB::table('lead')
+		if ($request->leadtype_id == 1) {
+			$getleadlist = DB::table('leaddetail')
 			->select('*')
 			->where('brand_id','=',$request->brand_id)
 			->where('lead_pickby','=',null)
+			->where('leadtype_id','=',1)
+			->where('status_id','=',1)
+			->get();
+		}else{
+			$getleadlist = DB::table('leaddetail')
+			->select('*')
+			->where('brand_id','=',$request->brand_id)
+			->where('lead_pickby','=',null)
+			->where('leadtype_id','=',2)
 			->where('status_id','=',1)
 			->get();
 		}
@@ -237,6 +229,7 @@ class leadController extends Controller
 		$getleadlist = DB::table('leaddetail')
 		->select('*')
 		->where('lead_pickby','=',$request->user_id)
+		->where('leadstatus_id','=',$request->leadstatus_id)
 		->where('leadtype_id','=',1)
 		->where('status_id','=',1)
 		->get();
@@ -280,6 +273,24 @@ class leadController extends Controller
 		]); 
 		if($update){
 			return response()->json(['message' => 'Lead Un-Pick Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function cancellead(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'lead_id'			=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Lead Id Required", 400);
+		}
+		$update  = DB::table('lead')
+		->where('lead_id','=',$request->lead_id)
+		->update([
+			'leadstatus_id'	=> 4,
+		]); 
+		if($update){
+			return response()->json(['message' => 'Lead Cacel Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

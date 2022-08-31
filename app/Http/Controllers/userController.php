@@ -267,8 +267,8 @@ class userController extends Controller
 		foreach ($getuserid as $getuserids) {
 			$sortuserid[] = $getuserids->user_id;
 		}
-		$getusers = DB::table('user')
-		->select('user_id','user_name','user_email','user_target','user_loginstatus','user_picture','user_coverpicture')
+		$getusers = DB::table('userdetail')
+		->select('*')
 		->where('status_id','=',1)
 		->whereIn('user_id',$sortuserid)
 		->get();

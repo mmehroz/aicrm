@@ -63,6 +63,7 @@ Route::any('/forwardedleadlist', [leadController::class, 'forwardedleadlist']);
 Route::any('/pickedleadlist', [leadController::class, 'pickedleadlist']);
 Route::any('/picklead', [leadController::class, 'picklead']);
 Route::any('/unpicklead', [leadController::class, 'unpicklead']);
+Route::any('/cancellead', [leadController::class, 'cancellead']);
 
 Route::any('/createorder', [orderController::class, 'createorder']);
 Route::any('/updateorder', [orderController::class, 'updateorder']);

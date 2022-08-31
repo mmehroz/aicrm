@@ -269,8 +269,9 @@ class taskController extends Controller
 				$dindex++;
 			}
 		}
+		$path = URL::to('/')."/public/user_picture/";
 		if($taskcommentdetails){
-			return response()->json(['taskcommentdetails' => $taskcommentdetails,'message' => 'Task Comment Detail'],200);
+			return response()->json(['taskcommentdetails' => $taskcommentdetails, 'path' => $path,'message' => 'Task Comment Detail'],200);
 		}else{
 			return response()->json(['taskcommentdetails' => $emptyarray,'message' => 'Task Comment Detail'],200);
 		}
@@ -385,15 +386,18 @@ class taskController extends Controller
 		$validate = Validator::make($request->all(), [ 
 	      'taskcomment_comment'	=> 'required',
 	      'task_id' 			=> 'required',
-	      'task_token' 			=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
+		$task_token = DB::table('task')
+		->select('task_token')
+		->where('task_id','=',$request->task_id)
+		->first();
 		$send = array(
 		'taskcomment_comment'	=> $request->taskcomment_comment,
 		'task_id'				=> $request->task_id,
-		'task_token'			=> $request->task_token,
+		'task_token'			=> $task_token->task_token,
 		'status_id' 			=> 1,
 		'taskcomment_date'		=> date('Y-m-d'),
 		'created_by'			=> $request->user_id,
