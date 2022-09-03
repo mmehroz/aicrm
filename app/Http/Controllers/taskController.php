@@ -26,22 +26,28 @@ class taskController extends Controller
 		$validate = Validator::make($request->all(), [ 
 	      'task_title' 			=> 'required',
 	      'task_description' 	=> 'required',
+	      'task_deadlinedate' 	=> 'required',
 	      'order_id' 			=> 'required',
-	      'order_token' 		=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
+		$order_token = DB::table('order')
+		->select('order_token')
+		->where('order_id','=',$request->order_id)
+		->where('status_id','=',1)
+		->first();
 		$task_token = openssl_random_pseudo_bytes(7);
     	$task_token = bin2hex($task_token);
 		$basic = array(
 		'task_title' 		=> $request->task_title,
 		'task_description' 	=> $request->task_description,
+		'task_deadlinedate' => $request->task_deadlinedate,
 		'task_token' 		=> $task_token,
 		'task_date' 		=> date('Y-m-d'),
 		'taskstatus_id'		=> 1,
 		'order_id'			=> $request->order_id,
-		'order_token'		=> $request->order_token,
+		'order_token'		=> $order_token->order_token,
 		'status_id'			=> 1,
 		'created_by'		=> $request->user_id,
 		'created_at'		=> date('Y-m-d h:i:s'),
@@ -100,6 +106,7 @@ class taskController extends Controller
 	      'task_token' 			=> 'required',
 	      'task_title'	 		=> 'required',
 	      'task_description'	=> 'required',
+	      'task_deadlinedate'	=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
@@ -109,6 +116,7 @@ class taskController extends Controller
 		->update([
 		'task_title' 			=> $request->task_title,
 		'task_description' 		=> $request->task_description,
+		'task_deadlinedate' 	=> $request->task_deadlinedate,
 		'updated_by'			=> $request->user_id,
 		'updated_at'			=> date('Y-m-d h:i:s'),
 		]);
@@ -159,8 +167,8 @@ class taskController extends Controller
 		}
 	}
 	public function tasklist(Request $request){
-		$tasklist = DB::table('task')
-		->select('task_id','task_title','task_description','task_token','taskstatus_id')
+		$tasklist = DB::table('tasklist')
+		->select('*')
 		->where('status_id','=',1)
 		->orderBy('task_id','DESC')
 		->paginate(30);
@@ -177,8 +185,8 @@ class taskController extends Controller
 		->get();
 		$task = array();
 		foreach ($taskstatus as $taskstatuss) {
-			$task[$taskstatuss->taskstatus_name] =  DB::table('task')
-			->select('task_id','task_title','task_description','task_token','taskstatus_id')
+			$task[$taskstatuss->taskstatus_name] =  DB::table('tasklist')
+			->select('*')
 			->where('taskstatus_id','=',$taskstatuss->taskstatus_id)
 			->where('status_id','=',1)
 			->orderBy('task_id','DESC')
@@ -476,7 +484,7 @@ class taskController extends Controller
 		->where('taskcomment_id','=',$request->taskcomment_id)
 		->where('status_id','=',1)
 		->orderBy('taskreply_id','DESC')
-		->paginate(20);
+		->paginate(10);
 		$path = URL::to('/')."/public/user_picture/";
 		if($replydetail){
 			return response()->json(['replydetail' => $replydetail, 'path' => $path,'message' => 'Comment Reply Detail'],200);
@@ -484,7 +492,7 @@ class taskController extends Controller
 			return response()->json(['replydetail' => $emptyarray,'message' => 'Comment Reply Detail'],200);
 		}
 	}
-	public function paginate($items, $perPage = 30, $page = null, $options = []){
+	public function paginate($items, $perPage = 10, $page = null, $options = []){
         $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
         $items = $items instanceof Collection ? $items : Collection::make($items);
         return  new  LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);

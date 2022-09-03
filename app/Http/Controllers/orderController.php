@@ -25,6 +25,7 @@ class orderController extends Controller
 	      'order_deadlinedate' 		=> 'required',
 	      'order_description' 		=> 'required',
 	      'ordertype_id'			=> 'required',
+	      'orderstatus_id'			=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
@@ -39,7 +40,7 @@ class orderController extends Controller
 		'order_date' 			=> date('Y-m-d'),
 		'ordertype_id'			=> $request->ordertype_id,
 		'lead_id'				=> $request->lead_id,
-		'orderstatus_id'		=> 1,
+		'orderstatus_id'		=> $request->orderstatus_id,
 		'status_id'				=> 1,
 		'created_by'			=> $request->user_id,
 		'created_at'			=> date('Y-m-d h:i:s'),
@@ -135,6 +136,7 @@ class orderController extends Controller
 	      'order_deadlinedate' 		=> 'required',
 	      'order_description' 		=> 'required',
 	      'ordertype_id'			=> 'required',
+	      'orderstatus_id'			=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
@@ -146,6 +148,7 @@ class orderController extends Controller
 		'order_deadlinedate' 	=> $request->order_deadlinedate,
 		'order_description' 	=> $request->order_description,
 		'ordertype_id'			=> $request->ordertype_id,
+		'orderstatus_id'		=> $request->orderstatus_id,
 		'updated_by'			=> $request->user_id,
 		'updated_at'			=> date('Y-m-d h:i:s'),
 		]);
@@ -265,12 +268,23 @@ class orderController extends Controller
      	if ($validate->fails()) {    
 			return response()->json("Brand Id Required", 400);
 		}
-		$orderlist = DB::table('basicorderdetail')
-		->select('*')
-		->where('brand_id','=',$request->brand_id)
-		->where('status_id','=',1)
-		->orderBy('order_id','DESC')
-		->paginate(30);
+		if ($request->role_id == 1) {
+			$orderlist = DB::table('basicorderdetail')
+			->select('*')
+			->where('brand_id','=',$request->brand_id)
+			->where('status_id','=',1)
+			->orderBy('order_id','DESC')
+			->paginate(30);
+		}else{
+			$orderlist = DB::table('basicorderdetail')
+			->select('*')
+			->where('brand_id','=',$request->brand_id)
+			->where('orderstatus_id','<',4)
+			->where('created_by','=',$request->user_id)
+			->where('status_id','=',1)
+			->orderBy('order_id','DESC')
+			->paginate(30);
+		}
 		if(isset($orderlist)){
 			return response()->json(['data' => $orderlist, 'message' => 'Order List'],200);
 		}else{
@@ -395,6 +409,132 @@ class orderController extends Controller
 		}
 		if($delete){
 			return response()->json(['message' => 'Successfully Removed From Order'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function ordertotalamount(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'order_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Order Id Required", 400);
+		}
+		$totalamount = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('order_id','=',$request->order_id)
+		->where('status_id','=',1)
+		->sum('orderpayment_amount');
+		if($totalamount){
+			return response()->json([ 'totalamount' => $totalamount,'message' => 'Order Total Amount'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function forwardedorderlist(Request $request){
+		$orderlist = DB::table('basicorderdetail')
+		->select('*')
+		->where('orderstatus_id','=',2)
+		->where('order_pickby','=',null)
+		->where('status_id','=',1)
+		->orderBy('order_id','DESC')
+		->get();
+		if(isset($orderlist)){
+			return response()->json(['data' => $orderlist, 'message' => 'Forwarded Order List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Forwarded Order List'],200);
+		}
+	}
+	public function pickedorderlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'orderstatus_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {
+			return response()->json("Order Status Id Required", 400);
+		}
+		if ($request->role_id == 6){
+			$orderlist = DB::table('basicorderdetail')
+			->select('*')
+			->where('orderstatus_id','=',$request->orderstatus_id)
+			->where('order_pickby','=',$request->user_id)
+			->where('status_id','=',1)
+			->orderBy('order_id','DESC')
+			->paginate(30);
+		}else if ($request->role_id == 5){
+			$orderlist = DB::table('basicorderdetail')
+			->select('*')
+			->where('orderstatus_id','=',$request->orderstatus_id)
+			->where('created_by','=',$request->user_id)
+			->where('status_id','=',1)
+			->orderBy('order_id','DESC')
+			->paginate(30);
+		}else{
+			$orderlist = DB::table('basicorderdetail')
+			->select('*')
+			->where('orderstatus_id','=',$request->orderstatus_id)
+			->where('status_id','=',1)
+			->orderBy('order_id','DESC')
+			->paginate(30);
+		}
+		if(isset($orderlist)){
+			return response()->json(['data' => $orderlist,'message' => 'Picked Order List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Picked Order List'],200);
+		}
+	}
+	public function pickorder(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'order_id'			=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Lead Id Required", 400);
+		}
+		$update  = DB::table('order')
+		->where('order_id','=',$request->order_id)
+		->update([
+			'order_pickby'		=> $request->user_id,
+			'orderstatus_id'	=> 3,
+		]); 
+		if($update){
+			return response()->json(['message' => 'Order Pick Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function unpickorder(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'order_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Oredr Id Required", 400);
+		}
+		$update  = DB::table('order')
+		->where('order_id','=',$request->order_id)
+		->update([
+			'order_pickby'		=> null,
+			'orderstatus_id'	=> 2,
+		]); 
+		if($update){
+			return response()->json(['message' => 'Order Un-Pick Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function updateorderstatus(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'order_id'			=> 'required',
+	      'orderstatus_id'		=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$update  = DB::table('order')
+		->where('order_id','=',$request->order_id)
+		->update([
+			'orderstatus_id'	=> $request->orderstatus_id,
+		]); 
+		if($update){
+			return response()->json(['message' => 'Status Updated Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

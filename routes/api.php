@@ -72,6 +72,12 @@ Route::any('/orderlist', [orderController::class, 'orderlist']);
 Route::any('/orderdetail', [orderController::class, 'orderdetail']);
 Route::any('/deleteorder', [orderController::class, 'deleteorder']);
 Route::any('/removefromorder', [orderController::class, 'removefromorder']);
+Route::any('/ordertotalamount', [orderController::class, 'ordertotalamount']);
+Route::any('/forwardedorderlist', [orderController::class, 'forwardedorderlist']);
+Route::any('/pickedorderlist', [orderController::class, 'pickedorderlist']);
+Route::any('/pickorder', [orderController::class, 'pickorder']);
+Route::any('/unpickorder', [orderController::class, 'unpickorder']);
+Route::any('/updateorderstatus', [orderController::class, 'updateorderstatus']);
 
 Route::any('/creattask', [taskController::class, 'creattask']);
 Route::any('/updatetask', [taskController::class, 'updatetask']);

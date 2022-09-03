@@ -226,7 +226,7 @@ class leadController extends Controller
 		->where('leadstatus_id','=',$request->leadstatus_id)
 		->where('status_id','=',1)
 		->orderBy('lead_id','DESC')
-		->get();
+		->paginate(30);
 		if(isset($getleadlist)){
 			return response()->json(['data' => $getleadlist,'message' => 'Picked Lead List'],200);
 		}else{
