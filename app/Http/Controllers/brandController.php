@@ -291,4 +291,32 @@ class brandController extends Controller
 			return response()->json(['data' => $emptyarray, 'message' => 'Brand List'],200);
 		}
 	}
+	public function remainingbrandlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+			'edituser_id'			=> 'required',
+		  ]);
+		if ($validate->fails()) {    
+			  return response()->json("Edit User Id Required", 400);
+		}
+		$brandid = DB::table('userbarnd')
+		->select('brand_id')
+		->where('user_id','=',$request->user_id)
+		->where('status_id','=',1)
+		->get();
+		// dd($brandid);
+		$sortbrandid = array();
+		foreach ($brandid as $brandids) {
+			$sortbrandid[] = $brandids->brand_id;
+		}
+		$brandlist = DB::table('brand')
+		->select('brand_id','brand_name','brand_email','created_at')
+		->whereNotIn('brand_id',$sortbrandid)
+		->where('status_id','=',1)
+		->get();
+		if(isset($brandlist)){
+			return response()->json(['data' => $brandlist, 'message' => 'Remining Brand List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Brand List'],200);
+		}
+	}
 }

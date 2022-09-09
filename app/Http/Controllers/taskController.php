@@ -179,6 +179,12 @@ class taskController extends Controller
 		}
 	}
 	public function statuswisetasklist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'brand_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Brand Id Required", 400);
+		}
 		$taskstatus = DB::table('taskstatus')
 		->select('*')
 		->where('status_id','=',1)
@@ -187,6 +193,7 @@ class taskController extends Controller
 		foreach ($taskstatus as $taskstatuss) {
 			$task[$taskstatuss->taskstatus_name] =  DB::table('tasklist')
 			->select('*')
+			->where('brand_id','=',$request->brand_id)
 			->where('taskstatus_id','=',$taskstatuss->taskstatus_id)
 			->where('status_id','=',1)
 			->orderBy('task_id','DESC')
@@ -466,8 +473,14 @@ class taskController extends Controller
 		'created_at'		=> date('Y-m-d h:i:s'),
 		);
 		$save = DB::table('taskreply')->insert($send);
-		if($save){
-			return response()->json(['message' => 'Reply Posted Successfully'],200);
+		$taskreply_id = DB::getPdo()->lastInsertId();
+		$replydetail = DB::table('taskreplydetails')
+		->select('*')
+		->where('taskreply_id','=',$taskreply_id)
+		->where('status_id','=',1)
+		->first();
+		if($replydetail){
+			return response()->json(['replydetail' => $replydetail,'message' => 'Reply Posted Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
@@ -479,17 +492,38 @@ class taskController extends Controller
      	if ($validate->fails()) {    
 			return response()->json("Task Id Required", 400);
 		}
-		$replydetail = DB::table('taskreply')
+		$replydetail = DB::table('taskreplydetails')
 		->select('*')
 		->where('taskcomment_id','=',$request->taskcomment_id)
 		->where('status_id','=',1)
 		->orderBy('taskreply_id','DESC')
-		->paginate(10);
+		->get();
 		$path = URL::to('/')."/public/user_picture/";
 		if($replydetail){
 			return response()->json(['replydetail' => $replydetail, 'path' => $path,'message' => 'Comment Reply Detail'],200);
 		}else{
 			return response()->json(['replydetail' => $emptyarray,'message' => 'Comment Reply Detail'],200);
+		}
+	}
+	public function movetask(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'task_id'			=> 'required',
+	      'taskstatus_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Task Id Required", 400);
+		}
+		$move  = DB::table('task')
+		->where('task_id','=',$request->task_id )
+		->update([
+		'taskstatus_id'	=> $request->taskstatus_id,
+		'updated_by'	=> $request->user_id,
+		'updated_at'	=> date('Y-m-d h:i:s'),
+		]);
+		if($move){
+			return response()->json(['message' => 'Task Move Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
 	public function paginate($items, $perPage = 10, $page = null, $options = []){

@@ -9,6 +9,7 @@ use App\Http\Controllers\userController;
 use App\Http\Controllers\leadController;
 use App\Http\Controllers\orderController;
 use App\Http\Controllers\taskController;
+use App\Http\Controllers\ppcController;
 /*
 |---------------------------------------------------------------------	-----
 | API Routes
@@ -45,6 +46,7 @@ Route::any('/brandlist', [brandController::class, 'brandlist']);
 Route::any('/branddetail', [brandController::class, 'branddetail']);
 Route::any('/deletebrand', [brandController::class, 'deletebrand']);
 Route::any('/userbrandlist', [brandController::class, 'userbrandlist']);
+Route::any('/remainingbrandlist', [brandController::class, 'remainingbrandlist']);
 
 Route::any('/adduser', [userController::class, 'adduser']);
 Route::any('/updateuser', [userController::class, 'updateuser']);
@@ -53,6 +55,7 @@ Route::any('/alluserlist', [userController::class, 'alluserlist']);
 Route::any('/userdetails', [userController::class, 'userdetails']);
 Route::any('/deleteuser', [userController::class, 'deleteuser']);
 Route::any('/updateusercoverpicture', [userController::class, 'updateusercoverpicture']);
+Route::any('/removeuserfrombrand', [userController::class, 'removeuserfrombrand']);
 
 Route::any('/createlead', [leadController::class, 'createlead']);
 Route::any('/updatelead', [leadController::class, 'updatelead']);
@@ -93,5 +96,12 @@ Route::any('/addmembertotask', [taskController::class, 'addmembertotask']);
 Route::any('/sendcommenttotask', [taskController::class, 'sendcommenttotask']);
 Route::any('/sendreply', [taskController::class, 'sendreply']);
 Route::any('/commentreplydetail', [taskController::class, 'commentreplydetail']);
+Route::any('/movetask', [taskController::class, 'movetask']);
+
+Route::any('/addppc', [ppcController::class, 'addppc']);
+Route::any('/updateppc', [ppcController::class, 'updateppc']);
+Route::any('/ppclist', [ppcController::class, 'ppclist']);
+Route::any('/ppcdetail', [ppcController::class, 'ppcdetail']);
+Route::any('/deleteppc', [ppcController::class, 'deleteppc']);
 });
 });

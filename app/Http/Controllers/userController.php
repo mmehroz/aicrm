@@ -308,16 +308,19 @@ class userController extends Controller
 		$brand = array();
 		foreach ($getbrandid as $getbrandids) {
 			$brand[] = DB::table('brand')
-			->select('brand_name')
+			->select('brand_id','brand_name')
 			->where('status_id','=',1)
 			->where('brand_id','=',$getbrandids->brand_id)
 			->first();
 		}
 		$sortbrands = array();
+		$bindex=0;
 		foreach ($brand as $brands) {
 			if($brands != null) {
-				$sortbrands[] = $brands->brand_name;
+				$sortbrands[$bindex]['name'] = $brands->brand_name;
+				$sortbrands[$bindex]['id'] = strval($brands->brand_id);
 			}
+			$bindex++;
 		}
 		$getuserdetails = DB::table('userdetail')
 		->select('*')
@@ -395,6 +398,31 @@ class userController extends Controller
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
+	//
+	public function removeuserfrombrand(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'brand_id'			=> 'required',
+		  'edituser_id'			=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$delete  = DB::table('userbarnd')
+		->where('brand_id','=',$request->brand_id)
+		->where('user_id','=',$request->edituser_id)
+		->where('status_id','=',1)
+		->update([
+			'status_id' 	=> 2,
+			'deleted_by'	=> $request->user_id,
+			'deleted_at'	=> date('Y-m-d h:i:s'),
+		]); 
+		if($delete){
+			return response()->json(['message' => 'User Removed From Brand Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	//
 	public  function generateRandomString($length = 20){
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $charactersLength = strlen($characters);

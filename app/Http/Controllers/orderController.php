@@ -121,6 +121,11 @@ class orderController extends Controller
 		->where('lead_id','=',$request->lead_id)
 		->update([
 		'leadstatus_id'	=> 3,
+		]);
+		DB::table('order')
+		->where('order_id','=',$request->order_id)
+		->update([
+		'orderstatus_id'	=> 4,
 		]); 
 		if($save){
 			return response()->json(['message' => 'Order Created Successfully'],200);
