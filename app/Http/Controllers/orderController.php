@@ -52,6 +52,7 @@ class orderController extends Controller
 				$payment = array(
 				'orderpayment_title'	=> $payments['orderpayment_title'],
 				'orderpayment_amount'	=> $payments['orderpayment_amount'],
+				'orderpayment_duedate'	=> $payments['orderpayment_duedate'],
 				'order_id'				=> $order_id,
 				'order_token' 			=> $order_token,
 				'status_id' 			=> 1,
@@ -163,6 +164,7 @@ class orderController extends Controller
 					$payment = array(
 					'orderpayment_title'	=> $payments['orderpayment_title'],
 					'orderpayment_amount'	=> $payments['orderpayment_amount'],
+					'orderpayment_duedate'	=> $payments['orderpayment_duedate'],
 					'order_id'				=> $request->order_id,
 					'order_token' 			=> $request->order_token,
 					'status_id' 			=> 1,
@@ -176,6 +178,7 @@ class orderController extends Controller
 					->update([
 					'orderpayment_title'	=> $payments['orderpayment_title'],
 					'orderpayment_amount'	=> $payments['orderpayment_amount'],
+					'orderpayment_duedate'	=> $payments['orderpayment_duedate'],
 					'updated_by'			=> $request->user_id,
 					'updated_at'			=> date('Y-m-d h:i:s'),
 					]);
@@ -328,9 +331,27 @@ class orderController extends Controller
 		->where('order_id','=',$request->order_id)
 		->where('status_id','=',1)
 		->get();
+		$gettask = DB::table('task')
+		->select('task_id')
+		->where('order_id','=',$request->order_id)
+		->where('status_id','=',1)
+		->get();
+		$sorttask = array();
+		if (isset($gettask)) {
+			foreach ($gettask as $gettasks) {
+				$sorttask[] = $gettasks->task_id;
+			}
+		}
+		$workattachmentdetail = DB::table('taskattachment')
+		->select('*')
+		->whereIn('task_id',$sorttask)
+		->where('attachmenttype','=',2)
+		->where('status_id','=',1)
+		->get();
 		$orderpath = URL::to('/')."/public/order/".$basicdetail->order_token.'/';
+		$taskworkpath = URL::to('/')."/public/taskwork/";
 		if($basicdetail){
-			return response()->json(['basicdetail' => $basicdetail, 'paymentdetail' => $paymentdetail, 'refrencedetail' => $refrencedetail, 'qadetail' => $qadetail, 'attachmentdetail' => $attachmentdetail, 'orderpath' => $orderpath,'message' => 'Order Detail'],200);
+			return response()->json(['basicdetail' => $basicdetail, 'paymentdetail' => $paymentdetail, 'refrencedetail' => $refrencedetail, 'qadetail' => $qadetail, 'attachmentdetail' => $attachmentdetail,'workattachmentdetail' => $workattachmentdetail, 'orderpath' => $orderpath, 'taskworkpath' => $taskworkpath,'message' => 'Order Detail'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
@@ -443,7 +464,7 @@ class orderController extends Controller
 		->where('order_pickby','=',null)
 		->where('status_id','=',1)
 		->orderBy('order_id','DESC')
-		->get();
+		->paginate(30);
 		if(isset($orderlist)){
 			return response()->json(['data' => $orderlist, 'message' => 'Forwarded Order List'],200);
 		}else{
@@ -537,6 +558,85 @@ class orderController extends Controller
 		->where('order_id','=',$request->order_id)
 		->update([
 			'orderstatus_id'	=> $request->orderstatus_id,
+		]); 
+		if($update){
+			return response()->json(['message' => 'Status Updated Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function orderprogress(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'order_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Order Id Required", 400);
+		}
+		$totaltask = DB::table('task')
+		->select('task_id')
+		->where('order_id','=',$request->order_id)
+		->where('status_id','=',1)
+		->count();
+		$completetask = DB::table('task')
+		->select('task_id')
+		->where('taskstatus_id','>=',3)
+		->where('order_id','=',$request->order_id)
+		->where('status_id','=',1)
+		->count();
+		if($totaltask){
+			return response()->json(['totaltask' => $totaltask,'completetask' => $completetask, 'message' => 'Order Progress'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function orderpaymentlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'orderpaymentstatus_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Orderstatus Id Required", 400);
+		}
+		if ($request->role_id == 1) {
+			$paymentlist = DB::table('orderpaymentdetails')
+			->select('*')
+			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+			->where('status_id','=',1)
+			->orderBy('orderpayment_duedate','DESC')
+			->paginate(30);	
+		}elseif ($request->role_id == 2) {
+			$paymentlist = DB::table('orderpaymentdetails')
+			->select('*')
+			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+			->where('status_id','=',1)
+			->orderBy('orderpayment_duedate','DESC')
+			->paginate(30);	
+		}else{
+			$paymentlist = DB::table('orderpaymentdetails')
+			->select('*')
+			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+			->where('created_by','=',$request->user_id)
+			->where('status_id','=',1)
+			->orderBy('orderpayment_duedate','DESC')
+			->paginate(30);	
+		}
+		if(isset($paymentlist)){
+			return response()->json(['data' => $paymentlist, 'message' => 'Order Payment List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Order Payment List'],200);
+		}
+	}
+	public function updateorderpaymentstatus(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'orderpayment_id'			=> 'required',
+	      'orderpaymentstatus_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$update  = DB::table('orderpayment')
+		->where('orderpayment_id','=',$request->orderpayment_id)
+		->update([
+			'orderpaymentstatus_id'	=> $request->orderpaymentstatus_id,
 		]); 
 		if($update){
 			return response()->json(['message' => 'Status Updated Successfully'],200);

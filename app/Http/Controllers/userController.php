@@ -398,7 +398,6 @@ class userController extends Controller
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
-	//
 	public function removeuserfrombrand(Request $request){
 		$validate = Validator::make($request->all(), [ 
 	      'brand_id'			=> 'required',
@@ -422,7 +421,18 @@ class userController extends Controller
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
-	//
+	public function rolewiseuserlist(Request $request){
+		$getusers = DB::table('userdetail')
+		->select('*')
+		->where('status_id','=',1)
+		->whereIn('role_id',[3,4])
+		->get();
+		if(isset($getusers)){
+			return response()->json(['data' => $getusers, 'message' => 'User List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'User List'],200);
+		}
+	}
 	public  function generateRandomString($length = 20){
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $charactersLength = strlen($characters);

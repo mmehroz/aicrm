@@ -212,7 +212,7 @@ class leadController extends Controller
 		->where('leadstatus_id','=',1)
 		->where('status_id','=',1)
 		->orderBy('lead_id','DESC')
-		->get();
+		->paginate(30);
 		if(isset($getleadlist)){
 			return response()->json(['data' => $getleadlist,'message' => 'Forwarded Lead List'],200);
 		}else{

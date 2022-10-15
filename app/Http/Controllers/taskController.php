@@ -43,6 +43,7 @@ class taskController extends Controller
 		'task_title' 		=> $request->task_title,
 		'task_description' 	=> $request->task_description,
 		'task_deadlinedate' => $request->task_deadlinedate,
+		'task_manager' 		=> $request->task_manager,
 		'task_token' 		=> $task_token,
 		'task_date' 		=> date('Y-m-d'),
 		'taskstatus_id'		=> 1,
@@ -54,16 +55,46 @@ class taskController extends Controller
 		);
 		$save = DB::table('task')->insert($basic);
 		$task_id = DB::getPdo()->lastInsertId();
+		if (!empty($request->task_manager)) {
+			$member = array(
+			'task_id'		=> $task_id,
+			'user_id'		=> $request->task_manager,
+			'status_id' 	=> 1,
+			'created_by'	=> $request->user_id,
+			'created_at'	=> date('Y-m-d h:i:s'),
+			);
+			DB::table('taskmember')->insert($member);
+		}
 		if (isset($request->member)) {
 			foreach ($request->member as $members) {
-				$member = array(
-				'task_id'		=> $task_id,
-				'user_id'		=> $members['user_id'],
-				'status_id' 	=> 1,
-				'created_by'	=> $request->user_id,
-				'created_at'	=> date('Y-m-d h:i:s'),
+				if ($request->task_manager != $members['user_id']) {
+					$member = array(
+					'task_id'		=> $task_id,
+					'user_id'		=> $members['user_id'],
+					'status_id' 	=> 1,
+					'created_by'	=> $request->user_id,
+					'created_at'	=> date('Y-m-d h:i:s'),
+					);
+					DB::table('taskmember')->insert($member);		
+				}
+			}
+		}
+		if (isset($request->orderattachment)) {
+			foreach ($request->orderattachment as $orderattachments) {
+				$orderattachment = DB::table('orderattachment')
+				->select('*')
+				->where('orderattachment_id','=',$orderattachments)
+				->first();
+				$saveattachment = array(
+				'taskattachment_name'	=> $orderattachment->orderattachment_name,
+				'task_id'				=> $task_id,
+				'task_token'			=> $task_token,
+				'attachmenttype'		=> 3,
+				'status_id' 			=> 1,
+				'created_by'			=> $request->user_id,
+				'created_at'			=> date('Y-m-d h:i:s'),
 				);
-				DB::table('taskmember')->insert($member);
+				DB::table('taskattachment')->insert($saveattachment);
 			}
 		}
 		if (isset($request->attachment)) {
@@ -117,19 +148,46 @@ class taskController extends Controller
 		'task_title' 			=> $request->task_title,
 		'task_description' 		=> $request->task_description,
 		'task_deadlinedate' 	=> $request->task_deadlinedate,
+		'task_manager' 			=> $request->task_manager,
 		'updated_by'			=> $request->user_id,
 		'updated_at'			=> date('Y-m-d h:i:s'),
 		]);
-		if (isset($request->member)) {
-			foreach ($request->member as $members) {
+		if (!empty($request->task_manager)) {
+			$checkmember = DB::table('taskmember')
+			->select('user_id')
+			->where('task_id','=',$request->task_id)
+			->where('user_id','=',$request->task_manager)
+			->where('status_id','=',1)
+			->count();
+			if ($checkmember = 0) {
 				$member = array(
 				'task_id'		=> $request->task_id,
-				'user_id'		=> $members['user_id'],
+				'user_id'		=> $request->task_manager,
 				'status_id' 	=> 1,
 				'created_by'	=> $request->user_id,
 				'created_at'	=> date('Y-m-d h:i:s'),
 				);
 				DB::table('taskmember')->insert($member);
+			}
+		}
+		if (isset($request->member)) {
+			foreach ($request->member as $members) {
+				$checkmember = DB::table('taskmember')
+				->select('user_id')
+				->where('task_id','=',$request->task_id)
+				->where('user_id','=',$members['user_id'])
+				->where('status_id','=',1)
+				->count();
+				if ($checkmember = 0) {
+					$member = array(
+					'task_id'		=> $request->task_id,
+					'user_id'		=> $members['user_id'],
+					'status_id' 	=> 1,
+					'created_by'	=> $request->user_id,
+					'created_at'	=> date('Y-m-d h:i:s'),
+					);
+					DB::table('taskmember')->insert($member);
+				}
 			}
 		}
 		if (isset($request->attachment)) {
@@ -191,13 +249,33 @@ class taskController extends Controller
 		->get();
 		$task = array();
 		foreach ($taskstatus as $taskstatuss) {
-			$task[$taskstatuss->taskstatus_name] =  DB::table('tasklist')
-			->select('*')
-			->where('brand_id','=',$request->brand_id)
-			->where('taskstatus_id','=',$taskstatuss->taskstatus_id)
-			->where('status_id','=',1)
-			->orderBy('task_id','DESC')
-			->paginate(30);
+			if ($request->role_id == 1 || $request->role_id == 2 || $request->role_id == 6) {
+				$task[$taskstatuss->taskstatus_name] =  DB::table('tasklist')
+				->select('*')
+				->where('brand_id','=',$request->brand_id)
+				->where('taskstatus_id','=',$taskstatuss->taskstatus_id)
+				->where('status_id','=',1)
+				->orderBy('task_id','DESC')
+				->paginate(30);
+			}else if ($request->role_id == 5) {
+				$task[$taskstatuss->taskstatus_name] =  DB::table('tasklist')
+				->select('*')
+				->where('ordercreator','=',$request->user_id)
+				->where('brand_id','=',$request->brand_id)
+				->where('taskstatus_id','=',$taskstatuss->taskstatus_id)
+				->where('status_id','=',1)
+				->orderBy('task_id','DESC')
+				->paginate(30);
+			}else{
+				$task[$taskstatuss->taskstatus_name] =  DB::table('memberstasklist')
+				->select('*')
+				->where('brand_id','=',$request->brand_id)
+				->where('taskstatus_id','=',$taskstatuss->taskstatus_id)
+				->where('status_id','=',1)
+				->groupBy('task_id')
+				->orderBy('task_id','DESC')
+				->paginate(30);
+			}
 		}
 		if(isset($task)){
 			return response()->json(['data' => $task, 'message' => 'Task List'],200);
@@ -212,7 +290,7 @@ class taskController extends Controller
      	if ($validate->fails()) {    
 			return response()->json("Task Id Required", 400);
 		}
-		$basicdetail = DB::table('task')
+		$basicdetail = DB::table('tasklist')
 		->select('*')
 		->where('task_id','=',$request->task_id)
 		->where('status_id','=',1)
@@ -220,12 +298,20 @@ class taskController extends Controller
 		$attachmentdetail = DB::table('taskattachment')
 		->select('*')
 		->where('task_id','=',$request->task_id)
+		->where('attachmenttype','=',1)
+		->where('status_id','=',1)
+		->get();
+		$forwardedattachmentdetail = DB::table('taskattachment')
+		->select('*')
+		->where('task_id','=',$request->task_id)
+		->where('attachmenttype','=',3)
 		->where('status_id','=',1)
 		->get();
 		$taskpath = URL::to('/')."/public/task/".$basicdetail->task_token."/";
+		$forwardedtaskpath = URL::to('/')."/public/order/".$basicdetail->order_token."/";
 		$memberpath = URL::to('/')."/public/user_picture/";
 		if($basicdetail){
-			return response()->json(['basicdetail' => $basicdetail, 'attachmentdetail' => $attachmentdetail, 'taskpath' => $taskpath, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
+			return response()->json(['basicdetail' => $basicdetail, 'attachmentdetail' => $attachmentdetail, 'forwardedattachmentdetail' => $forwardedattachmentdetail, 'taskpath' => $taskpath, 'forwardedtaskpath' => $forwardedtaskpath, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
@@ -247,13 +333,29 @@ class taskController extends Controller
 			$sorttaskmember[] = $taskmembers->user_id;
 		}
 		$memberdetail = DB::table('taskmemberdetail')
-		->select('user_id','user_name','user_email','user_picture','taskmember_id')
+		->select('*')
 		->where('task_id','=',$request->task_id)
 		->where('status_id','=',1)
 		->get();
+		$taskmanager = DB::table('task')
+		->select('task_manager')
+		->where('task_id','=',$request->task_id)
+		->where('status_id','=',1)
+		->first();
+		$index=0;
+		$sorttaskmemberdetails = array();
+		foreach ($memberdetail as $memberdetails) {
+			if ($taskmanager->task_manager == $memberdetails->user_id) {
+				$memberdetail[$index]->ismanager = "Manager";
+			}else{
+				$memberdetail[$index]->ismanager = "";
+			}
+			$sorttaskmemberdetails[$index] = $memberdetails;
+			$index++;
+		}
 		$memberpath = URL::to('/')."/public/user_picture/";
 		if($memberdetail){
-			return response()->json(['membersid' => $sorttaskmember, 'memberdetail' => $memberdetail, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
+			return response()->json(['membersid' => $sorttaskmember, 'memberdetail' => $sorttaskmemberdetails, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
 		}else{
 			return response()->json(['membersid' => $emptyarray, 'memberdetail' => $emptyarray,'message' => 'Task Detail'],200);
 		}
@@ -522,6 +624,66 @@ class taskController extends Controller
 		]);
 		if($move){
 			return response()->json(['message' => 'Task Move Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function submitwork(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'task_id' 	=> 'required',
+	      'task_token' 	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		if (isset($request->attachment)) {
+			// dd($attachment);
+			$attachment = $request->attachment;
+	    	$index = 0 ;
+	    	$filename = array();
+			foreach($attachment as $attachments){
+				$saveattachment = array();
+	    		if($attachments->isValid()){
+	    			$number = rand(1,999);
+			        $numb = $number / 7 ;
+			        $foldername = $request->task_token;
+					$extension = $attachments->getClientOriginalExtension();
+		            $filename = $attachments->getClientOriginalName();
+		            $filename = $attachments->move(public_path('taskwork/'.$foldername),$filename);
+		            $filename = $attachments->getClientOriginalName();
+				  	$saveattachment = array(
+					'taskattachment_name'	=> $filename,
+					'task_id'				=> $request->task_id,
+					'task_token'			=> $request->task_token,
+					'attachmenttype'		=> 2,
+					'status_id' 			=> 1,
+					'created_by'			=> $request->user_id,
+					'created_at'			=> date('Y-m-d h:i:s'),
+					);
+			    }else{
+					return response()->json("Invalid File", 400);
+				}
+	    	DB::table('taskattachment')->insert($saveattachment);
+	    	}
+    	}
+		return response()->json(['message' => 'Work Submited Successfully'],200);
+	}
+	public function taskworkattachment(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'task_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Task Id Required", 400);
+		}
+		$workattachmentdetail = DB::table('taskattachmentdetails')
+		->select('*')
+		->where('task_id','=',$request->task_id)
+		->where('attachmenttype','=',2)
+		->where('status_id','=',1)
+		->get();
+		$taskworkpath = URL::to('/')."/public/taskwork/";
+		if($workattachmentdetail){
+			return response()->json(['workattachmentdetail' => $workattachmentdetail, 'taskworkpath' => $taskworkpath, 'message' => 'Task Work Attachments'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

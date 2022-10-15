@@ -10,6 +10,7 @@ use App\Http\Controllers\leadController;
 use App\Http\Controllers\orderController;
 use App\Http\Controllers\taskController;
 use App\Http\Controllers\ppcController;
+use App\Http\Controllers\dashboardController;
 /*
 |---------------------------------------------------------------------	-----
 | API Routes
@@ -56,6 +57,7 @@ Route::any('/userdetails', [userController::class, 'userdetails']);
 Route::any('/deleteuser', [userController::class, 'deleteuser']);
 Route::any('/updateusercoverpicture', [userController::class, 'updateusercoverpicture']);
 Route::any('/removeuserfrombrand', [userController::class, 'removeuserfrombrand']);
+Route::any('/rolewiseuserlist', [userController::class, 'rolewiseuserlist']);
 
 Route::any('/createlead', [leadController::class, 'createlead']);
 Route::any('/updatelead', [leadController::class, 'updatelead']);
@@ -81,6 +83,9 @@ Route::any('/pickedorderlist', [orderController::class, 'pickedorderlist']);
 Route::any('/pickorder', [orderController::class, 'pickorder']);
 Route::any('/unpickorder', [orderController::class, 'unpickorder']);
 Route::any('/updateorderstatus', [orderController::class, 'updateorderstatus']);
+Route::any('/orderprogress', [orderController::class, 'orderprogress']);
+Route::any('/orderpaymentlist', [orderController::class, 'orderpaymentlist']);
+Route::any('/updateorderpaymentstatus', [orderController::class, 'updateorderpaymentstatus']);
 
 Route::any('/creattask', [taskController::class, 'creattask']);
 Route::any('/updatetask', [taskController::class, 'updatetask']);
@@ -97,11 +102,24 @@ Route::any('/sendcommenttotask', [taskController::class, 'sendcommenttotask']);
 Route::any('/sendreply', [taskController::class, 'sendreply']);
 Route::any('/commentreplydetail', [taskController::class, 'commentreplydetail']);
 Route::any('/movetask', [taskController::class, 'movetask']);
+Route::any('/submitwork', [taskController::class, 'submitwork']);
+Route::any('/taskworkattachment', [taskController::class, 'taskworkattachment']);
 
 Route::any('/addppc', [ppcController::class, 'addppc']);
 Route::any('/updateppc', [ppcController::class, 'updateppc']);
 Route::any('/ppclist', [ppcController::class, 'ppclist']);
 Route::any('/ppcdetail', [ppcController::class, 'ppcdetail']);
 Route::any('/deleteppc', [ppcController::class, 'deleteppc']);
+
+Route::any('/assignppc', [ppcController::class, 'assignppc']);
+Route::any('/updateassignppc', [ppcController::class, 'updateassignppc']);
+Route::any('/assignppclist', [ppcController::class, 'assignppclist']);
+Route::any('/assignppcdetail', [ppcController::class, 'assignppcdetail']);
+Route::any('/deleteassignppc', [ppcController::class, 'deleteassignppc']);
+Route::any('/monthlyppcbudget', [ppcController::class, 'monthlyppcbudget']);
+
+Route::any('/admindashboard', [dashboardController::class, 'admindashboard']);
+Route::any('/adminbranddetails', [dashboardController::class, 'adminbranddetails']);
+Route::any('/portaladmindashboard', [dashboardController::class, 'portaladmindashboard']);
 });
 });

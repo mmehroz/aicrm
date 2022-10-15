@@ -184,7 +184,7 @@ class brandController extends Controller
 		'brand_name' 			=> $request->brand_name,
 		'brand_email' 			=> $request->brand_email,
 		'brand_website' 		=> $request->brand_website,
-		'brandtype_id'				=> $request->brandtype_id,
+		'brandtype_id'			=> $request->brandtype_id,
 		'brand_description'		=> $request->brand_description,
 		'updated_by'	 		=> $request->user_id,
 		'updated_at'	 		=> date('Y-m-d h:i:s'),
@@ -285,8 +285,9 @@ class brandController extends Controller
 			->where('status_id','=',1)
 			->get();
 		}
+		$profilepath = URL::to('/')."/public/user_picture/";
 		if(isset($brandlist)){
-			return response()->json(['data' => $brandlist, 'message' => 'User Brand List'],200);
+			return response()->json(['data' => $brandlist, 'profilepath' => $profilepath,'message' => 'User Brand List'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'Brand List'],200);
 		}
@@ -300,7 +301,7 @@ class brandController extends Controller
 		}
 		$brandid = DB::table('userbarnd')
 		->select('brand_id')
-		->where('user_id','=',$request->user_id)
+		->where('user_id','=',$request->edituser_id)
 		->where('status_id','=',1)
 		->get();
 		// dd($brandid);
