@@ -425,7 +425,7 @@ class userController extends Controller
 		$getusers = DB::table('userdetail')
 		->select('*')
 		->where('status_id','=',1)
-		->whereIn('role_id',[3,4])
+		->whereIn('role_id',[4,5])
 		->get();
 		if(isset($getusers)){
 			return response()->json(['data' => $getusers, 'message' => 'User List'],200);

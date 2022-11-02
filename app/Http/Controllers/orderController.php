@@ -478,7 +478,7 @@ class orderController extends Controller
      	if ($validate->fails()) {
 			return response()->json("Order Status Id Required", 400);
 		}
-		if ($request->role_id == 6){
+		if ($request->role_id == 10){
 			$orderlist = DB::table('basicorderdetail')
 			->select('*')
 			->where('orderstatus_id','=',$request->orderstatus_id)
@@ -486,7 +486,7 @@ class orderController extends Controller
 			->where('status_id','=',1)
 			->orderBy('order_id','DESC')
 			->paginate(30);
-		}else if ($request->role_id == 5){
+		}else if ($request->role_id == 7){
 			$orderlist = DB::table('basicorderdetail')
 			->select('*')
 			->where('orderstatus_id','=',$request->orderstatus_id)
@@ -603,7 +603,7 @@ class orderController extends Controller
 			->where('status_id','=',1)
 			->orderBy('orderpayment_duedate','DESC')
 			->paginate(30);	
-		}elseif ($request->role_id == 2) {
+		}elseif ($request->role_id == 3) {
 			$paymentlist = DB::table('orderpaymentdetails')
 			->select('*')
 			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)

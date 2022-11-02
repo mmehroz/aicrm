@@ -134,7 +134,7 @@ class taskController extends Controller
 	public function updatetask(Request $request){
 		$validate = Validator::make($request->all(), [ 
 	      'task_id' 			=> 'required',
-	      'task_token' 			=> 'required',
+	      // 'task_token' 			=> 'required',
 	      'task_title'	 		=> 'required',
 	      'task_description'	=> 'required',
 	      'task_deadlinedate'	=> 'required',
@@ -142,6 +142,10 @@ class taskController extends Controller
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
+		$task_token = DB::table('task')
+		->select('task_token')
+		->where('task_id','=',$request->task_id)
+		->first();
 		$update  = DB::table('task')
 		->where('task_id','=',$request->task_id)
 		->update([
@@ -199,7 +203,7 @@ class taskController extends Controller
 	    		if($attachments->isValid()){
 	    			$number = rand(1,999);
 			        $numb = $number / 7 ;
-			        $foldername = $request->task_token;
+			        $foldername = $task_token;
 					$extension = $attachments->getClientOriginalExtension();
 		            $filename = $attachments->getClientOriginalName();
 		            $filename = $attachments->move(public_path('task/'.$foldername),$filename);
@@ -207,7 +211,7 @@ class taskController extends Controller
 				  	$saveattachment = array(
 					'taskattachment_name'	=> $filename,
 					'task_id'				=> $request->task_id,
-					'task_token'			=> $request->task_token,
+					'task_token'			=> $task_token,
 					'status_id' 			=> 1,
 					'created_by'			=> $request->user_id,
 					'created_at'			=> date('Y-m-d h:i:s'),

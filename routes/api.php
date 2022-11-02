@@ -11,6 +11,7 @@ use App\Http\Controllers\orderController;
 use App\Http\Controllers\taskController;
 use App\Http\Controllers\ppcController;
 use App\Http\Controllers\dashboardController;
+use App\Http\Controllers\billingController;
 /*
 |---------------------------------------------------------------------	-----
 | API Routes
@@ -121,5 +122,24 @@ Route::any('/monthlyppcbudget', [ppcController::class, 'monthlyppcbudget']);
 Route::any('/admindashboard', [dashboardController::class, 'admindashboard']);
 Route::any('/adminbranddetails', [dashboardController::class, 'adminbranddetails']);
 Route::any('/portaladmindashboard', [dashboardController::class, 'portaladmindashboard']);
+Route::any('/upcomingpaymentdashboard', [dashboardController::class, 'upcomingpaymentdashboard']);
+
+Route::any('/forwardedpaymentlist', [billingController::class, 'forwardedpaymentlist']);
+Route::any('/pickedpaymentlist', [billingController::class, 'pickedpaymentlist']);
+Route::any('/pickpayment', [billingController::class, 'pickpayment']);
+Route::any('/unpickpayment', [billingController::class, 'unpickpayment']);
+Route::any('/paymentdetails', [billingController::class, 'paymentdetails']);
+Route::any('/updatepaymentstatus', [billingController::class, 'updatepaymentstatus']);
+Route::any('/mergedeal', [billingController::class, 'mergedeal']);
+Route::any('/unmergedeal', [billingController::class, 'unmergedeal']);
+Route::any('/mergepickedpaymentlist', [billingController::class, 'mergepickedpaymentlist']);
+Route::any('/statuswisepaymentlist', [billingController::class, 'statuswisepaymentlist']);
+Route::any('/mergestatuswisepaymentlist', [billingController::class, 'mergestatuswisepaymentlist']);
+Route::any('/savefreshlead', [billingController::class, 'savefreshlead']);
+Route::any('/freshleadlist', [billingController::class, 'freshleadlist']);
+Route::any('/savefreshleadfollowup', [billingController::class, 'savefreshleadfollowup']);
+Route::any('/getfreshleadfollowup', [billingController::class, 'getfreshleadfollowup']);
+Route::any('/merchantlist', [billingController::class, 'merchantlist']);
+Route::any('/merchantlist', [billingController::class, 'merchantlist']);
 });
 });
