@@ -12,20 +12,11 @@ use App\Http\Controllers\taskController;
 use App\Http\Controllers\ppcController;
 use App\Http\Controllers\dashboardController;
 use App\Http\Controllers\billingController;
-/*
-|---------------------------------------------------------------------	-----
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
+use App\Http\Controllers\billingmerchantController;
+use App\Http\Controllers\freshleadController;
+use App\Http\Controllers\reportController;
+use App\Http\Controllers\targetController;
 
-// Route::middleware('auth:api')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
 Route::middleware('cors')->group(function(){
 Route::any('/login', [loginController::class, 'login']);
 Route::middleware('login.check')->group(function(){	
@@ -135,11 +126,30 @@ Route::any('/unmergedeal', [billingController::class, 'unmergedeal']);
 Route::any('/mergepickedpaymentlist', [billingController::class, 'mergepickedpaymentlist']);
 Route::any('/statuswisepaymentlist', [billingController::class, 'statuswisepaymentlist']);
 Route::any('/mergestatuswisepaymentlist', [billingController::class, 'mergestatuswisepaymentlist']);
-Route::any('/savefreshlead', [billingController::class, 'savefreshlead']);
-Route::any('/freshleadlist', [billingController::class, 'freshleadlist']);
-Route::any('/savefreshleadfollowup', [billingController::class, 'savefreshleadfollowup']);
-Route::any('/getfreshleadfollowup', [billingController::class, 'getfreshleadfollowup']);
-Route::any('/merchantlist', [billingController::class, 'merchantlist']);
-Route::any('/merchantlist', [billingController::class, 'merchantlist']);
+Route::any('/paymentamount', [billingController::class, 'paymentamount']);
+
+Route::any('/savefreshlead', [freshleadController::class, 'savefreshlead']);
+Route::any('/freshleadlist', [freshleadController::class, 'freshleadlist']);
+Route::any('/savefreshleadfollowup', [freshleadController::class, 'savefreshleadfollowup']);
+Route::any('/getfreshleadfollowup', [freshleadController::class, 'getfreshleadfollowup']);
+
+Route::any('/addbillingmerchant', [billingmerchantController::class, 'addbillingmerchant']);
+Route::any('/updatebillingmerchant', [billingmerchantController::class, 'updatebillingmerchant']);
+Route::any('/billingmerchantlist', [billingmerchantController::class, 'billingmerchantlist']);
+Route::any('/billingmerchantdetails', [billingmerchantController::class, 'billingmerchantdetails']);
+Route::any('/deletebillingmerchant', [billingmerchantController::class, 'deletebillingmerchant']);
+Route::any('/addwithdrawalamount', [billingmerchantController::class, 'addwithdrawalamount']);
+Route::any('/withdrawalamountlist', [billingmerchantController::class, 'withdrawalamountlist']);
+
+Route::any('/salestargetreport', [reportController::class, 'salestargetreport']);
+Route::any('/commissionreport', [reportController::class, 'commissionreport']);
+
+Route::any('/addtarget', [targetController::class, 'addtarget']);
+Route::any('/updatetarget', [targetController::class, 'updatetarget']);
+Route::any('/nontargetlist', [targetController::class, 'nontargetlist']);
+Route::any('/targetlist', [targetController::class, 'targetlist']);
+Route::any('/usertargetdetails', [targetController::class, 'usertargetdetails']);
+Route::any('/addcommission', [targetController::class, 'addcommission']);
+Route::any('/commissionlist', [targetController::class, 'commissionlist']);
 });
 });

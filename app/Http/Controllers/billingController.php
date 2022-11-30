@@ -112,7 +112,8 @@ class billingController extends Controller
 		$validate = Validator::make($request->all(), [ 
 	      'from'					=> 'required',
 	      'to'						=> 'required',
-	      'orderpaymentstatus_id'	=> 'required',
+		  'brand_id'				=> 'required', 
+		  'orderpaymentstatus_id'	=> 'required',
 	    ]);
      	if ($validate->fails()) {
 			return response()->json("From And To Date Is Required", 400);
@@ -129,6 +130,7 @@ class billingController extends Controller
 		->select('*')
 		->whereNotIn('order_token', $getmergedealtoken)
 		->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+		->where('brand_id','=',$request->brand_id)
 		->where('orderpayment_pickby','=',$request->user_id)
 		->whereBetween('orderpayment_date',[$request->from, $request->to])
 		->where('status_id','=',1)
@@ -145,7 +147,8 @@ class billingController extends Controller
 		$validate = Validator::make($request->all(), [ 
 	      'from'					=> 'required',
 	      'to'						=> 'required',
-	      'orderpaymentstatus_id'	=> 'required',
+	      'brand_id'				=> 'required',
+		  'orderpaymentstatus_id'	=> 'required',
 	    ]);
      	if ($validate->fails()) {
 			return response()->json($validate->errors(), 400);
@@ -162,6 +165,7 @@ class billingController extends Controller
 		->select('*')
 		->whereIn('order_token', $getmergedealtoken)
 		->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+		->where('brand_id','=',$request->brand_id)
 		->where('orderpayment_pickby','=',$request->user_id)
 		->whereBetween('orderpayment_date',[$request->from, $request->to])
 		->where('status_id','=',1)
@@ -358,7 +362,7 @@ class billingController extends Controller
 					'orderpayment_comment'	=> $request->orderpayment_comment,
 					'orderpaymentstatus_id'	=> $request->orderpaymentstatus_id,
 				]); 
-			}else{
+			}else{	
 				$update  = DB::table('orderpayment')
 				->whereIn('order_token',$request->order_id)
 				->update([
@@ -411,115 +415,6 @@ class billingController extends Controller
 			return response()->json("Oops! Something went wrong", 400);
 		}
 	}
-	public function merchantlist(Request $request){
-		$merchantlist = DB::table('merchant')
-		->select('*')
-		->where('status_id','=',1)
-		->get();	
-		if(isset($merchantlist)){
-			return response()->json(['data' => $merchantlist, 'message' => 'Merchant List'],200);
-		}else{
-			return response()->json(['data' => $emptyarray, 'message' => 'Merchant List'],200);
-		}
-	}
-	public function savefreshlead(Request $request){
-		$validate = Validator::make($request->all(), [ 
-	    	'freshlead_name'  		=> 'required',
-		    'freshlead_email' 		=> 'required',
-		    'freshlead_phone' 		=> 'required',
-		]);
-		if ($validate->fails()) {    
-			return response()->json($validate->errors(), 400);
-		}
-		$adds = array(
-		'freshlead_name' 			=> $request->freshlead_name,
-		'freshlead_email'			=> $request->freshlead_email,
-		'freshlead_phone' 			=> $request->freshlead_phone,
-		'freshlead_otherdetail' 	=> $request->freshlead_otherdetail,
-		'freshlead_date'			=> date('Y-m-d'),
-		'brand_id' 					=> $request->brandid,
-		'status_id'	 				=> 1,
-		'created_by'		 		=> $request->user_id,
-		'created_at'	 			=> date('Y-m-d h:i:s'),
-		);
-		$save = DB::table('freshlead')->insert($adds);
-		if($save){
-			return response()->json(['message' => 'Lead Saved Successfully'],200);
-		}else{
-			return response()->json("Oops! Something Went Wrong", 400);
-		}
-	}
-	public function freshleadlist(Request $request){
-		$validate = Validator::make($request->all(), [ 
-	      'from'	=> 'required',
-	      'to'		=> 'required',
-	    ]);
-     	if ($validate->fails()) {    
-			return response()->json($validate->errors(), 400);
-		}
-		if ($request->role_id == 1 || $request->role_id == 3) {
-			$getorderlist = DB::table('freshlead')
-			->select('*')
-			->where('brand_id','=',$request->brandid)
-			->whereBetween('freshlead_date',[$request->from, $request->to])
-			->where('status_id','=',1)
-			->get();		
-		}else{
-			$getorderlist = DB::table('freshlead')
-			->select('*')
-			->where('brand_id','=',$request->brandid)
-			->where('created_by','=',$request->user_id)
-			->whereBetween('freshlead_date',[$request->from, $request->to])
-			->where('status_id','=',1)
-			->get();		
-		}
-		if($getorderlist){
-			return response()->json(['data' => $getorderlist,'message' => 'Save Lead List'],200);
-		}else{
-			$emptyarray = array();
-			return response()->json(['data' => $emptyarray,'message' => 'Lead List'],200);
-		}
-	}
-	public function savefreshleadfollowup(Request $request){
-		$validate = Validator::make($request->all(), [ 
-	      'leadfollowup_comment'	=> 'required',
-	      'freshlead_id'			=> 'required',
-	    ]);
-     	if ($validate->fails()) {    
-			return response()->json($validate->errors(), 400);
-		}
-		$adds[] = array(
-		'leadfollowup_comment' 	=> $request->leadfollowup_comment,
-		'freshlead_id' 			=> $request->freshlead_id,
-		'status_id'		 		=> 1,
-		'created_by'	 		=> $request->user_id,
-		'created_at'	 		=> date('Y-m-d h:i:s'),
-		);
-		$save = DB::table('leadfollowup')->insert($adds);
-		if($save){
-			return response()->json(['message' => 'Followup Saved Successfully'],200);
-		}else{
-			return response()->json("Oops! Something went wrong", 400);
-		}
-	}
-	public function getfreshleadfollowup(Request $request){
-		$validate = Validator::make($request->all(), [ 
-	      'freshlead_id'	=> 'required',
-	    ]);
-	 	if ($validate->fails()) {    
-			return response()->json($validate->errors(), 400);
-		}
-		$getdealfollowup = DB::table('getleadfollowup')
-		->select('*')
-		->where('freshlead_id','=',$request->freshlead_id)
-		->where('status_id','=',1)
-		->get();
-		if($getdealfollowup){
-			return response()->json(['data' => $getdealfollowup,'message' => 'Followup List'],200);
-		}else{
-			return response()->json("Oops! Something Went Wrong", 400);
-		}
-	}
 	public function paymentamount(Request $request){
 		$validate = Validator::make($request->all(), [ 
 	      'order_id'	=> 'required',
@@ -531,27 +426,27 @@ class billingController extends Controller
 		if ($request->order_type == "Merge") {
 			$getmergedeal = DB::table('mergedeal')
 			->select('order_token')
+			->where('mergedeal_token','=',$request->order_id)
 			->where('status_id','=',1)
 			->get();
 			$getmergedealtoken = array();
 			foreach ($getmergedeal as $getmergedeals) {
 				$getmergedealtoken[] = $getmergedeals->order_token;
 			}	
-			$getdealfollowup = DB::table('orderpayment')
+			$paymentamount = DB::table('orderpayment')
 			->select('orderpayment_amount')
 			->whereIn('order_token',$getmergedealtoken)
 			->where('status_id','=',1)
 			->sum('orderpayment_amount');
 		}else{
-			$getdealfollowup = DB::table('orderpayment')
+			$paymentamount = DB::table('orderpayment')
 			->select('orderpayment_amount')
-			->whereIn('order_token',$request->order_id)
+			->where('order_token','=',$request->order_id)
 			->where('status_id','=',1)
 			->sum('orderpayment_amount');
 		}
-		
-		if($getdealfollowup){
-			return response()->json(['data' => $getdealfollowup,'message' => 'Followup List'],200);
+		if($paymentamount){
+			return response()->json(['totalamount' => $paymentamount,'message' => 'Order Payment Amount'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

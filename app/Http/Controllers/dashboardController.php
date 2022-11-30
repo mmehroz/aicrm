@@ -404,7 +404,7 @@ class dashboardController extends Controller
 		->select('expense_title','expense_amount')
 		->where('expense_yearandmonth','=',$request->yearmonth)
 		->where('expense_isrecuring','=',1)
-		->where('expensetype_id','=',4)
+		->where('expensetype_id','=',2)
 		->where('status_id','=',2)
 		->get();
 		$vanexpense = DB::connection('mysql2')->table('expense')
@@ -418,7 +418,7 @@ class dashboardController extends Controller
 		->select('expense_title','expense_amount')
 		->where('expense_yearandmonth','=',$request->yearmonth)
 		->where('expense_isrecuring','=',0)
-		->where('expensetype_id','!=',4)
+		->where('expensetype_id','=',3)
 		->where('status_id','=',2)
 		->get();
 		$sumfixexpense = DB::connection('mysql2')->table('expense')
