@@ -21,115 +21,122 @@ class orderController extends Controller
 	public $emptyarray = array();
 	public function createorder(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'order_title' 			=> 'required',
-	      'order_deadlinedate' 		=> 'required',
-	      'order_description' 		=> 'required',
-	      'ordertype_id'			=> 'required',
-	      'orderstatus_id'			=> 'required',
-	    ]);
+		  'masterOrder'		=> 'required',
+	      'lead_id'			=> 'required',
+		]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
 		$order_token = openssl_random_pseudo_bytes(7);
-    	$order_token = bin2hex($order_token);
-		$basic = array(
-		'order_title' 			=> $request->order_title,
-		'order_deadlinedate' 	=> $request->order_deadlinedate,
-		'order_description' 	=> $request->order_description,
-		'order_token' 			=> $order_token,
-		'order_date' 			=> date('Y-m-d'),
-		'ordertype_id'			=> $request->ordertype_id,
-		'lead_id'				=> $request->lead_id,
-		'orderstatus_id'		=> $request->orderstatus_id,
-		'status_id'				=> 1,
-		'created_by'			=> $request->user_id,
-		'created_at'			=> date('Y-m-d h:i:s'),
-		);
-		$save = DB::table('order')->insert($basic);
-		$order_id = DB::getPdo()->lastInsertId();
-		if (isset($request->payment)) {
-			foreach ($request->payment as $payments) {
-				$payment = array(
-				'orderpayment_title'	=> $payments['orderpayment_title'],
-				'orderpayment_amount'	=> $payments['orderpayment_amount'],
-				'orderpayment_duedate'	=> $payments['orderpayment_duedate'],
-				'order_id'				=> $order_id,
-				'order_token' 			=> $order_token,
-				'status_id' 			=> 1,
-				'created_by'			=> $request->user_id,
-				'created_at'			=> date('Y-m-d h:i:s'),
-				);
-				DB::table('orderpayment')->insert($payment);
+		$order_token = bin2hex($order_token);
+		$multiple = $request->masterOrder;
+		$brand = DB::table('lead')
+		->select('brand_id')
+		->where('lead_id','=',$request->lead_id)
+		->where('status_id','=',1)
+		->first();
+		foreach ($multiple as $multiples) {
+			$basic = array(
+			'order_title' 			=> $multiples['order_title'],
+			'order_deadlinedate' 	=> $multiples['order_deadlinedate'],
+			'order_description' 	=> $multiples['order_description'],
+			'order_assignto'		=> $multiples['order_assignto'],
+			'order_token' 			=> $order_token,
+			'order_date' 			=> date('Y-m-d'),
+			'ordertype_id'			=> $multiples['ordertype_id'],
+			'lead_id'				=> $request->lead_id,
+			'brand_id'				=> $brand->brand_id,
+			'orderstatus_id'		=> 4,
+			'status_id'				=> 1,
+			'created_by'			=> $request->user_id,
+			'created_at'			=> date('Y-m-d h:i:s'),
+			);
+			$save = DB::table('order')->insert($basic);
+			$order_id = DB::getPdo()->lastInsertId();
+			if (isset($multiples['payment'])) {
+				foreach ($multiples['payment'] as $payments) {
+					$payment = array(
+					'orderpayment_title'	=> $payments['orderpayment_title'],
+					'orderpayment_amount'	=> $payments['orderpayment_amount'],
+					'orderpayment_duedate'	=> $payments['orderpayment_duedate'],
+					'order_id'				=> $order_id,
+					'order_token' 			=> $order_token,
+					'status_id' 			=> 1,
+					'created_by'			=> $request->user_id,
+					'created_at'			=> date('Y-m-d h:i:s'),
+					);
+					DB::table('orderpayment')->insert($payment);
+				}
 			}
+			if (isset($multiples['refrence'])) {
+				foreach ($multiples['refrence'] as $refrences) {
+					$refrence = array(
+					'orderrefrence_title'	=> $refrences['orderrefrence_title'],
+					'orderrefrence_link'	=> $refrences['orderrefrence_link'],
+					'order_id'				=> $order_id,
+					'order_token' 			=> $order_token,
+					'status_id' 			=> 1,
+					'created_by'			=> $request->user_id,
+					'created_at'			=> date('Y-m-d h:i:s'),
+					);
+					DB::table('orderrefrence')->insert($refrence);
+				}
+			}
+			if (isset($multiples['question'])) {
+				foreach ($multiples['question'] as $questions) {
+					$question = array(
+					'orderqa_answer'	=> $questions['orderqa_answer'],
+					'orderquestion_id'	=> $questions['orderquestion_id'],
+					'order_id'			=> $order_id,
+					'order_token' 		=> $order_token,
+					'status_id' 		=> 1,
+					'created_by'		=> $request->user_id,
+					'created_at'		=> date('Y-m-d h:i:s'),
+					);
+					DB::table('orderqa')->insert($question);
+				}
+			}
+			if (isset($multiples['attachment'])) {
+			$attachment = $multiples['attachment'];
+			$index = 0 ;
+			$filename = array();
+			foreach($attachment as $attachments){
+				$saveattachment = array();
+				if($attachments->isValid()){
+					$number = rand(1,999);
+					$numb = $number / 7 ;
+					$foldername = $order_token;
+					$extension = $attachments->getClientOriginalExtension();
+					$filename = $attachments->getClientOriginalName();
+					$filename = $attachments->move(public_path('order/'.$foldername),$filename);
+					$filename = $attachments->getClientOriginalName();
+					$saveattachment = array(
+					'orderattachment_name'	=> $filename,
+					'order_id'				=> $order_id,
+					'order_token'			=> $order_token,
+					'status_id' 			=> 1,
+					'created_by'			=> $request->user_id,
+					'created_at'			=> date('Y-m-d h:i:s'),
+					);
+				}else{
+					return response()->json("Invalid File", 400);
+				}
+			DB::table('orderattachment')->insert($saveattachment);
+			}
+			}
+			DB::table('order')
+			->where('order_id','=',$order_id)
+			->update([
+			'orderstatus_id'	=> 4,
+			]);
 		}
-		if (isset($request->refrence)) {
-			foreach ($request->refrence as $refrences) {
-				$refrence = array(
-				'orderrefrence_title'	=> $refrences['orderrefrence_title'],
-				'orderrefrence_link'	=> $refrences['orderrefrence_link'],
-				'order_id'				=> $order_id,
-				'order_token' 			=> $order_token,
-				'status_id' 			=> 1,
-				'created_by'			=> $request->user_id,
-				'created_at'			=> date('Y-m-d h:i:s'),
-				);
-				DB::table('orderrefrence')->insert($refrence);
-			}
-		}
-		if (isset($request->question)) {
-			foreach ($request->question as $questions) {
-				$question = array(
-				'orderqa_answer'	=> $questions['orderqa_answer'],
-				'orderquestion_id'	=> $questions['orderquestion_id'],
-				'order_id'			=> $order_id,
-				'order_token' 		=> $order_token,
-				'status_id' 		=> 1,
-				'created_by'		=> $request->user_id,
-				'created_at'		=> date('Y-m-d h:i:s'),
-				);
-				DB::table('orderqa')->insert($question);
-			}
-		}
-		if (isset($request->attachment)) {
-		$attachment = $request->attachment;
-    	$index = 0 ;
-    	$filename = array();
-		foreach($attachment as $attachments){
-			$saveattachment = array();
-    		if($attachments->isValid()){
-    			$number = rand(1,999);
-		        $numb = $number / 7 ;
-		        $foldername = $order_token;
-				$extension = $attachments->getClientOriginalExtension();
-	            $filename = $attachments->getClientOriginalName();
-	            $filename = $attachments->move(public_path('order/'.$foldername),$filename);
-	            $filename = $attachments->getClientOriginalName();
-			  	$saveattachment = array(
-				'orderattachment_name'	=> $filename,
-				'order_id'				=> $order_id,
-				'order_token'			=> $order_token,
-				'status_id' 			=> 1,
-				'created_by'			=> $request->user_id,
-				'created_at'			=> date('Y-m-d h:i:s'),
-				);
-		    }else{
-				return response()->json("Invalid File", 400);
-			}
-    	DB::table('orderattachment')->insert($saveattachment);
-    	}
-    	}
-    	DB::table('lead')
+		DB::table('lead')
 		->where('lead_id','=',$request->lead_id)
 		->update([
 		'leadstatus_id'	=> 3,
 		]);
-		DB::table('order')
-		->where('order_id','=',$request->order_id)
-		->update([
-		'orderstatus_id'	=> 4,
-		]); 
 		if($save){
-			return response()->json(['message' => 'Order Created Successfully'],200);
+			return response()->json(['message' => 'Order Created Successfully', 'order_token' => $order_token],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
@@ -279,6 +286,7 @@ class orderController extends Controller
 		if ($request->role_id == 1) {
 			$orderlist = DB::table('basicorderdetail')
 			->select('*')
+			->groupBy('order_token')
 			->where('brand_id','=',$request->brand_id)
 			->where('status_id','=',1)
 			->orderBy('order_id','DESC')
@@ -286,6 +294,7 @@ class orderController extends Controller
 		}else{
 			$orderlist = DB::table('basicorderdetail')
 			->select('*')
+			->groupBy('order_token')
 			->where('brand_id','=',$request->brand_id)
 			->where('orderstatus_id','<',4)
 			->where('created_by','=',$request->user_id)
@@ -350,14 +359,19 @@ class orderController extends Controller
 		->get();
 		$orderpath = URL::to('/')."/public/order/".$basicdetail->order_token.'/';
 		$taskworkpath = URL::to('/')."/public/taskwork/";
+		$countqa = count($qadetail);
 		if($basicdetail){
-			return response()->json(['basicdetail' => $basicdetail, 'paymentdetail' => $paymentdetail, 'refrencedetail' => $refrencedetail, 'qadetail' => $qadetail, 'attachmentdetail' => $attachmentdetail,'workattachmentdetail' => $workattachmentdetail, 'orderpath' => $orderpath, 'taskworkpath' => $taskworkpath,'message' => 'Order Detail'],200);
+			if($countqa == 0){
+				return response()->json(['basicdetail' => $basicdetail, 'paymentdetail' => $paymentdetail, 'refrencedetail' => $refrencedetail, 'attachmentdetail' => $attachmentdetail,'workattachmentdetail' => $workattachmentdetail, 'orderpath' => $orderpath, 'taskworkpath' => $taskworkpath,'message' => 'Order Detail'],200);
+			}else{
+				return response()->json(['basicdetail' => $basicdetail, 'paymentdetail' => $paymentdetail, 'refrencedetail' => $refrencedetail, 'qadetail' => $qadetail, 'attachmentdetail' => $attachmentdetail,'workattachmentdetail' => $workattachmentdetail, 'orderpath' => $orderpath, 'taskworkpath' => $taskworkpath,'message' => 'Order Detail'],200);		
+			}
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
 	public function deleteorder(Request $request){
-		$validate = Validator::make($request->all(), [ 
+		$validate = Validator::make($request->all(), [
 	      'order_id'	=> 'required',
 	    ]);
      	if ($validate->fails()) {    
@@ -441,16 +455,37 @@ class orderController extends Controller
 	}
 	public function ordertotalamount(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'order_id'	=> 'required',
+	      'type'	=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json("Order Id Required", 400);
 		}
-		$totalamount = DB::table('orderpayment')
-		->select('orderpayment_amount')
-		->where('order_id','=',$request->order_id)
-		->where('status_id','=',1)
-		->sum('orderpayment_amount');
+		if($request->type == "Deal"){
+			$validate = Validator::make($request->all(), [ 
+				'order_token'	=> 'required',
+			]);
+			if ($validate->fails()) {    
+				return response()->json("Order Token Required", 400);
+			}
+			$totalamount = DB::table('orderpayment')
+			->select('orderpayment_amount')
+			->where('order_token','=',$request->order_token)
+			->where('status_id','=',1)
+			->sum('orderpayment_amount');
+		}else{
+			$validate = Validator::make($request->all(), [ 
+				'order_id'	=> 'required',
+			]);
+			if ($validate->fails()) {    
+				return response()->json("Order Id Required", 400);
+			}
+			$totalamount = DB::table('orderpayment')
+			->select('orderpayment_amount')
+			->where('order_id','=',$request->order_id)
+			->where('status_id','=',1)
+			->sum('orderpayment_amount');
+		}
+	
 		if($totalamount){
 			return response()->json([ 'totalamount' => $totalamount,'message' => 'Order Total Amount'],200);
 		}else{
@@ -460,7 +495,8 @@ class orderController extends Controller
 	public function forwardedorderlist(Request $request){
 		$orderlist = DB::table('basicorderdetail')
 		->select('*')
-		->where('orderstatus_id','=',2)
+		->groupBy('order_token')
+		->where('orderstatus_id','=',4)
 		->where('order_pickby','=',null)
 		->where('status_id','=',1)
 		->orderBy('order_id','DESC')
@@ -481,6 +517,7 @@ class orderController extends Controller
 		if ($request->role_id == 10){
 			$orderlist = DB::table('basicorderdetail')
 			->select('*')
+			->groupBy('order_token')
 			->where('orderstatus_id','=',$request->orderstatus_id)
 			->where('order_pickby','=',$request->user_id)
 			->where('status_id','=',1)
@@ -489,6 +526,7 @@ class orderController extends Controller
 		}else if ($request->role_id == 7){
 			$orderlist = DB::table('basicorderdetail')
 			->select('*')
+			->groupBy('order_token')
 			->where('orderstatus_id','=',$request->orderstatus_id)
 			->where('created_by','=',$request->user_id)
 			->where('status_id','=',1)
@@ -497,6 +535,7 @@ class orderController extends Controller
 		}else{
 			$orderlist = DB::table('basicorderdetail')
 			->select('*')
+			->groupBy('order_token')
 			->where('orderstatus_id','=',$request->orderstatus_id)
 			->where('status_id','=',1)
 			->orderBy('order_id','DESC')
@@ -510,13 +549,13 @@ class orderController extends Controller
 	}
 	public function pickorder(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'order_id'			=> 'required',
+	      'order_token'			=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json("Lead Id Required", 400);
 		}
 		$update  = DB::table('order')
-		->where('order_id','=',$request->order_id)
+		->where('order_token','=',$request->order_token)
 		->update([
 			'order_pickby'		=> $request->user_id,
 			'orderstatus_id'	=> 3,
@@ -529,13 +568,13 @@ class orderController extends Controller
 	}
 	public function unpickorder(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'order_id'	=> 'required',
+	      'order_token'	=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json("Oredr Id Required", 400);
 		}
 		$update  = DB::table('order')
-		->where('order_id','=',$request->order_id)
+		->where('order_token','=',$request->order_token)
 		->update([
 			'order_pickby'		=> null,
 			'orderstatus_id'	=> 2,
@@ -548,17 +587,38 @@ class orderController extends Controller
 	}
 	public function updateorderstatus(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'order_id'			=> 'required',
 	      'orderstatus_id'		=> 'required',
+		  'type'				=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
-		$update  = DB::table('order')
-		->where('order_id','=',$request->order_id)
-		->update([
-			'orderstatus_id'	=> $request->orderstatus_id,
-		]); 
+		if($request->type == "Deal"){
+			$validate = Validator::make($request->all(), [ 
+			'order_token'			=> 'required',
+			]);
+			if ($validate->fails()) {    
+				return response()->json($validate->errors(), 400);
+			}
+			$update  = DB::table('order')
+			->where('order_token','=',$request->order_token)
+			->update([
+				'orderstatus_id'	=> $request->orderstatus_id,
+			]); 
+		}else{
+			$validate = Validator::make($request->all(), [ 
+			'order_id'				=> 'required',
+			]);
+			if ($validate->fails()) {    
+				return response()->json($validate->errors(), 400);
+			}
+			$update  = DB::table('order')
+			->where('order_id','=',$request->order_id)
+			->update([
+				'orderstatus_id'	=> $request->orderstatus_id,
+			]); 
+		}
+		
 		if($update){
 			return response()->json(['message' => 'Status Updated Successfully'],200);
 		}else{
@@ -567,22 +627,48 @@ class orderController extends Controller
 	}
 	public function orderprogress(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'order_id'	=> 'required',
+	      'type'		=> 'required',
 	    ]);
      	if ($validate->fails()) {    
-			return response()->json("Order Id Required", 400);
+			return response()->json("Type Required", 400);
 		}
-		$totaltask = DB::table('task')
-		->select('task_id')
-		->where('order_id','=',$request->order_id)
-		->where('status_id','=',1)
-		->count();
-		$completetask = DB::table('task')
-		->select('task_id')
-		->where('taskstatus_id','>=',3)
-		->where('order_id','=',$request->order_id)
-		->where('status_id','=',1)
-		->count();
+		if($request->type == "Deal"){
+			$validate = Validator::make($request->all(), [ 
+				'order_token'	=> 'required',
+			]);
+			if ($validate->fails()) {    
+				return response()->json("Order Token Required", 400);
+			}
+			$totaltask = DB::table('task')
+			->select('task_id')
+			->where('order_token','=',$request->order_token)
+			->where('status_id','=',1)
+			->count();
+			$completetask = DB::table('task')
+			->select('task_id')
+			->where('taskstatus_id','>=',3)
+			->where('order_token','=',$request->order_token)
+			->where('status_id','=',1)
+			->count();
+		}else{
+			$validate = Validator::make($request->all(), [ 
+				'order_id'	=> 'required',
+			]);
+			if ($validate->fails()) {    
+				return response()->json("Order Id Required", 400);
+			}
+			$totaltask = DB::table('task')
+			->select('task_id')
+			->where('order_id','=',$request->order_id)
+			->where('status_id','=',1)
+			->count();
+			$completetask = DB::table('task')
+			->select('task_id')
+			->where('taskstatus_id','>=',3)
+			->where('order_id','=',$request->order_id)
+			->where('status_id','=',1)
+			->count();
+		}
 		if($totaltask){
 			return response()->json(['totaltask' => $totaltask,'completetask' => $completetask, 'message' => 'Order Progress'],200);
 		}else{
@@ -642,6 +728,25 @@ class orderController extends Controller
 			return response()->json(['message' => 'Status Updated Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function grouporderlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'order_token'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {
+			return response()->json("Order Token Required", 400);
+		}
+		$orderlist = DB::table('basicorderdetail')
+		->select('*')
+		->where('order_token','=',$request->order_token)
+		->where('status_id','=',1)
+		->orderBy('order_id','DESC')
+		->get();
+		if(isset($orderlist)){
+			return response()->json(['data' => $orderlist,'message' => 'Picked Order List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Picked Order List'],200);
 		}
 	}
 }

@@ -485,4 +485,241 @@ class dashboardController extends Controller
 		}
 		return response()->json($graphdata,200);
 	}
+	public function workerdashboard(Request $request){
+		$validate = Validator::make($request->all(), [ 
+			'yearmonth'	=> 'required',
+			'brand_id'	=> 'required',
+			'id'		=> 'required',
+		]);
+		if ($validate->fails()) {    
+		    return response()->json($validate->errors(), 400);
+		}
+		$getyearandmonth = explode('-', $request->yearmonth);
+		$getuser = DB::table('user')
+		->select('*')
+		->where('user_id','=',$request->id)
+		->where('status_id','=',1)
+		->first();
+		$list=array();
+		$noofdays = date('t');
+		for($d=1; $d<=$noofdays; $d++)
+		{
+			$time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
+			if (date('m', $time)==$getyearandmonth[1])       
+				$list[]=date('Y-m-d', $time);
+		}
+		$datewiseordercount = array();
+		$index = 0;
+		foreach ($list as $lists) {
+		$totalorders = DB::table('task')
+		->select('task_id')
+		->where('brand_id','=',$request->brand_id)
+		->where('status_id','=',1)
+		->where('task_workby','=',$request->id)
+		->where('task_date','=',$lists)
+		->count('order_id');
+		$completeorders = DB::table('task')
+		->select('task_id')
+		->where('brand_id','=',$request->brand_id)
+		->where('status_id','=',1)
+		->where('taskstatus_id','=',3)
+		->where('task_workby','=',$request->id)
+		->where('task_date','=',$lists)
+		->count('order_id');
+		$datewiseordercount[$index]['totalorders'] = $totalorders;
+		$datewiseordercount[$index]['completeorders'] = $completeorders;
+		$datewiseordercount[$index]['orderdate'] = $lists;
+		$index++;
+		}
+		$monthlytotalorders = DB::table('task')
+		->select('task_id')
+		->where('brand_id','=',$request->brand_id)
+		->where('status_id','=',1)
+		->where('task_workby','=',$request->id)
+		->where('task_date','=',$lists)
+		->count('order_id');
+		$monthlycompleteorders = DB::table('task')
+		->select('task_id')
+		->where('brand_id','=',$request->brand_id)
+		->where('status_id','=',1)
+		->where('taskstatus_id','=',3)
+		->where('task_workby','=',$request->id)
+		->where('task_date','=',$lists)
+		->count('order_id');
+		$monthlyremainingorders = $monthlytotalorders-$monthlycompleteorders;
+		$ordercounts = array();
+		$ordercounts['totalorder'] = $monthlytotalorders;
+		$ordercounts['completeorder'] = $monthlycompleteorders;
+		$ordercounts['pendingorder'] = $monthlyremainingorders;
+		$userpicturepath = URL::to('/')."/public/user_picture/";
+		$branddetail = DB::table('branddetail')
+		->select('*')
+		->where('brand_id','=',$request->brand_id)
+		->where('status_id','=',1)
+		->first();
+		$logopath = URL::to('/')."/public/brand_logo/";
+		if(isset($getuser)){
+		    return response()->json(['userdata' => $getuser, 'daileordercount' => $datewiseordercount, 'orderscount' => $ordercounts, 'userpicturepath' => $userpicturepath, 'branddetail' => $branddetail, 'logopath' => $logopath, 'message' => 'Worker Dashboard Details'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function salesdashboard(Request $request){
+		$validate = Validator::make($request->all(), [ 
+			'yearmonth'	=> 'required',
+			'brand_id'	=> 'required',
+			'id'		=> 'required',
+		]);
+		if ($validate->fails()) {    
+		    return response()->json($validate->errors(), 400);
+		}
+		$getyearandmonth = explode('-', $request->yearmonth);
+		$getuser = DB::table('user')
+		->select('*')
+		->where('user_id','=',$request->id)
+		->where('status_id','=',1)
+		->first();
+		$list=array();
+		$noofdays = date('t');
+		$from = $request->yearmonth.'-01';
+		$to = $request->yearmonth.'-'.$noofdays;
+		for($d=1; $d<=$noofdays; $d++)
+		{
+			$time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
+			if (date('m', $time)==$getyearandmonth[1])       
+				$list[]=date('Y-m-d', $time);
+		}
+		function countDays($year, $month, $ignore) {
+		    $count = 0;
+		    $counter = mktime(0, 0, 0, $month, 1, $year);
+		    while (date("n", $counter) == $month) {
+		        if (in_array(date("w", $counter), $ignore) == false) {
+		            $count++;
+		        }
+		        $counter = strtotime("+1 day", $counter);
+		    }
+		    return $count;
+		}
+		$workingdays = countDays(2013, 1, array(0, 6));
+		$datewiseordercount = array();
+		$index = 0;
+		foreach ($list as $lists) {
+		$orderscount = DB::table('order')
+		->select('order_id')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('order_date','=',$lists)
+		->where('brand_id','=',$request->brand_id)
+		->count('order_id');
+		$orderamount = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('orderpayment_date','=',$lists)
+		->where('brand_id','=',$request->brand_id)
+		->sum('orderpayment_amount');
+		$datewiseordercount[$index]['orderscount'] = $orderscount;
+		$datewiseordercount[$index]['orderamount'] = $orderamount;
+		$datewiseordercount[$index]['orderdate'] = $lists;
+		$index++;
+		}
+		$target = array();
+		$targetachieved = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('orderpaymentstatus_id','!=',1)
+		->whereBetween('orderpayment_date', [$from, $to])
+		->where('brand_id','=',$request->brand_id)
+		->sum('orderpayment_amount');	
+		$targetpaid = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('orderpaymentstatus_id','=',4)
+		->whereBetween('orderpayment_date', [$from, $to])
+		->where('brand_id','=',$request->brand_id)
+		->sum('orderpayment_amount');	
+		$recoverypaid = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('orderpaymentstatus_id','=',7)
+		->whereBetween('orderpayment_recoverydate', [$from, $to])
+		->where('brand_id','=',$request->brand_id)
+		->sum('orderpayment_amount');
+		$targetcancel = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('orderpaymentstatus_id','=',4)
+		->whereBetween('orderpayment_date', [$from, $to])
+		->where('brand_id','=',$request->brand_id)
+		->sum('orderpayment_amount');
+		$targetincrement = DB::table('usertarget')
+		->select('usertarget_target')
+		->where('user_id','=',$request->id)
+		->where('usertarget_month','<=',$request->yearmonth)
+		->where('status_id','=',1)
+		->sum('usertarget_target');
+		$usertarget = $getuser->user_target+$targetincrement;
+		$unpaidamount = $targetachieved-$targetpaid-$targetcancel-$recoverypaid;
+		$counttotalorders = DB::table('order')
+		->select('order_id')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('orderstatus_id','!=',1)
+		->whereBetween('order_date', [$from, $to])
+		->where('brand_id','=',$request->brand_id)
+		->count('order_id');
+		$countcompleteorders = DB::table('order')
+		->select('order_id')
+		->where('status_id','=',1)
+		->whereIn('orderstatus_id',[8,9,10,11])
+		->where('created_by','=',$request->id)
+		->whereBetween('order_date', [$from, $to])
+		->where('brand_id','=',$request->brand_id)
+		->count('order_id');
+		$countpaidorders = DB::table('order')
+		->select('order_id')
+		->where('status_id','=',1)
+		->where('orderstatus_id','=',11)
+		->where('created_by','=',$request->id)
+		->whereBetween('order_date', [$from, $to])
+		->where('brand_id','=',$request->brand_id)
+		->count('order_id');
+		$countcancel = DB::table('order')
+		->select('order_id')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('orderstatus_id','=',12)
+		->whereBetween('order_date', [$from, $to])
+		->where('brand_id','=',$request->brand_id)
+		->count('order_id');
+		$countpendingorders = $countcompleteorders-$countpaidorders-$countcancel;
+		$target['user_target'] = $usertarget;
+		$target['achieved'] = $targetachieved;
+		$target['paid'] = $targetpaid;
+		$target['recovery'] = $recoverypaid;
+		$target['unpaidamount'] = $unpaidamount;
+		$target['remaining'] = $getuser->user_target - $targetachieved;
+		$target['perday'] = $getuser->user_target / $workingdays;
+		$target['cancel'] = $targetcancel;
+		$target['counttotalorders'] = $counttotalorders;
+		$target['countcompleteorders'] = $countcompleteorders;
+		$target['countpaidorders'] = $countpaidorders;
+		$target['countcancel'] = $countcancel;
+		$userpicturepath = URL::to('/')."/public/user_picture/";
+		$branddetail = DB::table('branddetail')
+		->select('*')
+		->where('brand_id','=',$request->brand_id)
+		->where('status_id','=',1)
+		->first();
+		$logopath = URL::to('/')."/public/brand_logo/";
+		if(isset($getuser)){
+		    return response()->json(['userdata' => $getuser, 'target' => $target, 'daileordercount' => $datewiseordercount, 'userpicturepath' => $userpicturepath, 'branddetail' => $branddetail, 'logopath' => $logopath, 'message' => 'Sales Dashboard Details'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
 }

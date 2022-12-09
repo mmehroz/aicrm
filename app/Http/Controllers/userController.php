@@ -293,6 +293,36 @@ class userController extends Controller
 			return response()->json(['data' => $emptyarray, 'message' => 'User List'],200);
 		}
 	}
+	public function workeruserlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+			'brand_id'			=> 'required',
+		]);
+		if ($validate->fails()) {    
+			return response()->json("Brand Id Required", 400);
+		}
+		$getuserid = DB::table('userbarnd')
+		->select('user_id')
+		->where('status_id','=',1)
+		->where('brand_id','=',$request->brand_id)
+		->get();
+		$sortuserid = array();
+		foreach ($getuserid as $getuserids) {
+			$sortuserid[] = $getuserids->user_id;
+		}
+		$getusers = DB::table('user')
+		->select('user_id','user_name','user_email','user_target','user_loginstatus','user_picture','user_coverpicture')
+		->whereIn('user_id',$sortuserid)
+		->where('role_id','>',10)
+		->where('status_id','=',1)
+		->get();
+		$profilepath = URL::to('/')."/public/user_picture/";
+		$coverpath = URL::to('/')."/public/user_coverpicture/";
+		if(isset($getusers)){
+			return response()->json(['data' => $getusers,'profilepath' => $profilepath, 'coverpath' => $coverpath, 'message' => 'User List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'User List'],200);
+		}
+	}
 	public function userdetails(Request $request){
 		$validate = Validator::make($request->all(), [ 
 	      'edituser_id'			=> 'required',
@@ -429,6 +459,33 @@ class userController extends Controller
 		->get();
 		if(isset($getusers)){
 			return response()->json(['data' => $getusers, 'message' => 'User List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'User List'],200);
+		}
+	}
+	public function rolesuserlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'brand_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Brand Id Required", 400);
+		}
+		$role = DB::table('role')
+		->select('*')
+		->where('status_id','=',1)
+		->get();
+		$task = array();
+		foreach ($role as $roles) {
+			$task[$roles->role_name] =  DB::table('tasklist')
+			->select('*')
+			->where('brand_id','=',$request->brand_id)
+			->where('taskstatus_id','=',$roles->role_id)
+			->where('status_id','=',1)
+			->orderBy('task_id','DESC')
+			->paginate(30);
+		}
+		if(isset($task)){
+			return response()->json(['data' => $task, 'message' => 'User List'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'User List'],200);
 		}

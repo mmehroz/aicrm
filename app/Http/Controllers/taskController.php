@@ -32,8 +32,8 @@ class taskController extends Controller
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
-		$order_token = DB::table('order')
-		->select('order_token')
+		$order_details = DB::table('order')
+		->select('order_token','brand_id')
 		->where('order_id','=',$request->order_id)
 		->where('status_id','=',1)
 		->first();
@@ -48,7 +48,8 @@ class taskController extends Controller
 		'task_date' 		=> date('Y-m-d'),
 		'taskstatus_id'		=> 1,
 		'order_id'			=> $request->order_id,
-		'order_token'		=> $order_token->order_token,
+		'order_token'		=> $order_details->order_token,
+		'brand_id'		    => $order_details->brand_id,
 		'status_id'			=> 1,
 		'created_by'		=> $request->user_id,
 		'created_at'		=> date('Y-m-d h:i:s'),
@@ -253,7 +254,7 @@ class taskController extends Controller
 		->get();
 		$task = array();
 		foreach ($taskstatus as $taskstatuss) {
-			if ($request->role_id == 1 || $request->role_id == 2 || $request->role_id == 6) {
+			if ($request->role_id < 3) {
 				$task[$taskstatuss->taskstatus_name] =  DB::table('tasklist')
 				->select('*')
 				->where('brand_id','=',$request->brand_id)
@@ -261,7 +262,7 @@ class taskController extends Controller
 				->where('status_id','=',1)
 				->orderBy('task_id','DESC')
 				->paginate(30);
-			}else if ($request->role_id == 5) {
+			}else if ($request->role_id == 6 || $request->role_id == 7) {
 				$task[$taskstatuss->taskstatus_name] =  DB::table('tasklist')
 				->select('*')
 				->where('ordercreator','=',$request->user_id)
@@ -463,14 +464,23 @@ class taskController extends Controller
 	}
 	public function orderwisetasklist(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'order_id'	=> 'required',
+	      'order_token'	=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json("Order Id Required", 400);
 		}
+		$orderid = DB::table('order')
+		->select('order_id')
+		->where('order_token','=',$request->order_token)
+		->where('status_id','=',1)
+		->get();
+		$sortoredrid = array();
+        foreach($orderid as $orderids){
+            $sortoredrid[] = $orderids->order_id;
+		}
 		$tasklist = DB::table('task')
 		->select('task_id','task_title','task_description','task_token','taskstatus_id')
-		->where('order_id','=',$request->order_id)
+		->whereIn('order_id',$sortoredrid)
 		->where('status_id','=',1)
 		->paginate(30);
 		if(isset($tasklist)){
@@ -626,6 +636,21 @@ class taskController extends Controller
 		'updated_by'	=> $request->user_id,
 		'updated_at'	=> date('Y-m-d h:i:s'),
 		]);
+		if($request->taskstatus_id == 3){
+			$taskcount = DB::table('task')
+			->select('order_id')
+			->where('order_id','=',$request->order_id)
+			->where('taskstatus_id','=',2)
+			->where('status_id','=',1)
+			->count();
+			if($taskcount == 0){
+				DB::table('order')
+				->where('order_id','=',$request->order_id)
+				->update([
+					'orderstatus_id' 	=> 5,
+				]);
+			}
+		}
 		if($move){
 			return response()->json(['message' => 'Task Move Successfully'],200);
 		}else{
@@ -636,6 +661,7 @@ class taskController extends Controller
 		$validate = Validator::make($request->all(), [ 
 	      'task_id' 	=> 'required',
 	      'task_token' 	=> 'required',
+		  'attachment' 	=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
@@ -670,7 +696,6 @@ class taskController extends Controller
 	    	DB::table('taskattachment')->insert($saveattachment);
 	    	}
     	}
-		return response()->json(['message' => 'Work Submited Successfully'],200);
 	}
 	public function taskworkattachment(Request $request){
 		$validate = Validator::make($request->all(), [ 

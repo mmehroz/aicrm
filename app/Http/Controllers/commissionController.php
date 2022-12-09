@@ -20,11 +20,12 @@ use URL;
 class commissionController extends Controller
 {
 	public function addcommission(Request $request){
-		$validate = Validator::make($request->all(), [ 
+		$validate = Validator::make($request->all(), [
 	    	'commission'  	=> 'required',
+			'id'  			=> 'required',
 	    ]);
-		if ($validate->fails()) {    
-			return response()->json("Fields Required", 400);
+		if ($validate->fails()) {
+			return response()->json($validate->errors(), 400);
 		}
 		$multiple = $request->commission;
 		foreach ($multiple as $multiples) {
@@ -47,6 +48,12 @@ class commissionController extends Controller
 		}
 	}
 	public function commissionlist(Request $request){
+		$validate = Validator::make($request->all(), [
+	    	'id'  	=> 'required',
+	    ]);
+		if ($validate->fails()) {
+			return response()->json($validate->errors(), 400);
+		}
 		$getcommissionlist = DB::table('commissionlist')
 		->select('*')
 		->where('user_id','=',$request->id)

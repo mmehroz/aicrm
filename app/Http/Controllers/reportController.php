@@ -463,6 +463,6 @@ class reportController extends Controller
 			$commissiondata[$commissionindex]['date'] = $lists;
 			$commissionindex++;
 		}
-		return response()->json(['commissiondata' => $commissiondata, 'targetachieveddate' => $achieveddate, 'message' => 'Monthly Employee Commission Report'],200);
+		return response()->json(['commissiondata' => $commissiondata, 'targetachieveddate' => '2022-12-09', 'message' => 'Monthly Employee Commission Report'],200);
 	}
 }

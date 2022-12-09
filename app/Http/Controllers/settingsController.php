@@ -128,10 +128,25 @@ class settingsController extends Controller
 		}
 	}
 	public function taskstatus(Request $request){
-		$taskstatuslist = DB::table('taskstatus')
-		->select('*')
-		->where('status_id','=',1)
-		->get();
+		if($request->role_id > 11){
+			$taskstatuslist = DB::table('taskstatus')
+			->select('*')
+			->whereIn('taskstatus_id',[2,3,9])
+			->where('status_id','=',1)
+			->get();
+		}elseif($request->role_id == 6 || $request->role_id = 7){
+			$taskstatuslist = DB::table('taskstatus')
+			->select('*')
+			->whereIn('taskstatus_id',[4,5,6,7,8])
+			->where('status_id','=',1)
+			->get();
+		}else{
+			$taskstatuslist = DB::table('taskstatus')
+		    ->select('*')
+		    ->where('status_id','=',1)
+		    ->get();
+		}
+		
 		if(isset($taskstatuslist)){
 			return response()->json(['data' => $taskstatuslist, 'message' => 'Task Status List'],200);
 		}else{

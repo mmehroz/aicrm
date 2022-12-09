@@ -16,6 +16,7 @@ use App\Http\Controllers\billingmerchantController;
 use App\Http\Controllers\freshleadController;
 use App\Http\Controllers\reportController;
 use App\Http\Controllers\targetController;
+use App\Http\Controllers\commissionController;
 
 Route::middleware('cors')->group(function(){
 Route::any('/login', [loginController::class, 'login']);
@@ -50,6 +51,8 @@ Route::any('/deleteuser', [userController::class, 'deleteuser']);
 Route::any('/updateusercoverpicture', [userController::class, 'updateusercoverpicture']);
 Route::any('/removeuserfrombrand', [userController::class, 'removeuserfrombrand']);
 Route::any('/rolewiseuserlist', [userController::class, 'rolewiseuserlist']);
+Route::any('/rolesuserlist', [userController::class, 'rolesuserlist']);
+Route::any('/workeruserlist', [userController::class, 'workeruserlist']);
 
 Route::any('/createlead', [leadController::class, 'createlead']);
 Route::any('/updatelead', [leadController::class, 'updatelead']);
@@ -78,6 +81,7 @@ Route::any('/updateorderstatus', [orderController::class, 'updateorderstatus']);
 Route::any('/orderprogress', [orderController::class, 'orderprogress']);
 Route::any('/orderpaymentlist', [orderController::class, 'orderpaymentlist']);
 Route::any('/updateorderpaymentstatus', [orderController::class, 'updateorderpaymentstatus']);
+Route::any('/grouporderlist', [orderController::class, 'grouporderlist']);
 
 Route::any('/creattask', [taskController::class, 'creattask']);
 Route::any('/updatetask', [taskController::class, 'updatetask']);
@@ -114,6 +118,8 @@ Route::any('/admindashboard', [dashboardController::class, 'admindashboard']);
 Route::any('/adminbranddetails', [dashboardController::class, 'adminbranddetails']);
 Route::any('/portaladmindashboard', [dashboardController::class, 'portaladmindashboard']);
 Route::any('/upcomingpaymentdashboard', [dashboardController::class, 'upcomingpaymentdashboard']);
+Route::any('/workerdashboard', [dashboardController::class, 'workerdashboard']);
+Route::any('/salesdashboard', [dashboardController::class, 'salesdashboard']);
 
 Route::any('/forwardedpaymentlist', [billingController::class, 'forwardedpaymentlist']);
 Route::any('/pickedpaymentlist', [billingController::class, 'pickedpaymentlist']);
@@ -149,7 +155,8 @@ Route::any('/updatetarget', [targetController::class, 'updatetarget']);
 Route::any('/nontargetlist', [targetController::class, 'nontargetlist']);
 Route::any('/targetlist', [targetController::class, 'targetlist']);
 Route::any('/usertargetdetails', [targetController::class, 'usertargetdetails']);
-Route::any('/addcommission', [targetController::class, 'addcommission']);
-Route::any('/commissionlist', [targetController::class, 'commissionlist']);
+
+Route::any('/addcommission', [commissionController::class, 'addcommission']);
+Route::any('/commissionlist', [commissionController::class, 'commissionlist']);
 });
 });
