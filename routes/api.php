@@ -17,6 +17,11 @@ use App\Http\Controllers\freshleadController;
 use App\Http\Controllers\reportController;
 use App\Http\Controllers\targetController;
 use App\Http\Controllers\commissionController;
+use App\Http\Controllers\requestquoteController;
+use App\Http\Controllers\leadgenerateController;
+
+Route::any('/downloadclientattachment', [taskController::class, 'downloadclientattachment']);
+Route::any('/downloadworkattachment', [taskController::class, 'downloadworkattachment']);
 
 Route::middleware('cors')->group(function(){
 Route::any('/login', [loginController::class, 'login']);
@@ -65,6 +70,7 @@ Route::any('/automanualleadlist', [leadController::class, 'automanualleadlist'])
 Route::any('/picklead', [leadController::class, 'picklead']);
 Route::any('/unpicklead', [leadController::class, 'unpicklead']);
 Route::any('/cancellead', [leadController::class, 'cancellead']);
+Route::any('/makelead', [leadController::class, 'makelead']);
 
 Route::any('/createorder', [orderController::class, 'createorder']);
 Route::any('/updateorder', [orderController::class, 'updateorder']);
@@ -82,6 +88,8 @@ Route::any('/orderprogress', [orderController::class, 'orderprogress']);
 Route::any('/orderpaymentlist', [orderController::class, 'orderpaymentlist']);
 Route::any('/updateorderpaymentstatus', [orderController::class, 'updateorderpaymentstatus']);
 Route::any('/grouporderlist', [orderController::class, 'grouporderlist']);
+Route::any('/clientwiseorderlist', [orderController::class, 'clientwiseorderlist']);
+Route::any('/previousorderhistory', [orderController::class, 'previousorderhistory']);
 
 Route::any('/creattask', [taskController::class, 'creattask']);
 Route::any('/updatetask', [taskController::class, 'updatetask']);
@@ -117,9 +125,11 @@ Route::any('/monthlyppcbudget', [ppcController::class, 'monthlyppcbudget']);
 Route::any('/admindashboard', [dashboardController::class, 'admindashboard']);
 Route::any('/adminbranddetails', [dashboardController::class, 'adminbranddetails']);
 Route::any('/portaladmindashboard', [dashboardController::class, 'portaladmindashboard']);
+Route::any('/billingmerchantdashboard', [dashboardController::class, 'billingmerchantdashboard']);
 Route::any('/upcomingpaymentdashboard', [dashboardController::class, 'upcomingpaymentdashboard']);
 Route::any('/workerdashboard', [dashboardController::class, 'workerdashboard']);
 Route::any('/salesdashboard', [dashboardController::class, 'salesdashboard']);
+Route::any('/leadashboard', [dashboardController::class, 'leadashboard']);
 
 Route::any('/forwardedpaymentlist', [billingController::class, 'forwardedpaymentlist']);
 Route::any('/pickedpaymentlist', [billingController::class, 'pickedpaymentlist']);
@@ -133,6 +143,7 @@ Route::any('/mergepickedpaymentlist', [billingController::class, 'mergepickedpay
 Route::any('/statuswisepaymentlist', [billingController::class, 'statuswisepaymentlist']);
 Route::any('/mergestatuswisepaymentlist', [billingController::class, 'mergestatuswisepaymentlist']);
 Route::any('/paymentamount', [billingController::class, 'paymentamount']);
+Route::any('/sumpaymentamount', [billingController::class, 'sumpaymentamount']);
 
 Route::any('/savefreshlead', [freshleadController::class, 'savefreshlead']);
 Route::any('/freshleadlist', [freshleadController::class, 'freshleadlist']);
@@ -147,16 +158,25 @@ Route::any('/deletebillingmerchant', [billingmerchantController::class, 'deleteb
 Route::any('/addwithdrawalamount', [billingmerchantController::class, 'addwithdrawalamount']);
 Route::any('/withdrawalamountlist', [billingmerchantController::class, 'withdrawalamountlist']);
 
-Route::any('/salestargetreport', [reportController::class, 'salestargetreport']);
-Route::any('/commissionreport', [reportController::class, 'commissionreport']);
-
 Route::any('/addtarget', [targetController::class, 'addtarget']);
 Route::any('/updatetarget', [targetController::class, 'updatetarget']);
 Route::any('/nontargetlist', [targetController::class, 'nontargetlist']);
 Route::any('/targetlist', [targetController::class, 'targetlist']);
 Route::any('/usertargetdetails', [targetController::class, 'usertargetdetails']);
 
+Route::any('/salestargetreport', [reportController::class, 'salestargetreport']);
+Route::any('/commissionreport', [reportController::class, 'commissionreport']);
+
 Route::any('/addcommission', [commissionController::class, 'addcommission']);
 Route::any('/commissionlist', [commissionController::class, 'commissionlist']);
+
+Route::any('/sendquoterequest', [requestquoteController::class, 'sendquoterequest']);
+Route::any('/quotelist', [requestquoteController::class, 'quotelist']);
+Route::any('/quotedetails', [requestquoteController::class, 'quotedetails']);
+Route::any('/deletequote', [requestquoteController::class, 'deletequote']);
+Route::any('/movequoterequest', [requestquoteController::class, 'movequoterequest']);
+Route::any('/updatequoterequest', [requestquoteController::class, 'updatequoterequest']);
+
+Route::any('/generatelead', [leadgenerateController::class, 'generatelead']);
 });
 });

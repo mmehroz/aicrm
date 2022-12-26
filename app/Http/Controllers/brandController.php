@@ -28,6 +28,8 @@ class brandController extends Controller
 		      'brand_website' 		=> 'required',
 		      'brandtype_id'		=> 'required',
 		      'brand_description'	=> 'required',
+			  'brand_invoicename'	=> 'required',
+			  'brand_currency'		=> 'required',
 		    ]);
 	     	if ($validate->fails()) {    
 				return response()->json($validate->errors(), 400);
@@ -94,6 +96,8 @@ class brandController extends Controller
 			'brand_website' 	=> $request->brand_website,
 			'brandtype_id' 		=> $request->brandtype_id,
 			'brand_description' => $request->brand_description,
+			'brand_invoicename' => $request->brand_invoicename,
+			'brand_currency' 	=> $request->brand_currency,
 			'brand_date' 		=> date('Y-m-d'),
 			'status_id'			=> 1,
 			'created_by'		=> $request->user_id,
@@ -114,6 +118,8 @@ class brandController extends Controller
 	      'brand_website' 		=> 'required',
 	      'brandtype_id'		=> 'required',
 	      'brand_description'	=> 'required',
+		  'brand_invoicename'	=> 'required',
+		  'brand_currency'		=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
@@ -186,6 +192,8 @@ class brandController extends Controller
 		'brand_website' 		=> $request->brand_website,
 		'brandtype_id'			=> $request->brandtype_id,
 		'brand_description'		=> $request->brand_description,
+		'brand_invoicename' 	=> $request->brand_invoicename,
+		'brand_currency' 		=> $request->brand_currency,
 		'updated_by'	 		=> $request->user_id,
 		'updated_at'	 		=> date('Y-m-d h:i:s'),
 		]);
@@ -273,7 +281,7 @@ class brandController extends Controller
 		foreach ($brandid as $brandids) {
 			$sortbrandid[] = $brandids->brand_id;
 		}
-		if ($request->role_id == 1 || $request->role_id == 3 || $request->role_id == 10) {
+		if ($request->role_id < 2) {
 			$brandlist = DB::table('brand')
 			->select('brand_id','brand_name','brand_email','created_at')
 			->where('status_id','=',1)

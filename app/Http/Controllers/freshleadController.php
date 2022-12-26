@@ -34,7 +34,7 @@ class freshleadController extends Controller
 		'freshlead_phone' 			=> $request->freshlead_phone,
 		'freshlead_otherdetail' 	=> $request->freshlead_otherdetail,
 		'freshlead_date'			=> date('Y-m-d'),
-		'brand_id' 					=> $request->brandid,
+		'brand_id' 					=> $request->brand_id,
 		'status_id'	 				=> 1,
 		'created_by'		 		=> $request->user_id,
 		'created_at'	 			=> date('Y-m-d h:i:s'),
@@ -57,14 +57,14 @@ class freshleadController extends Controller
 		if ($request->role_id == 1 || $request->role_id == 3) {
 			$getorderlist = DB::table('freshlead')
 			->select('*')
-			->where('brand_id','=',$request->brandid)
+			->where('brand_id','=',$request->brand_id)
 			->whereBetween('freshlead_date',[$request->from, $request->to])
 			->where('status_id','=',1)
 			->get();		
 		}else{
 			$getorderlist = DB::table('freshlead')
 			->select('*')
-			->where('brand_id','=',$request->brandid)
+			->where('brand_id','=',$request->brand_id)
 			->where('created_by','=',$request->user_id)
 			->whereBetween('freshlead_date',[$request->from, $request->to])
 			->where('status_id','=',1)

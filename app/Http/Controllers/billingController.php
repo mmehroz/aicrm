@@ -178,19 +178,73 @@ class billingController extends Controller
 			return response()->json(['data' => $emptyarray, 'message' => 'Picked Order List'],200);
 		}
 	}
-	public function pickpayment(Request $request){
+	public function sumpaymentamount(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'order_id'	=> 'required',
+	      'from'					=> 'required',
+	      'to'						=> 'required',
+		  'brand_id'				=> 'required', 
+		  'orderpaymentstatus_id'	=> 'required',
 	    ]);
-     	if ($validate->fails()) {    
-			return response()->json("Order Id Required", 400);
+     	if ($validate->fails()) {
+			return response()->json("From And To Date Is Required", 400);
 		}
-		$update  = DB::table('orderpayment')
-		->where('order_id','=',$request->order_id)
-		->update([
-			'orderpayment_pickby'	=> $request->user_id,
-			'orderpaymentstatus_id'	=> 9,
-		]); 
+		$getmergedeal = DB::table('mergedeal')
+		->select('order_token')
+		->where('status_id','=',1)
+		->get();
+		$getmergedealtoken = array();
+		foreach ($getmergedeal as $getmergedeals) {
+			$getmergedealtoken[] = $getmergedeals->order_token;
+		}
+		$paymentamount = DB::table('orderpaymentdetails')
+		->select('*')
+		->whereNotIn('order_token', $getmergedealtoken)
+		->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+		->where('brand_id','=',$request->brand_id)
+		->where('orderpayment_pickby','=',$request->user_id)
+		->whereBetween('orderpayment_date',[$request->from, $request->to])
+		->where('status_id','=',1)
+		->sum('orderpayment_amount');
+		$mergepaymentamount = DB::table('mergepaymentdetails')
+		->select('*')
+		->whereIn('order_token', $getmergedealtoken)
+		->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+		->where('brand_id','=',$request->brand_id)
+		->where('orderpayment_pickby','=',$request->user_id)
+		->whereBetween('orderpayment_date',[$request->from, $request->to])
+		->where('status_id','=',1)
+		->sum('orderpayment_amount');
+		$sumallpaymentamount = $paymentamount+$mergepaymentamount;
+		return response()->json(['paymentamount' => $paymentamount, 'mergepaymentamount' => $mergepaymentamount, 'sumallpaymentamount' => $sumallpaymentamount,'message' => 'Billing Payment'],200);
+	}
+	public function pickpayment(Request $request){
+		if($request->picktype == "All"){
+			$validate = Validator::make($request->all(), [ 
+				'order_token'	=> 'required',
+			]);
+			if ($validate->fails()) {    
+				return response()->json("Order Token Required", 400);
+			}
+			$update  = DB::table('orderpayment')
+			->whereIn('order_token',$request->order_token)
+			->update([
+				'orderpayment_pickby'	=> $request->user_id,
+				'orderpaymentstatus_id'	=> 9,
+			]); 
+		}else{
+			$validate = Validator::make($request->all(), [ 
+				'order_id'	=> 'required',
+			]);
+			if ($validate->fails()) {    
+				return response()->json("Order Id Required", 400);
+			}
+			$update  = DB::table('orderpayment')
+			->where('order_id','=',$request->order_id)
+			->update([
+				'orderpayment_pickby'	=> $request->user_id,
+				'orderpaymentstatus_id'	=> 9,
+			]); 
+		}
 		if($update){
 			return response()->json(['message' => 'Pick Successfully'],200);
 		}else{
@@ -251,9 +305,9 @@ class billingController extends Controller
 		->first();
 		$getbranddetail = DB::table('brand')
 		->where('brand_id','=',$getleaddetail->brand_id)
-		->select('brand_logo','brand_email','brand_website','brand_invoicename')
+		->select('brand_cover','brand_email','brand_website','brand_invoicename','brand_currency')
 		->first();
-		$logopath = URL::to('/')."/public/brand_logo/";
+		$coverpath = URL::to('/')."/public/brand_cover/";
 		$inviceinfo = array(
 			'lead_name' 			=> $getleaddetail->lead_name,
 			'lead_email' 			=> $getleaddetail->lead_email,
@@ -262,9 +316,10 @@ class billingController extends Controller
 			'brand_email' 			=> $getbranddetail->brand_email,
 			'brand_website' 		=> $getbranddetail->brand_website,
 			'brand_invoicename' 	=> $getbranddetail->brand_invoicename,
+			'brand_currency' 		=> $getbranddetail->brand_currency == 1 ? "$" : " £",
 			'order_token' 			=> $order_token,
-			'brand_logo' 			=> $getbranddetail->brand_logo,
-			'brand_logopath' 		=> $logopath,
+			'brand_cover' 			=> $getbranddetail->brand_cover,
+			'brand_coverpath' 		=> $coverpath,
 		);
 		if(isset($paymentdetail)){
 			return response()->json(['data' => $paymentdetail,'inviceinfo' => $inviceinfo, 'message' => 'Payment Details'],200);
@@ -334,20 +389,34 @@ class billingController extends Controller
 			}
 		}else{
 			if ($request->orderpaymentstatus_id == 2) {
-				$validate = Validator::make($request->all(), [ 
-			      'merchant_id'				=> 'required',
-			      'orderpayment_invoiceno'	=> 'required',
-			    ]);
-		     	if ($validate->fails()) {
-					return response()->json($validate->errors(), 400);
-				}
-				$update  = DB::table('orderpayment')
-				->whereIn('order_token',$request->order_id)
-				->update([
-					'merchant_id'				=> $request->merchant_id,
-					'orderpayment_invoiceno'	=> $request->orderpayment_invoiceno,
-					'orderpaymentstatus_id'		=> $request->orderpaymentstatus_id,
-				]); 	
+				if($request->isEdit == 1){
+					$validate = Validator::make($request->all(), [ 
+						'orderpayment_invoiceno'	=> 'required',
+						]);
+						if ($validate->fails()) {
+							return response()->json($validate->errors(), 400);
+						}
+						$update  = DB::table('orderpayment')
+						->where('order_token','=',$request->order_id)
+						->update([
+							'orderpayment_invoiceno'	=> $request->orderpayment_invoiceno,
+						]); 
+				}else{
+					$validate = Validator::make($request->all(), [ 
+					'orderpayment_invoiceno'	=> 'required',
+					'merchant_id'				=> 'required',
+					]);
+					if ($validate->fails()) {
+						return response()->json($validate->errors(), 400);
+					}
+					$update  = DB::table('orderpayment')
+					->where('order_token','=',$request->order_id)
+					->update([
+						'merchant_id'				=> $request->merchant_id,
+						'orderpayment_invoiceno'	=> $request->orderpayment_invoiceno,
+						'orderpaymentstatus_id'		=> $request->orderpaymentstatus_id,
+					]); 
+				}	
 			}
 			elseif ($request->orderpaymentstatus_id == 4) {
 				$validate = Validator::make($request->all(), [ 
@@ -357,14 +426,14 @@ class billingController extends Controller
 					return response()->json($validate->errors(), 400);
 				}
 				$update  = DB::table('orderpayment')
-				->whereIn('order_token',$request->order_id)
+				->where('order_token','=',$request->order_id)
 				->update([
 					'orderpayment_comment'	=> $request->orderpayment_comment,
 					'orderpaymentstatus_id'	=> $request->orderpaymentstatus_id,
 				]); 
 			}else{	
 				$update  = DB::table('orderpayment')
-				->whereIn('order_token',$request->order_id)
+				->where('order_token','=',$request->order_id)
 				->update([
 					'orderpaymentstatus_id'	=> $request->orderpaymentstatus_id,
 				]); 

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use ZipArchive;
 use Image;
 use DB;
 use Input;
@@ -721,5 +722,47 @@ class taskController extends Controller
         $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
         $items = $items instanceof Collection ? $items : Collection::make($items);
         return  new  LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
+    }
+	public function downloadclientattachment(Request $request)
+    {   
+		$validate = Validator::make($request->all(), [ 
+			'task_token'	=> 'required',
+		]);
+		if ($validate->fails()) {    
+			return response()->json("Task Token Required", 400);
+		}
+        $zip = new ZipArchive;
+        $fileName = 'clientattachment.zip';
+        if ($zip->open(public_path($fileName), ZipArchive::OVERWRITE) === TRUE)
+        {
+            $files = File::files(public_path('task/'.$request->task_token));
+            foreach ($files as $file) {
+                $relativeNameInZipFile = basename($file);
+                $zip->addFile($file, $relativeNameInZipFile);
+            }
+            $zip->close();
+        }
+    	return response()->download(public_path($fileName));
+    }
+	public function downloadworkattachment(Request $request)
+    {   
+		$validate = Validator::make($request->all(), [ 
+			'task_token'	=> 'required',
+		]);
+		if ($validate->fails()) {    
+			return response()->json("Task Token Required", 400);
+		}
+        $zip = new ZipArchive;
+        $fileName = 'workattachment.zip';
+        if ($zip->open(public_path($fileName), ZipArchive::OVERWRITE) === TRUE)
+        {
+            $files = File::files(public_path('taskwork/'.$request->task_token));
+            foreach ($files as $file) {
+                $relativeNameInZipFile = basename($file);
+                $zip->addFile($file, $relativeNameInZipFile);
+            }
+            $zip->close();
+        }
+    	return response()->download(public_path($fileName));
     }
 }

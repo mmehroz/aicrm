@@ -595,7 +595,7 @@ final class Html5Entities
         'Eum'                             => 'Ë',
         'euml'                            => 'ë',
         'eum'                             => 'ë',
-        'euro'                            => '€',
+        'euro'                            => ' £',
         'excl'                            => '!',
         'exist'                           => '∃',
         'Exists'                          => '∃',

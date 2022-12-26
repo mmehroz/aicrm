@@ -46,7 +46,7 @@ class orderController extends Controller
 			'ordertype_id'			=> $multiples['ordertype_id'],
 			'lead_id'				=> $request->lead_id,
 			'brand_id'				=> $brand->brand_id,
-			'orderstatus_id'		=> 4,
+			'orderstatus_id'		=> 2,
 			'status_id'				=> 1,
 			'created_by'			=> $request->user_id,
 			'created_at'			=> date('Y-m-d h:i:s'),
@@ -59,7 +59,10 @@ class orderController extends Controller
 					'orderpayment_title'	=> $payments['orderpayment_title'],
 					'orderpayment_amount'	=> $payments['orderpayment_amount'],
 					'orderpayment_duedate'	=> $payments['orderpayment_duedate'],
+					'orderpayment_date' 	=> date('Y-m-d'),
 					'order_id'				=> $order_id,
+					'brand_id'				=> $brand->brand_id,
+					'lead_id'				=> $request->lead_id,
 					'order_token' 			=> $order_token,
 					'status_id' 			=> 1,
 					'created_by'			=> $request->user_id,
@@ -124,11 +127,6 @@ class orderController extends Controller
 			DB::table('orderattachment')->insert($saveattachment);
 			}
 			}
-			DB::table('order')
-			->where('order_id','=',$order_id)
-			->update([
-			'orderstatus_id'	=> 4,
-			]);
 		}
 		DB::table('lead')
 		->where('lead_id','=',$request->lead_id)
@@ -283,7 +281,7 @@ class orderController extends Controller
      	if ($validate->fails()) {    
 			return response()->json("Brand Id Required", 400);
 		}
-		if ($request->role_id == 1) {
+		if ($request->role_id <= 3) {
 			$orderlist = DB::table('basicorderdetail')
 			->select('*')
 			->groupBy('order_token')
@@ -496,7 +494,7 @@ class orderController extends Controller
 		$orderlist = DB::table('basicorderdetail')
 		->select('*')
 		->groupBy('order_token')
-		->where('orderstatus_id','=',4)
+		->where('orderstatus_id','=',$request->orderstatus_id)
 		->where('order_pickby','=',null)
 		->where('status_id','=',1)
 		->orderBy('order_id','DESC')
@@ -514,32 +512,62 @@ class orderController extends Controller
      	if ($validate->fails()) {
 			return response()->json("Order Status Id Required", 400);
 		}
-		if ($request->role_id == 10){
-			$orderlist = DB::table('basicorderdetail')
-			->select('*')
-			->groupBy('order_token')
-			->where('orderstatus_id','=',$request->orderstatus_id)
-			->where('order_pickby','=',$request->user_id)
-			->where('status_id','=',1)
-			->orderBy('order_id','DESC')
-			->paginate(30);
-		}else if ($request->role_id == 7){
-			$orderlist = DB::table('basicorderdetail')
-			->select('*')
-			->groupBy('order_token')
-			->where('orderstatus_id','=',$request->orderstatus_id)
-			->where('created_by','=',$request->user_id)
-			->where('status_id','=',1)
-			->orderBy('order_id','DESC')
-			->paginate(30);
+		if($request->orderstatus_id == 4 && $request->role_id == 6 || $request->orderstatus_id == 4 && $request->role_id == 7){
+			if ($request->role_id == 10){
+				$orderlist = DB::table('basicorderdetail')
+				->select('*')
+				->groupBy('order_token')
+				->whereIn('orderstatus_id',[2,3,4])
+				->where('order_pickby','=',$request->user_id)
+				->where('status_id','=',1)
+				->orderBy('order_id','DESC')
+				->paginate(30);
+			}else if ($request->role_id == 6 || $request->role_id == 7){
+				$orderlist = DB::table('basicorderdetail')
+				->select('*')
+				->groupBy('order_token')
+				->whereIn('orderstatus_id',[2,3,4])
+				->where('created_by','=',$request->user_id)
+				->where('status_id','=',1)
+				->orderBy('order_id','DESC')
+				->paginate(30);
+			}else{
+				$orderlist = DB::table('basicorderdetail')
+				->select('*')
+				->groupBy('order_token')
+				->whereIn('orderstatus_id',[2,3,4])
+				->where('status_id','=',1)
+				->orderBy('order_id','DESC')
+				->paginate(30);
+			}
 		}else{
-			$orderlist = DB::table('basicorderdetail')
-			->select('*')
-			->groupBy('order_token')
-			->where('orderstatus_id','=',$request->orderstatus_id)
-			->where('status_id','=',1)
-			->orderBy('order_id','DESC')
-			->paginate(30);
+			if ($request->role_id == 10){
+				$orderlist = DB::table('basicorderdetail')
+				->select('*')
+				->groupBy('order_token')
+				->where('orderstatus_id','=',$request->orderstatus_id)
+				->where('order_pickby','=',$request->user_id)
+				->where('status_id','=',1)
+				->orderBy('order_id','DESC')
+				->paginate(30);
+			}else if ($request->role_id == 6 || $request->role_id == 7){
+				$orderlist = DB::table('basicorderdetail')
+				->select('*')
+				->groupBy('order_token')
+				->where('orderstatus_id','=',$request->orderstatus_id)
+				->where('created_by','=',$request->user_id)
+				->where('status_id','=',1)
+				->orderBy('order_id','DESC')
+				->paginate(30);
+			}else{
+				$orderlist = DB::table('basicorderdetail')
+				->select('*')
+				->groupBy('order_token')
+				->where('orderstatus_id','=',$request->orderstatus_id)
+				->where('status_id','=',1)
+				->orderBy('order_id','DESC')
+				->paginate(30);
+			}
 		}
 		if(isset($orderlist)){
 			return response()->json(['data' => $orderlist,'message' => 'Picked Order List'],200);
@@ -747,6 +775,49 @@ class orderController extends Controller
 			return response()->json(['data' => $orderlist,'message' => 'Picked Order List'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'Picked Order List'],200);
+		}
+	}
+	public function clientwiseorderlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'lead_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Lead Id Required", 400);
+		}
+		$personaldetails = DB::table('leadcompletedetails')
+		->select('*')
+		->where('lead_id','=',$request->lead_id)
+		->where('status_id','=',1)
+		->first();
+		$orderlist = DB::table('basicorderdetail')
+		->select('*')
+		->groupBy('order_token')
+		->where('lead_id','=',$request->lead_id)
+		->where('status_id','=',1)
+		->orderBy('order_id','DESC')
+		->paginate(30);
+		if(isset($personaldetails)){
+			return response()->json(['personaldetails' => $personaldetails, 'orderlist' => $orderlist, 'message' => 'Client Area'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Client Area'],200);
+		}
+	}
+	public function previousorderhistory(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'oldorder_clientemail'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Client Email Is Required", 400);
+		}
+		$orderlist = DB::table('oldorder')
+		->select('*')
+		->where('oldorder_clientemail','=',$request->oldorder_clientemail)
+		->orderBy('oldorder_id','DESC')
+		->paginate(30);
+		if(isset($orderlist)){
+			return response()->json(['data' => $orderlist, 'message' => 'Previous Order History'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Previous Order History'],200);
 		}
 	}
 }

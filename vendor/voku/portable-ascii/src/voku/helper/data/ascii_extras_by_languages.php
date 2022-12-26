@@ -522,7 +522,7 @@ return [
     //
     // url: https://en.wikipedia.org/wiki/Currency_symbol
     'currency' => [
-        '€'  => ' Euro ',
+        ' £'  => ' Euro ',
         '$'  => ' Dollar ',
         '₢'  => ' cruzeiro ',
         '₣'  => ' French franc ',

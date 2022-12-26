@@ -2880,7 +2880,7 @@ return [
     //
     // url => https://en.wikipedia.org/wiki/Currency_symbol
     'currency_short' => [
-        '€'  => 'EUR',
+        ' £'  => 'EUR',
         '$'  => '$',
         '₢'  => 'Cr',
         '₣'  => 'Fr.',

@@ -133,7 +133,7 @@ class dashboardController extends Controller
 		->get();
 		$userpicturepath = URL::to('/')."/public/user_picture/";
 		$brandlogopath = URL::to('/')."/public/brand_logo/";
-		return response()->json(['topdata' => $topdata, 'upcommingpayments' => $getupcommingpayments, 'pendingtask' => $pendingtask, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
+		return response()->json(['topdata' => $topdata,'test' => $list, 'upcommingpayments' => $getupcommingpayments, 'pendingtask' => $pendingtask, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
 	}
 	public function adminbranddetails(Request $request){
 		$validate = Validator::make($request->all(), [ 
@@ -148,6 +148,7 @@ class dashboardController extends Controller
 		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
 		->first();
+		$branddetails->brand_currency = $branddetails->brand_currency == 1 ? "$" : " £";
 		$getyearandmonth = explode('-', $request->yearmonth);
 		$getfirstdate = $request->yearmonth."-01";
 		$noofdays = date('t');
@@ -467,14 +468,14 @@ class dashboardController extends Controller
 			if ($i <= 9) {
 				$getupcommingpayments = DB::table('orderpaymentdetails')
 				->select('order_title','orderpayment_title','orderpayment_amount','user_name','user_picture')
-				->where('orderpaymentstatus_id','!=',3)
+				->whereIn('orderpaymentstatus_id',[1,8,9])
 				// ->where('orderpayment_duedate','=',$request->yearmonth.'-0'.$i)
 				->where('status_id','=',1)
 				->get();
 			}else{
 				$getupcommingpayments = DB::table('orderpaymentdetails')
 				->select('order_title','orderpayment_title','orderpayment_amount','user_name','user_picture')
-				->where('orderpaymentstatus_id','!=',3)
+				->whereIn('orderpaymentstatus_id',[1,8,9])
 				// ->where('orderpayment_duedate','=',$request->yearmonth.'-'.$i)
 				->where('status_id','=',1)
 				->get();
@@ -484,6 +485,47 @@ class dashboardController extends Controller
 			$yearindex++;
 		}
 		return response()->json($graphdata,200);
+	}
+	public function billingmerchantdashboard(Request $request){
+		$validate = Validator::make($request->all(), [ 
+			'yearmonth'	=> 'required',
+		]);
+		if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$billingmerchantlist = DB::table('billingmerchant')
+		->select('*')
+		->where('status_id','=',1)
+		->get();
+		if(isset($billingmerchantlist)){
+			$sortbillingmerchant = array();
+			$mindex=0;
+			foreach($billingmerchantlist as $billingmerchantlists){
+				$grossamount = DB::table('orderpayment')
+				->select('orderpayment_amount')
+				->where('orderpayment_date','like',$request->yearmonth.'%')
+				->where('merchant_id','=',$billingmerchantlists->billingmerchant_id)
+				->where('status_id','=',1)
+				->sum('orderpayment_amount');
+				$withdrawalamount = DB::table('withdrawal')
+				->select('withdrawal_amount')
+				->where('withdrawal_month','=',$request->yearmonth)
+				->where('status_id','=',1)
+				->sum('withdrawal_amount');
+				$netbalance = $grossamount-$withdrawalamount;
+				$billingmerchantlists->grossamount = $grossamount;
+				$billingmerchantlists->withdrawalamount = $withdrawalamount;
+				$billingmerchantlists->netamount = $netbalance;
+				$sortbillingmerchant[$mindex] = $billingmerchantlists;
+				$mindex++;
+			}
+			$logopath = URL::to('/')."/public/billingmerchantlogo/";
+			return response()->json(['sortbillingmerchant' => $sortbillingmerchant, 'logopath' => $logopath,  'message' => 'Billing Merchant Details'],200);
+		}else{
+			$emptyarray = array();
+			$logopath = "";
+			return response()->json(['sortbillingmerchant' => $emptyarray, 'logopath' => $logopath,  'message' => 'Billing Merchant Details'],200);
+		}
 	}
 	public function workerdashboard(Request $request){
 		$validate = Validator::make($request->all(), [ 
@@ -702,8 +744,8 @@ class dashboardController extends Controller
 		$target['paid'] = $targetpaid;
 		$target['recovery'] = $recoverypaid;
 		$target['unpaidamount'] = $unpaidamount;
-		$target['remaining'] = $getuser->user_target - $targetachieved;
-		$target['perday'] = $getuser->user_target / $workingdays;
+		$target['remaining'] = $usertarget - $targetachieved;
+		$target['perday'] = $usertarget / $workingdays;
 		$target['cancel'] = $targetcancel;
 		$target['counttotalorders'] = $counttotalorders;
 		$target['countcompleteorders'] = $countcompleteorders;
@@ -718,6 +760,130 @@ class dashboardController extends Controller
 		$logopath = URL::to('/')."/public/brand_logo/";
 		if(isset($getuser)){
 		    return response()->json(['userdata' => $getuser, 'target' => $target, 'daileordercount' => $datewiseordercount, 'userpicturepath' => $userpicturepath, 'branddetail' => $branddetail, 'logopath' => $logopath, 'message' => 'Sales Dashboard Details'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function leadashboard(Request $request){
+		$validate = Validator::make($request->all(), [ 
+			'yearmonth'	=> 'required',
+			'brand_id'	=> 'required',
+			'id'		=> 'required',
+		]);
+		if ($validate->fails()) {    
+		    return response()->json($validate->errors(), 400);
+		}
+		$getyearandmonth = explode('-', $request->yearmonth);
+		$getuser = DB::table('user')
+		->select('*')
+		->where('user_id','=',$request->id)
+		->where('status_id','=',1)
+		->first();
+		$list=array();
+		$noofdays = date('t');
+		$from = $request->yearmonth.'-01';
+		$to = $request->yearmonth.'-'.$noofdays;
+		for($d=1; $d<=$noofdays; $d++)
+		{
+			$time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
+			if (date('m', $time)==$getyearandmonth[1])       
+				$list[]=date('Y-m-d', $time);
+		}
+		function countDays($year, $month, $ignore) {
+		    $count = 0;
+		    $counter = mktime(0, 0, 0, $month, 1, $year);
+		    while (date("n", $counter) == $month) {
+		        if (in_array(date("w", $counter), $ignore) == false) {
+		            $count++;
+		        }
+		        $counter = strtotime("+1 day", $counter);
+		    }
+		    return $count;
+		}
+		$datewiseordercount = array();
+		$index = 0;
+		foreach ($list as $lists) {
+		$getdailysavelead = DB::table('freshlead')
+		->select('freshlead_id')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('freshlead_date','=',$lists)
+		->where('brand_id','=',$request->brand_id)
+		->count('freshlead_id');
+		$getdailytotal = DB::table('leadgenerate')
+		->select('leadgenerate_id')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('leadgenerate_date','=',$lists)
+		->where('brand_id','=',$request->brand_id)
+		->count('lead_id');
+		$getdailyclient = DB::table('leadgenerate')
+		->select('leadgenerate_id')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('leadstatus_id','=',3)
+		->where('leadgenerate_date','=',$lists)
+		->where('brand_id','=',$request->brand_id)
+		->count('lead_id');
+		$getdailycancel = DB::table('leadgenerate')
+		->select('leadgenerate_id')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('leadstatus_id','=',12)
+		->where('leadgenerate_date','=',$lists)
+		->where('brand_id','=',$request->brand_id)
+		->count('lead_id');
+		$datewiseordercount[$index]['savelead'] = $getdailysavelead;
+		$datewiseordercount[$index]['total'] = $getdailytotal;
+		$datewiseordercount[$index]['client'] = $getdailyclient;
+		$datewiseordercount[$index]['cancel'] = $getdailycancel;
+		$datewiseordercount[$index]['orderdate'] = $lists;
+		$index++;
+		}
+		$getmonthlysavelead = DB::table('freshlead')
+		->select('freshlead_id')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->whereBetween('freshlead_date', [$from, $to])
+		->where('brand_id','=',$request->brand_id)
+		->count('freshlead_id');
+		$getmonthlytotal = DB::table('leadgenerate')
+		->select('leadgenerate_id')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->whereBetween('leadgenerate_date', [$from, $to])
+		->where('brand_id','=',$request->brand_id)
+		->count('lead_id');
+		$getmonthlyclient = DB::table('leadgenerate')
+		->select('leadgenerate_id')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('leadstatus_id','=',3)
+		->whereBetween('leadgenerate_date', [$from, $to])
+		->where('brand_id','=',$request->brand_id)
+		->count('lead_id');
+		$getmonthlycancel = DB::table('leadgenerate')
+		->select('leadgenerate_id')
+		->where('status_id','=',1)
+		->where('created_by','=',$request->id)
+		->where('leadstatus_id','=',4)
+		->whereBetween('leadgenerate_date', [$from, $to])
+		->where('brand_id','=',$request->brand_id)
+		->count('lead_id');
+		$monthlyordercount = array();
+		$monthlyordercount['savelead'] = $getmonthlysavelead;
+		$monthlyordercount['total'] = $getmonthlytotal;
+		$monthlyordercount['client'] = $getmonthlyclient;
+		$monthlyordercount['cancel'] = $getmonthlycancel;
+		$userpicturepath = URL::to('/')."/public/user_picture/";
+		$branddetail = DB::table('branddetail')
+		->select('*')
+		->where('brand_id','=',$request->brand_id)
+		->where('status_id','=',1)
+		->first();
+		$logopath = URL::to('/')."/public/brand_logo/";
+		if(isset($getuser)){
+			return response()->json(['userdata' => $getuser, 'daileordercount' => $datewiseordercount,'orderscount' => $monthlyordercount, 'branddetail' => $branddetail, 'userpicturepath' => $userpicturepath, 'logopath' => $logopath, 'message' => 'Lead Dashboard Details'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

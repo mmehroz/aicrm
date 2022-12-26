@@ -32,6 +32,7 @@ class leadController extends Controller
 	      'role_id' 			=> 'required',
 	      'lead_name' 			=> 'required',
 	      'lead_email'			=> 'required',
+		  'brand_id'			=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
@@ -41,7 +42,7 @@ class leadController extends Controller
 		'lead_email'			=> $request->lead_email,
 		'lead_altemail' 		=> $request->lead_altemail,
 		'lead_phone' 			=> $request->lead_phone,
-		'city_id' 				=> $request->city_id,
+		'city_id' 				=> 1,
 		'state_id'				=> $request->state_id,
 		'country_id' 			=> $request->country_id,
 		'lead_zip' 				=> $request->lead_zip,
@@ -51,9 +52,9 @@ class leadController extends Controller
 		'lead_bussinesswebsite' => $request->lead_bussinesswebsite,
 		'lead_bussinessphone' 	=> $request->lead_bussinessphone,
 		'lead_otherdetails' 	=> $request->lead_otherdetails,
-		'lead_pickby' 			=> $request->role_id == 7 ? $request->user_id : null,
+		'lead_pickby' 			=> $request->role_id == 6 || $request->role_id == 7 ? $request->user_id : null,
 		'lead_date' 			=> date('Y-m-d'),
-		'leadstatus_id'		 	=> $request->role_id == 7 ? 2 : 1,
+		'leadstatus_id'		 	=> $request->role_id == 6 || $request->role_id == 7 ? 2 : 1,
 		'brand_id'		 		=> $request->brand_id,
 		'leadtype_id'	 		=> 2,
 		'status_id'		 		=> 1,
@@ -74,7 +75,6 @@ class leadController extends Controller
 	      'lead_email'				=> 'required',
 	      'lead_altemail' 			=> 'required',
 	      'lead_phone'				=> 'required',
-	      'city_id' 				=> 'required',
 	      'state_id'				=> 'required',
 	      'country_id' 				=> 'required',
 	      'lead_zip'				=> 'required',
@@ -109,7 +109,6 @@ class leadController extends Controller
 		'lead_email'			=> $request->lead_email,
 		'lead_altemail' 		=> $request->lead_altemail,
 		'lead_phone' 			=> $request->lead_phone,
-		'city_id' 				=> $request->city_id,
 		'state_id'				=> $request->state_id,
 		'country_id' 			=> $request->country_id,
 		'lead_zip' 				=> $request->lead_zip,
@@ -170,7 +169,7 @@ class leadController extends Controller
 		$getdetails = DB::table('leadcompletedetails')
 		->select('*')
 		->where('lead_id','=',$request->lead_id)
-		->where('status_id','=',1)
+		->where('status_id','!=',2)
 		->first();
 		if($getdetails){
 			return response()->json(['data' => $getdetails,'message' => 'Lead Details'],200);
@@ -205,14 +204,16 @@ class leadController extends Controller
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
-		$getleadlist = DB::table('leaddetail')
-		->select('*')
-		->where('brand_id','=',$request->brand_id)
-		->where('lead_pickby','=',null)
-		->where('leadstatus_id','=',1)
-		->where('status_id','=',1)
-		->orderBy('lead_id','DESC')
-		->paginate(30);
+		if($request->role_id != 7){
+			$getleadlist = DB::table('leaddetail')
+			->select('*')
+			->where('brand_id','=',$request->brand_id)
+			->where('lead_pickby','=',null)
+			->where('leadstatus_id','=',1)
+			->where('status_id','=',3)
+			->orderBy('lead_id','DESC')
+			->paginate(30);
+		}
 		if(isset($getleadlist)){
 			return response()->json(['data' => $getleadlist,'message' => 'Forwarded Lead List'],200);
 		}else{
@@ -220,13 +221,24 @@ class leadController extends Controller
 		}
 	}
 	public function pickedleadlist(Request $request){
-		$getleadlist = DB::table('leaddetail')
-		->select('*')
-		->where('lead_pickby','=',$request->user_id)
-		->where('leadstatus_id','=',$request->leadstatus_id)
-		->where('status_id','=',1)
-		->orderBy('lead_id','DESC')
-		->paginate(30);
+		if($request->role_id == 1 || $request->role_id == 2 || $request->role_id == 3){
+			$getleadlist = DB::table('leaddetail')
+			->select('*')
+			->where('brand_id','=',$request->brand_id)
+			->where('leadstatus_id','=',$request->leadstatus_id)
+			->where('status_id','!=',2)
+			->orderBy('lead_id','DESC')
+			->paginate(30);
+		}else{
+			$getleadlist = DB::table('leaddetail')
+			->select('*')
+			->where('lead_pickby','=',$request->user_id)
+			->where('brand_id','=',$request->brand_id)
+			->where('leadstatus_id','=',$request->leadstatus_id)
+			->where('status_id','!=',2)
+			->orderBy('lead_id','DESC')
+			->paginate(30);
+		}
 		if(isset($getleadlist)){
 			return response()->json(['data' => $getleadlist,'message' => 'Picked Lead List'],200);
 		}else{
@@ -245,7 +257,8 @@ class leadController extends Controller
 		->select('*')
 		->where('brand_id','=',$request->brand_id)
 		->where('leadtype_id','=',$request->leadtype_id)
-		->where('status_id','=',1)
+		->where('leadstatus_id','<=',2)
+		->where('status_id','=',3)
 		->orderBy('lead_id','DESC')
 		->paginate(30);
 		if(isset($getleadlist)){
@@ -303,9 +316,64 @@ class leadController extends Controller
 		->where('lead_id','=',$request->lead_id)
 		->update([
 			'leadstatus_id'	=> 4,
+			'status_id'		=> 1,
 		]); 
 		if($update){
 			return response()->json(['message' => 'Lead Cacel Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function makelead(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'lead_id'			=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Lead Id Required", 400);
+		}
+		$order = DB::table('order')
+		->select('*')
+		->where('lead_id','=',$request->lead_id)
+		->where('status_id','=',3)
+		->first();
+		$update  = DB::table('lead')
+		->where('lead_id','=',$request->lead_id)
+		->update([
+			'leadstatus_id'	=> 3,
+			'status_id'		=> 1,
+		]);
+		DB::table('order')
+		->where('lead_id','=',$order->lead_id)
+		->update([
+			'status_id'		=> 1,
+		]);
+		DB::table('orderpayment')
+		->where('order_id','=',$order->order_id)
+		->update([
+			'status_id'		=> 1,
+		]); 
+		DB::table('orderrefrence')
+		->where('order_id','=',$order->order_id)
+		->update([
+			'status_id'		=> 1,
+		]);
+		DB::table('orderqa')
+		->where('order_id','=',$order->order_id)
+		->update([
+			'status_id'		=> 1,
+		]);
+		DB::table('orderattachment')
+		->where('order_id','=',$order->order_id)
+		->update([
+			'status_id'		=> 1,
+		]);
+		DB::table('leadgenerate')
+		->where('lead_id','=',$request->lead_id)
+		->update([
+			'leadstatus_id'	=> 3,
+		]);
+		if($update){
+			return response()->json(['message' => 'Make Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

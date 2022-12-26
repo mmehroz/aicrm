@@ -54,7 +54,8 @@ class loginController extends Controller
 				$index++;
 			}
 			$path = URL::to('/')."/public/user_picture/";
-			return response()->json(['data' => $getinfo, 'path' => $path, 'message' => 'Login Successfully'],200);
+			$coverpath = URL::to('/')."/public/user_coverpicture/";
+			return response()->json(['data' => $getinfo, 'path' => $path, 'coverpath' => $coverpath, 'message' => 'Login Successfully'],200);
 		}else{
 			return response()->json("Invalid Email Or Password", 400);
 		}

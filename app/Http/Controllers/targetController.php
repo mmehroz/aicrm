@@ -27,7 +27,7 @@ class targetController extends Controller
             'brand_id'  	        => 'required',
 	    ]);
 		if ($validate->fails()) {    
-			return response()->json("Fields Required", 400);
+			return response()->json($validate->errors(), 400);
 		}
 		$addtarget[] = array(
 		'usertarget_target'		=> $request->usertarget_target,
@@ -50,7 +50,7 @@ class targetController extends Controller
 	    	'usertarget_target'  	=> 'required',
 	    ]);
 		if ($validate->fails()) {    
-			return response()->json("Fields Required", 400);
+			return response()->json($validate->errors(), 400);
 		}
 		$updatetarget = DB::table('usertarget')
 			->where('usertarget_id','=',$request->usertarget_id)
@@ -69,7 +69,7 @@ class targetController extends Controller
 	    	'brand_id'  		=> 'required',
 	    ]);
 		if ($validate->fails()) {    
-			return response()->json("Fields Required", 400);
+			return response()->json($validate->errors(), 400);
 		}
 		$getuserid = DB::table('userbarnd')
 		->select('user_id')
@@ -109,7 +109,7 @@ class targetController extends Controller
 	    	'brand_id'  		=> 'required',
 	    ]);
 		if ($validate->fails()) {    
-			return response()->json("Fields Required", 400);
+			return response()->json($validate->errors(), 400);
 		}
         $getuserid = DB::table('userbarnd')
 		->select('user_id')
@@ -138,7 +138,7 @@ class targetController extends Controller
 	    	'target_userid'		=> 'required',
 	    ]);
 		if ($validate->fails()) {    
-			return response()->json("Fields Required", 400);
+			return response()->json($validate->errors(), 400);
 		}
 		$getusertargetlist = DB::table('targetlist')
 		->select('*')
