@@ -97,6 +97,18 @@ class taskController extends Controller
 				'created_at'			=> date('Y-m-d h:i:s'),
 				);
 				DB::table('taskattachment')->insert($saveattachment);
+				$getextension = explode('.', $orderattachment->orderattachment_name);
+				if($getextension[1] == 'jpg' || $getextension[1] == 'jpeg' || $getextension[1] == 'png' ){
+					$attachmentname = $orderattachment->orderattachment_name;
+				}else{
+					$attachmentname = 'no_image.jpg';
+				}
+				DB::table('task')
+					->where('task_id','=',$task_id)
+					->update([
+					'task_cover' 		=> $attachmentname,
+					'task_covertype' 	=> "Order",
+				]);
 			}
 		}
 		if (isset($request->attachment)) {
@@ -125,6 +137,18 @@ class taskController extends Controller
 					return response()->json("Invalid File", 400);
 				}
 	    	DB::table('taskattachment')->insert($saveattachment);
+			$getextension = explode('.', $filename);
+				if($getextension[1] == 'jpg' || $getextension[1] == 'jpeg' || $getextension[1] == 'png' ){
+					$attachmentname = $filename;
+				}else{
+					$attachmentname = 'no_image.jpg';
+				}
+				DB::table('task')
+					->where('task_id','=',$task_id)
+					->update([
+					'task_cover' 		=> $attachmentname,
+					'task_covertype' 	=> "Task",
+				]);
 	    	}
     	}
 		if($save){
@@ -255,7 +279,7 @@ class taskController extends Controller
 		->get();
 		$task = array();
 		foreach ($taskstatus as $taskstatuss) {
-			if ($request->role_id < 3) {
+			if ($request->role_id <= 3) {
 				$task[$taskstatuss->taskstatus_name] =  DB::table('tasklist')
 				->select('*')
 				->where('brand_id','=',$request->brand_id)
@@ -272,19 +296,45 @@ class taskController extends Controller
 				->where('status_id','=',1)
 				->orderBy('task_id','DESC')
 				->paginate(30);
-			}else{
-				$task[$taskstatuss->taskstatus_name] =  DB::table('memberstasklist')
+			}else if ($request->role_id == 10) {
+				$task[$taskstatuss->taskstatus_name] =  DB::table('tasklist')
 				->select('*')
+				->where('created_by','=',$request->user_id)
 				->where('brand_id','=',$request->brand_id)
 				->where('taskstatus_id','=',$taskstatuss->taskstatus_id)
 				->where('status_id','=',1)
-				->groupBy('task_id')
 				->orderBy('task_id','DESC')
 				->paginate(30);
+			}else{
+				if($taskstatuss->taskstatus_id == 1){
+					$task[$taskstatuss->taskstatus_name] =  DB::table('memberstasklist')
+					->select('*')
+					->where('brand_id','=',$request->brand_id)
+					->where('taskstatus_id','=',$taskstatuss->taskstatus_id)
+					->where('taskuser_id','=',$request->user_id)
+					->where('memberstatus_id','=',1)
+					->where('status_id','=',1)
+					->groupBy('task_id')
+					->orderBy('task_id','DESC')
+					->paginate(30);
+				}else{
+					$task[$taskstatuss->taskstatus_name] =  DB::table('memberstasklist')
+					->select('*')
+					->where('brand_id','=',$request->brand_id)
+					->where('taskstatus_id','=',$taskstatuss->taskstatus_id)
+					->where('taskuser_id','=',$request->user_id)
+					->where('task_workby','=',$request->user_id)
+					->where('memberstatus_id','=',1)
+					->where('status_id','=',1)
+					->groupBy('task_id')
+					->orderBy('task_id','DESC')
+					->paginate(30);
+				}
 			}
 		}
+		$taskpath = URL::to('/')."/public/task/";
 		if(isset($task)){
-			return response()->json(['data' => $task, 'message' => 'Task List'],200);
+			return response()->json(['data' => $task, 'taskpath' => $taskpath, 'message' => 'Task List'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'Task List'],200);
 		}
@@ -630,6 +680,15 @@ class taskController extends Controller
      	if ($validate->fails()) {    
 			return response()->json("Task Id Required", 400);
 		}
+		if($request->taskstatus_id == 2){
+			$move  = DB::table('task')
+			->where('task_id','=',$request->task_id )
+			->update([
+			'task_workby'	=> $request->user_id,
+			'updated_by'	=> $request->user_id,
+			'updated_at'	=> date('Y-m-d h:i:s'),
+			]);
+		}
 		$move  = DB::table('task')
 		->where('task_id','=',$request->task_id )
 		->update([
@@ -726,16 +785,16 @@ class taskController extends Controller
 	public function downloadclientattachment(Request $request)
     {   
 		$validate = Validator::make($request->all(), [ 
-			'task_token'	=> 'required',
+			'order_token'	=> 'required',
 		]);
 		if ($validate->fails()) {    
 			return response()->json("Task Token Required", 400);
 		}
         $zip = new ZipArchive;
         $fileName = 'clientattachment.zip';
-        if ($zip->open(public_path($fileName), ZipArchive::OVERWRITE) === TRUE)
+        if ($zip->open(public_path($fileName), ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE)
         {
-            $files = File::files(public_path('task/'.$request->task_token));
+            $files = File::files(public_path('order/'.$request->order_token));
             foreach ($files as $file) {
                 $relativeNameInZipFile = basename($file);
                 $zip->addFile($file, $relativeNameInZipFile);
@@ -754,7 +813,7 @@ class taskController extends Controller
 		}
         $zip = new ZipArchive;
         $fileName = 'workattachment.zip';
-        if ($zip->open(public_path($fileName), ZipArchive::OVERWRITE) === TRUE)
+        if ($zip->open(public_path($fileName), ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE)
         {
             $files = File::files(public_path('taskwork/'.$request->task_token));
             foreach ($files as $file) {

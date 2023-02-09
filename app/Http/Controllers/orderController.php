@@ -53,20 +53,25 @@ class orderController extends Controller
 			);
 			$save = DB::table('order')->insert($basic);
 			$order_id = DB::getPdo()->lastInsertId();
+			$recoverydate = date('Y-m-d');
+			$recoverydate = date('Y-m-d', strtotime($recoverydate . "+1 months") );
+			$lastpaiddate = explode('-', $recoverydate);
+			$sortlastpaiddate = $lastpaiddate[0].'-'.$lastpaiddate[1].'-07';
 			if (isset($multiples['payment'])) {
 				foreach ($multiples['payment'] as $payments) {
 					$payment = array(
-					'orderpayment_title'	=> $payments['orderpayment_title'],
-					'orderpayment_amount'	=> $payments['orderpayment_amount'],
-					'orderpayment_duedate'	=> $payments['orderpayment_duedate'],
-					'orderpayment_date' 	=> date('Y-m-d'),
-					'order_id'				=> $order_id,
-					'brand_id'				=> $brand->brand_id,
-					'lead_id'				=> $request->lead_id,
-					'order_token' 			=> $order_token,
-					'status_id' 			=> 1,
-					'created_by'			=> $request->user_id,
-					'created_at'			=> date('Y-m-d h:i:s'),
+					'orderpayment_title'		=> $payments['orderpayment_title'],
+					'orderpayment_amount'		=> $payments['orderpayment_amount'],
+					'orderpayment_duedate'		=> $payments['orderpayment_duedate'],
+					'orderpayment_date' 		=> date('Y-m-d'),
+					'orderpayment_lastpaiddate' => $sortlastpaiddate,
+					'order_id'					=> $order_id,
+					'brand_id'					=> $brand->brand_id,
+					'lead_id'					=> $request->lead_id,
+					'order_token' 				=> $order_token,
+					'status_id' 				=> 1,
+					'created_by'				=> $request->user_id,
+					'created_at'				=> date('Y-m-d h:i:s'),
 					);
 					DB::table('orderpayment')->insert($payment);
 				}
@@ -147,7 +152,6 @@ class orderController extends Controller
 	      'order_deadlinedate' 		=> 'required',
 	      'order_description' 		=> 'required',
 	      'ordertype_id'			=> 'required',
-	      'orderstatus_id'			=> 'required',
 	    ]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
@@ -159,7 +163,6 @@ class orderController extends Controller
 		'order_deadlinedate' 	=> $request->order_deadlinedate,
 		'order_description' 	=> $request->order_description,
 		'ordertype_id'			=> $request->ordertype_id,
-		'orderstatus_id'		=> $request->orderstatus_id,
 		'updated_by'			=> $request->user_id,
 		'updated_at'			=> date('Y-m-d h:i:s'),
 		]);
@@ -339,7 +342,7 @@ class orderController extends Controller
 		->where('status_id','=',1)
 		->get();
 		$gettask = DB::table('task')
-		->select('task_id')
+		->select('task_id','task_title','task_token')
 		->where('order_id','=',$request->order_id)
 		->where('status_id','=',1)
 		->get();
@@ -360,9 +363,9 @@ class orderController extends Controller
 		$countqa = count($qadetail);
 		if($basicdetail){
 			if($countqa == 0){
-				return response()->json(['basicdetail' => $basicdetail, 'paymentdetail' => $paymentdetail, 'refrencedetail' => $refrencedetail, 'attachmentdetail' => $attachmentdetail,'workattachmentdetail' => $workattachmentdetail, 'orderpath' => $orderpath, 'taskworkpath' => $taskworkpath,'message' => 'Order Detail'],200);
+				return response()->json(['basicdetail' => $basicdetail, 'paymentdetail' => $paymentdetail, 'refrencedetail' => $refrencedetail, 'attachmentdetail' => $attachmentdetail,'workattachmentdetail' => $workattachmentdetail, 'tasklist' => $gettask, 'orderpath' => $orderpath, 'taskworkpath' => $taskworkpath,'message' => 'Order Detail'],200);
 			}else{
-				return response()->json(['basicdetail' => $basicdetail, 'paymentdetail' => $paymentdetail, 'refrencedetail' => $refrencedetail, 'qadetail' => $qadetail, 'attachmentdetail' => $attachmentdetail,'workattachmentdetail' => $workattachmentdetail, 'orderpath' => $orderpath, 'taskworkpath' => $taskworkpath,'message' => 'Order Detail'],200);		
+				return response()->json(['basicdetail' => $basicdetail, 'paymentdetail' => $paymentdetail, 'refrencedetail' => $refrencedetail, 'qadetail' => $qadetail, 'attachmentdetail' => $attachmentdetail,'workattachmentdetail' => $workattachmentdetail, 'tasklist' => $gettask, 'orderpath' => $orderpath, 'taskworkpath' => $taskworkpath,'message' => 'Order Detail'],200);		
 			}
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
@@ -531,6 +534,25 @@ class orderController extends Controller
 				->where('status_id','=',1)
 				->orderBy('order_id','DESC')
 				->paginate(30);
+			}else if ($request->role_id == 3){
+				$brandid = DB::table('userbarnd')
+				->select('brand_id')
+				->where('user_id','=',$request->user_id)
+				->where('status_id','=',1)
+				->get();
+				// dd($brandid);
+				$sortbrandid = array();
+				foreach ($brandid as $brandids) {
+					$sortbrandid[] = $brandids->brand_id;
+				}
+				$orderlist = DB::table('basicorderdetail')
+				->select('*')
+				->groupBy('order_token')
+				->whereIn('orderstatus_id',[2,3,4])
+				->whereIn('brand_id',$sortbrandid)
+				->where('status_id','=',1)
+				->orderBy('order_id','DESC')
+				->paginate(30);
 			}else{
 				$orderlist = DB::table('basicorderdetail')
 				->select('*')
@@ -556,6 +578,25 @@ class orderController extends Controller
 				->groupBy('order_token')
 				->where('orderstatus_id','=',$request->orderstatus_id)
 				->where('created_by','=',$request->user_id)
+				->where('status_id','=',1)
+				->orderBy('order_id','DESC')
+				->paginate(30);
+			}else if ($request->role_id == 3){
+				$brandid = DB::table('userbarnd')
+				->select('brand_id')
+				->where('user_id','=',$request->user_id)
+				->where('status_id','=',1)
+				->get();
+				// dd($brandid);
+				$sortbrandid = array();
+				foreach ($brandid as $brandids) {
+					$sortbrandid[] = $brandids->brand_id;
+				}
+				$orderlist = DB::table('basicorderdetail')
+				->select('*')
+				->groupBy('order_token')
+				->where('orderstatus_id','=',$request->orderstatus_id)
+				->whereIn('brand_id',$sortbrandid)
 				->where('status_id','=',1)
 				->orderBy('order_id','DESC')
 				->paginate(30);
@@ -615,9 +656,9 @@ class orderController extends Controller
 	}
 	public function updateorderstatus(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'orderstatus_id'		=> 'required',
-		  'type'				=> 'required',
-	    ]);
+	      'orderstatus_id'	=> 'required',
+		  'type'			=> 'required',
+		]);
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
@@ -646,7 +687,6 @@ class orderController extends Controller
 				'orderstatus_id'	=> $request->orderstatus_id,
 			]); 
 		}
-		
 		if($update){
 			return response()->json(['message' => 'Status Updated Successfully'],200);
 		}else{
@@ -697,11 +737,12 @@ class orderController extends Controller
 			->where('status_id','=',1)
 			->count();
 		}
-		if($totaltask){
-			return response()->json(['totaltask' => $totaltask,'completetask' => $completetask, 'message' => 'Order Progress'],200);
-		}else{
-			return response()->json("Oops! Something Went Wrong", 400);
-		}
+		$progresspercent = $completetask/$totaltask*100;
+		// if($totaltask){
+			return response()->json(['totaltask' => $totaltask,'completetask' => $completetask, 'progresspercent' => $progresspercent, 'message' => 'Order Progress'],200);
+		// }else{
+		// 	return response()->json("Oops! Something Went Wrong", 400);
+		// }
 	}
 	public function orderpaymentlist(Request $request){
 		$validate = Validator::make($request->all(), [ 
@@ -710,7 +751,7 @@ class orderController extends Controller
      	if ($validate->fails()) {    
 			return response()->json("Orderstatus Id Required", 400);
 		}
-		if ($request->role_id == 1) {
+		if ($request->role_id <= 2) {
 			$paymentlist = DB::table('orderpaymentdetails')
 			->select('*')
 			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
@@ -718,9 +759,19 @@ class orderController extends Controller
 			->orderBy('orderpayment_duedate','DESC')
 			->paginate(30);	
 		}elseif ($request->role_id == 3) {
+			$brandid = DB::table('userbarnd')
+			->select('brand_id')
+			->where('user_id','=',$request->user_id)
+			->where('status_id','=',1)
+			->get();
+			$sortbrandid = array();
+			foreach ($brandid as $brandids) {
+				$sortbrandid[] = $brandids->brand_id;
+			}
 			$paymentlist = DB::table('orderpaymentdetails')
 			->select('*')
 			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+			->whereIn('brand_id',$sortbrandid)
 			->where('status_id','=',1)
 			->orderBy('orderpayment_duedate','DESC')
 			->paginate(30);	
@@ -818,6 +869,45 @@ class orderController extends Controller
 			return response()->json(['data' => $orderlist, 'message' => 'Previous Order History'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'Previous Order History'],200);
+		}
+	}
+	public function updatemultiorderstatus(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'orderstatus_id'	=> 'required',
+		  'type'			=> 'required',
+		]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		if($request->type == "Deal"){
+			$validate = Validator::make($request->all(), [ 
+			'order_token'			=> 'required',
+			]);
+			if ($validate->fails()) {    
+				return response()->json($validate->errors(), 400);
+			}
+			$update  = DB::table('order')
+			->whereIn('order_token',$request->order_token)
+			->update([
+				'orderstatus_id'	=> $request->orderstatus_id,
+			]); 
+		}else{
+			$validate = Validator::make($request->all(), [ 
+			'order_id'				=> 'required',
+			]);
+			if ($validate->fails()) {    
+				return response()->json($validate->errors(), 400);
+			}
+			$update  = DB::table('order')
+			->whereIn('order_id',$request->order_id)
+			->update([
+				'orderstatus_id'	=> $request->orderstatus_id,
+			]); 
+		}
+		if($update){
+			return response()->json(['message' => 'Status Updated Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
 }

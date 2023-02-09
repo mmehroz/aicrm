@@ -26,11 +26,41 @@ class reportController extends Controller
         if ($validate->fails()) {
             return response()->json($validate->errors(), 400);
         }
+		$userbrand = DB::table('userbarnd')
+		->select('brand_id')
+		->where('user_id','=',$request->user_id)
+		->where('status_id','=',1)
+		->get();
+		$sortbrand = array();
+		foreach($userbrand as $brands){
+			$sortbrand[] = $brands->brand_id;
+		}
+		$userids = DB::table('userbarnd')
+		->select('user_id')
+		->whereIn('brand_id',$sortbrand)
+		->where('status_id','=',1)
+		->get();
+		$sortuserids = array();
+		foreach($userids as $useridss){
+			$sortuserids[] = $useridss->user_id;
+		}
 		$from = $request->from;
+		$from = explode('-',$request->from);
+		if($from[1] <= 9){
+			$setfrom = $from[0].'-0'.$from[1].'-'.$from[2];
+		}else{
+			$setfrom = $from[0].'-'.$from[1].'-'.$from[2];
+		}
 		$to = $request->to;
-		$gettoyearandmonth = explode('-', $to);
+		$to = explode('-',$request->to);
+		if($to[1] <= 9){
+			$setto = $to[0].'-0'.$to[1].'-'.$to[2];
+		}else{
+			$setto = $to[0].'-'.$to[1].'-'.$to[2];
+		}
+		$gettoyearandmonth = explode('-', $setto);
 		$toyearandmonth = $gettoyearandmonth[0].'-'.$gettoyearandmonth[1];
-		$fromyearandmonth = explode('-', $from);
+		$fromyearandmonth = explode('-', $setfrom);
 		$year = $fromyearandmonth[0];
 		$month = $fromyearandmonth[1];
 		$targetdate = $year.'-'.$month;
@@ -38,6 +68,7 @@ class reportController extends Controller
 		$userdetails = array();
 		$userlist = DB::table('user')
 		->select('user_id','role_id','user_name','user_target','user_picture')
+		->whereIn('user_id',$sortuserids)
 		->whereIn('role_id',[6,7])
 		->where('status_id','=',1)
 		->get();
@@ -60,85 +91,85 @@ class reportController extends Controller
 		$sumachieved = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
-		->where('ordertype_id','=',$request->ordertype_id)
-		->whereBetween('orderpayment_date', [$from, $to])
+		// ->where('ordertype_id','=',$request->ordertype_id)
+		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumpaid = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
 		->where('orderpaymentstatus_id','=',3)
-		->where('ordertype_id','=',$request->ordertype_id)
-		->whereBetween('orderpayment_date', [$from, $to])
+		// ->where('ordertype_id','=',$request->ordertype_id)
+		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumcancel = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
 		->where('orderpaymentstatus_id','=',4)
-		->where('ordertype_id','=',$request->ordertype_id)
-		->whereBetween('orderpayment_date', [$from, $to])
+		// ->where('ordertype_id','=',$request->ordertype_id)
+		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumrefund = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
 		->where('orderpaymentstatus_id','=',5)
-		->where('ordertype_id','=',$request->ordertype_id)
-		->whereBetween('orderpayment_date', [$from, $to])
+		// ->where('ordertype_id','=',$request->ordertype_id)
+		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumchargeback = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
 		->where('orderpaymentstatus_id','=',6)
-		->where('ordertype_id','=',$request->ordertype_id)
-		->whereBetween('orderpayment_date', [$from, $to])
+		// ->where('ordertype_id','=',$request->ordertype_id)
+		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumrecovery = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
 		->where('orderpaymentstatus_id','=',7)
-		->where('ordertype_id','=',$request->ordertype_id)
-		->whereBetween('orderpayment_date', [$from, $to])
+		// ->where('ordertype_id','=',$request->ordertype_id)
+		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumunpaid = $sumachieved-$sumpaid;
 		$sumcountachieved = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
-		->where('ordertype_id','=',$request->ordertype_id)
-		->whereBetween('orderpayment_date', [$from, $to])
+		// ->where('ordertype_id','=',$request->ordertype_id)
+		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumcountpaid = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
 		->where('orderpaymentstatus_id','=',3)
-		->where('ordertype_id','=',$request->ordertype_id)
-		->whereBetween('orderpayment_date', [$from, $to])
+		// ->where('ordertype_id','=',$request->ordertype_id)
+		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumcountcancel = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
 		->where('orderpaymentstatus_id','=',4)
-		->where('ordertype_id','=',$request->ordertype_id)
-		->whereBetween('orderpayment_date', [$from, $to])
+		// ->where('ordertype_id','=',$request->ordertype_id)
+		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumcountrefund = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
 		->where('orderpaymentstatus_id','=',5)
-		->where('ordertype_id','=',$request->ordertype_id)
-		->whereBetween('orderpayment_date', [$from, $to])
+		// ->where('ordertype_id','=',$request->ordertype_id)
+		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumcountchargeback = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
 		->where('orderpaymentstatus_id','=',6)
-		->where('ordertype_id','=',$request->ordertype_id)
-		->whereBetween('orderpayment_date', [$from, $to])
+		// ->where('ordertype_id','=',$request->ordertype_id)
+		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumcountrecovery = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
 		->where('orderpaymentstatus_id','=',7)
-		->where('ordertype_id','=',$request->ordertype_id)
-		->whereBetween('orderpayment_date', [$from, $to])
+		// ->where('ordertype_id','=',$request->ordertype_id)
+		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$summreport = array(
             'sumtarget' 			=> $sumtarget,
@@ -166,100 +197,100 @@ class reportController extends Controller
 				->where('status_id','=',1)
 				->sum('usertarget_target');
 				$user_target = $userlist->user_target+$targetincrement;
-				$achieved = DB::table('orderpayment')
+				$achieved = DB::table('orderwithpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->whereBetween('orderpayment_date', [$from, $to])
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
-				$paid = DB::table('orderpayment')
+				$paid = DB::table('orderwithpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',3)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->whereBetween('orderpayment_date', [$from, $to])
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
-				$cancel = DB::table('orderpayment')
+				$cancel = DB::table('orderwithpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',4)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->whereBetween('orderpayment_date', [$from, $to])
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
-				$refund = DB::table('orderpayment')
+				$refund = DB::table('orderwithpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',5)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->whereBetween('orderpayment_date', [$from, $to])
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
-				$chargeback = DB::table('orderpayment')
+				$chargeback = DB::table('orderwithpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',6)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->whereBetween('orderpayment_date', [$from, $to])
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
-				$recovery = DB::table('orderpayment')
+				$recovery = DB::table('orderwithpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',7)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->whereBetween('orderpayment_date', [$from, $to])
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
 				$unpaid = $achieved-$paid;
-				$countachieved = DB::table('orderpayment')
+				$countachieved = DB::table('orderwithpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->whereBetween('orderpayment_date', [$from, $to])
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
-				$countpaid = DB::table('orderpayment')
+				$countpaid = DB::table('orderwithpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',3)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->whereBetween('orderpayment_date', [$from, $to])
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
-				$countcancel = DB::table('orderpayment')
+				$countcancel = DB::table('orderwithpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',4)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->whereBetween('orderpayment_date', [$from, $to])
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
-				$countrefund = DB::table('orderpayment')
+				$countrefund = DB::table('orderwithpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',5)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->whereBetween('orderpayment_date', [$from, $to])
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
-				$countchargeback = DB::table('orderpayment')
+				$countchargeback = DB::table('orderwithpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',6)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->whereBetween('orderpayment_date', [$from, $to])
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
-				$countrecovery = DB::table('orderpayment')
+				$countrecovery = DB::table('orderwithpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',7)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->whereBetween('orderpayment_date', [$from, $to])
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
 				$countunpaid = $countachieved-$countpaid;
 				$userlist->user_target = $user_target;
@@ -308,14 +339,14 @@ class reportController extends Controller
 		$designerdetails = array();
 		foreach ($designerlist as $designerlist) {
 			if(isset($designerlist->user_id)){
-				$completeorders = DB::table('order')
-				->select('order_id')
+				$completeorders = DB::table('task')
+				->select('task_id')
 				->where('status_id','=',1)
-				->where('orderstatus_id','>',4)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->where('order_pickby','=',$designerlist->user_id)
-				->whereBetween('order_date', [$from, $to])
-				->count('order_id');
+				->where('taskstatus_id','>=',3)
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->where('task_workby','=',$designerlist->user_id)
+				->whereBetween('task_date', [$setfrom, $setto])
+				->count('task_id');
 				$getcommission = DB::table('commission')
 				->select('*')
 				->where('status_id','=',1)
@@ -353,14 +384,14 @@ class reportController extends Controller
 		$digitizercommission = 0;
 		foreach ($digitizerlist as $digitizerlist) {
 			if(isset($digitizerlist->user_id)){
-				$completeorders = DB::table('order')
-				->select('order_id')
+				$completeorders = DB::table('task')
+				->select('task_id')
 				->where('status_id','=',1)
-				->where('orderstatus_id','>',4)
-				->where('ordertype_id','=',$request->ordertype_id)
-				->where('order_pickby','=',$digitizerlist->user_id)
-				->whereBetween('order_date', [$from, $to])
-				->count('order_id');
+				->where('taskstatus_id','>=',3)
+				// ->where('ordertype_id','=',$request->ordertype_id)
+				->where('task_workby','=',$digitizerlist->user_id)
+				->whereBetween('task_date', [$setfrom, $setto])
+				->count('task_id');
 				$getcommission = DB::table('commission')
 				->select('*')
 				->where('status_id','=',1)
@@ -404,8 +435,22 @@ class reportController extends Controller
         if ($validate->fails()) {
             return response()->json($validate->errors(), 400);
         }
+		$from = $request->from;
+		$from = explode('-',$request->from);
+		if($from[1] <= 9){
+			$setfrom = $from[0].'-0'.$from[1].'-'.$from[2];
+		}else{
+			$setfrom = $from[0].'-'.$from[1].'-'.$from[2];
+		}
 		$date = $request->date;
-		$getyearandmonth = explode('-', $date);
+		$date = $request->date;
+		$date = explode('-',$request->date);
+		if($date[1] <= 9){
+			$setdate = $date[0].'-0'.$date[1].'-'.$date[2];
+		}else{
+			$setdate = $date[0].'-'.$date[1].'-'.$date[2];
+		}
+		$getyearandmonth = explode('-', $setdate);
 		$list=array();
 		$year = $getyearandmonth[0];
 		$month = $getyearandmonth[1];
@@ -430,14 +475,14 @@ class reportController extends Controller
 			->where('status_id','=',1)
 			->where('created_by','=',$request->id)
 			->where('orderpaymentstatus_id','=',3)
-			->whereBetween('orderpayment_date', [$request->from, $lists])
+			->whereBetween('orderpayment_date', [$setfrom, $lists])
 			->sum('orderpayment_amount');
 			$getrecoveryamount = DB::table('orderpayment')
 			->select('orderpayment_amount')
 			->where('status_id','=',1)
 			->where('created_by','=',$request->id)
 			->where('orderpaymentstatus_id','=',7)
-			->whereBetween('orderpayment_date', [$request->from, $lists])
+			->whereBetween('orderpayment_date', [$setfrom, $lists])
 			->sum('orderpayment_amount');
 			$gettargetachieved = $getpaidamount + $getrecoveryamount;
 			$getcommission = DB::table('commission')
@@ -455,20 +500,20 @@ class reportController extends Controller
 			}
 			foreach ($commission as $commissions) {
 			if ($gettargetachieved >= $commissions['from'] && $gettargetachieved <= $commissions['to']) {
-					$getpaidorders = DB::table('order')
-					->select('order_id')
+					$getpaidorders = DB::table('orderpayment')
+					->select('orderpayment_id')
 					->where('status_id','=',1)
 					->where('created_by','=',$request->id)
-					->where('order_id','=',11)
-					->where('order_date','=',$lists)
-					->count('order_id');
+					->where('orderpaymentstatus_id','=',3)
+					->where('orderpayment_date','=',$lists)
+					->count('orderpayment_id');
 					$getrecoveryorders = DB::table('orderpayment')
-					->select('order_amountquoted')
+					->select('orderpayment_id')
 					->where('status_id','=',1)
 					->where('created_by','=',$request->id)
-					->where('orderpaymentstatus_id','=',18)
-					->where('order_recoverydate','=',$lists)
-					->count('order_id');
+					->where('orderpaymentstatus_id','=',7)
+					->where('orderpayment_recoverydate','=',$lists)
+					->count('orderpayment_id');
 					if ($commissions['from'] != 1 && $gettargetachieved >= $commissions['from'] && $indexforallpaidorders == 0) {
 					$achieveddate = $lists;
 					$indexforallpaidorders++;

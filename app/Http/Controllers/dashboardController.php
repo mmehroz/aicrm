@@ -27,9 +27,21 @@ class dashboardController extends Controller
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
-		$getyearandmonth = explode('-', $request->yearmonth);
-		$getfirstdate = $request->yearmonth."-01";
-		$noofdays = date('t');
+		$yearmonth = explode('-',$request->yearmonth);
+		if($yearmonth[1] <= 9){
+			$setyearmonth = $yearmonth[0].'-0'.$yearmonth[1];
+		}else{
+			$setyearmonth = $yearmonth[0].'-'.$yearmonth[1];
+		}
+		$getyearandmonth = explode('-', $setyearmonth);
+		$getfirstdate = $setyearmonth."-01";
+		if($yearmonth[1] == "1" || $yearmonth[1] == "3" || $yearmonth[1] == "5" || $yearmonth[1] == "7" || $yearmonth[1] == "8" || $yearmonth[1] == "10" || $yearmonth[1] == "12"){
+			$noofdays = 31;
+		}elseif($yearmonth[1] == "2"){
+			$noofdays = 28;
+		}else{
+			$noofdays = 30;
+		}
 		$list=array();
 		for($d=1; $d<=$noofdays; $d++)
 		{
@@ -37,12 +49,42 @@ class dashboardController extends Controller
 		    if (date('m', $time)==$getyearandmonth[1])       
 		        $list[]=date('Y-m-d', $time);
 		}
+		$totalbrand = DB::table('brand')
+		->select('brand_id')
+		->where('status_id','=',1)
+		->get();
+		$brands = array();
+		foreach($totalbrand as $totalbrands){
+			$brands[] =  $totalbrands->brand_id;
+		}
+		$graphdata = array();
+		$index = 0;
+		foreach ($list as $lists) {
+			$totalincomeindollar = DB::table('orderpayment')
+			->select('orderpayment_amount')
+			->where('orderpayment_date','=', $lists)
+			->whereIn('brand_id',$brands)
+			->where('status_id','=',1)
+			->sum('orderpayment_amount');
+			$paidincomeindollar = DB::table('orderpayment')
+			->select('orderpayment_amount')
+			->where('orderpaymentstatus_id','=',3)
+			->where('orderpayment_date','=', $lists)
+			->whereIn('brand_id',$brands)
+			->where('status_id','=',1)
+			->sum('orderpayment_amount');
+			$remainingincomeindollar = $totalincomeindollar-$paidincomeindollar;
+			$graphdata[$index]['total'] = $totalincomeindollar;
+			$graphdata[$index]['paid'] = $paidincomeindollar;
+			$graphdata[$index]['remaining'] = $remainingincomeindollar;
+			$index++;
+		}
 		$grosssale = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->whereIn('orderpayment_date', $list)
 		->where('status_id','=',1)
 		->sum('orderpayment_amount');
-		$unpaidsale = DB::table('orderpayment')
+		$invoicesale = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('orderpaymentstatus_id','=',2)
 		->whereIn('orderpayment_date', $list)
@@ -78,9 +120,10 @@ class dashboardController extends Controller
 		->whereIn('orderpayment_date', $list)
 		->where('status_id','=',1)
 		->sum('orderpayment_amount');
+		$totalunpaid = $grosssale-$invoicesale-$paidsale-$cancel-$refund-$chargeback-$recovery;
 		$ppcassigned = DB::table('assignppc')
 		->select('assignppc_amount')
-		->where('assignppc_month','=',$request->yearmonth)
+		->where('assignppc_month','=',$setyearmonth)
 		->where('status_id','=',1)
 		->sum('assignppc_amount');
 		$ppcspend = DB::table('ppc')
@@ -98,21 +141,50 @@ class dashboardController extends Controller
 		->where('status_id','=',1)
 		->whereIn('orderpayment_date',$list)
 		->sum('orderpayment_amount');
+		$previousrecover = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('orderpaymentstatus_id','=',7)
+		->where('orderpayment_date','<',$getfirstdate)
+		->where('status_id','=',1)
+		->sum('orderpayment_amount');
+		$previouscancel = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('orderpaymentstatus_id','=',4)
+		->where('orderpayment_date','<',$getfirstdate)
+		->where('status_id','=',1)
+		->sum('orderpayment_amount');
+		$previouspaid = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('orderpaymentstatus_id','=',3)
+		->where('orderpayment_date','<',$getfirstdate)
+		->where('status_id','=',1)
+		->sum('orderpayment_amount');
+		$previousunpaid = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->whereNotIn('orderpaymentstatus_id',[3,4,7])
+		->where('orderpayment_date','<',$getfirstdate)
+		->where('status_id','=',1)
+		->sum('orderpayment_amount');
 		$remainingtarget = $gettotaltarget-$gettotalachieve;
 		$topdata = array(
 			'grosssale' 		=> $grosssale,
 			'paidsale' 			=> $paidsale,
-			'unpaidsale' 		=> $unpaidsale,
+			'invoicesale' 		=> $invoicesale,
 			'cancel' 			=> $cancel,
 			'refund' 			=> $refund,
 			'chargeback' 		=> $chargeback,
 			'recovery' 			=> $recovery,
+			'totalunpaid' 		=> $totalunpaid,
 			'totaltarget' 		=> $gettotaltarget,
 			'totalachieve'	 	=> $gettotalachieve,
 			'remainingtarget' 	=> $remainingtarget,
 			'ppcassigned' 		=> $ppcassigned,
 			'ppcspend' 			=> $ppcspend,
 			'remainingppc' 		=> $remainingppc,
+			'previousrecover' 	=> $previousrecover,
+			'previouscancel' 	=> $previouscancel,
+			'previouspaid' 		=> $previouspaid,
+			'previousunpaid' 	=> $remainingppc,
 		);
 		$getupcommingpayments = DB::table('orderpaymentdetails')
 		->select('order_title','orderpayment_title','orderpayment_amount','user_name','user_picture')
@@ -129,11 +201,11 @@ class dashboardController extends Controller
 		->select('task_id','task_title','task_deadlinedate','taskstatus_name','creator')
 		->where('taskstatus_id','>',2)
 		->where('status_id','=',1)
-		->where('task_deadlinedate','like',$request->yearmonth.'%')
+		->where('task_date','=',date('Y-m-d'))
 		->get();
 		$userpicturepath = URL::to('/')."/public/user_picture/";
 		$brandlogopath = URL::to('/')."/public/brand_logo/";
-		return response()->json(['topdata' => $topdata,'test' => $list, 'upcommingpayments' => $getupcommingpayments, 'pendingtask' => $pendingtask, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
+		return response()->json(['topdata' => $topdata,'test' => $list, 'upcommingpayments' => $getupcommingpayments, 'pendingtask' => $pendingtask, 'graphdata' => $graphdata,'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
 	}
 	public function adminbranddetails(Request $request){
 		$validate = Validator::make($request->all(), [ 
@@ -143,15 +215,27 @@ class dashboardController extends Controller
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
+		$yearmonth = explode('-',$request->yearmonth);
+		if($yearmonth[1] <= 9){
+			$setyearmonth = $yearmonth[0].'-0'.$yearmonth[1];
+		}else{
+			$setyearmonth = $yearmonth[0].'-'.$yearmonth[1];
+		}
 		$branddetails = DB::table('brand')
 		->select('*')
 		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
 		->first();
 		$branddetails->brand_currency = $branddetails->brand_currency == 1 ? "$" : " £";
-		$getyearandmonth = explode('-', $request->yearmonth);
-		$getfirstdate = $request->yearmonth."-01";
-		$noofdays = date('t');
+		$getyearandmonth = explode('-', $setyearmonth);
+		$getfirstdate = $setyearmonth."-01";
+		if($yearmonth[1] == "1" || $yearmonth[1] == "3" || $yearmonth[1] == "5" || $yearmonth[1] == "7" || $yearmonth[1] == "8" || $yearmonth[1] == "10" || $yearmonth[1] == "12"){
+			$noofdays = 31;
+		}elseif($yearmonth[1] == "2"){
+			$noofdays = 28;
+		}else{
+			$noofdays = 30;
+		}
 		$list=array();
 		for($d=1; $d<=$noofdays; $d++)
 		{
@@ -170,7 +254,7 @@ class dashboardController extends Controller
 		}
 		$ppcassignindollar = DB::table('assignppc')
 		->select('assignppc_amount')
-		->where('assignppc_month','=',$request->yearmonth)
+		->where('assignppc_month','=',$setyearmonth)
 		->whereIn('user_id',$sortuserbrand)
 		->where('status_id','=',1)
 		->sum('assignppc_amount');
@@ -183,16 +267,17 @@ class dashboardController extends Controller
 		$remainingppcindollar = $ppcassignindollar-$ppcspendindollar;
 		$totalincomeindollar = DB::table('orderpayment')
 		->select('orderpayment_amount')
-		->where('orderpaymentstatus_id','!=',3)
 		->whereIn('orderpayment_date', $list)
 		->whereIn('created_by',$sortuserbrand)
+		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
 		->sum('orderpayment_amount');
 		$paidincomeindollar = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('orderpaymentstatus_id','=',3)
-		->whereIn('orderpayment_paiddate', $list)
+		->whereIn('orderpayment_date', $list)
 		->whereIn('created_by',$sortuserbrand)
+		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
 		->sum('orderpayment_amount');
 		$remaininngincomeindollar = $totalincomeindollar-$paidincomeindollar;
@@ -209,25 +294,25 @@ class dashboardController extends Controller
 		foreach ($list as $lists) {
 			$totalincomeindollar = DB::table('orderpayment')
 			->select('orderpayment_amount')
-			->whereIn('orderpayment_date', $list)
+			->where('orderpayment_date','=', $lists)
 			->whereIn('created_by',$sortuserbrand)
-			// ->where('brand_id','=',$request->brand_id)
+			->where('brand_id','=',$request->brand_id)
 			->where('status_id','=',1)
 			->sum('orderpayment_amount');
 			$paidincomeindollar = DB::table('orderpayment')
 			->select('orderpayment_amount')
 			->where('orderpaymentstatus_id','=',3)
-			->whereIn('orderpayment_paiddate', $list)
+			->where('orderpayment_date','=', $lists)
 			->whereIn('created_by',$sortuserbrand)
-			// ->where('brand_id','=',$request->brand_id)
+			->where('brand_id','=',$request->brand_id)
 			->where('status_id','=',1)
 			->sum('orderpayment_amount');
 			$remainingincomeindollar = DB::table('orderpayment')
 			->select('orderpayment_amount')
 			->where('orderpaymentstatus_id','!=',3)
-			->whereIn('orderpayment_date', $list)
+			->where('orderpayment_date','=', $lists)
 			->whereIn('created_by',$sortuserbrand)
-			// ->where('brand_id','=',$request->brand_id)
+			->where('brand_id','=',$request->brand_id)
 			->where('status_id','=',1)
 			->sum('orderpayment_amount');
 			$daywisepaidincome[$index]['total'] = $totalincomeindollar;
@@ -238,7 +323,7 @@ class dashboardController extends Controller
 		$getuser = DB::table('user')
 		->select('user_id','user_name','user_picture','user_target')
 		->whereIn('user_id',$sortuserbrand)
-		->where('role_id','=',7)
+		->whereIn('role_id',[6,7])
 		->where('status_id','=',1)
 		->get();
 		$topagent = array();
@@ -248,7 +333,7 @@ class dashboardController extends Controller
 			$getachieve = DB::table('orderpayment')
 			->select('orderpayment_amount')
 			->where('status_id','=',1)
-			->where('orderpayment_date','like',$request->yearmonth.'%')
+			->where('orderpayment_date','like',$setyearmonth.'%')
 			->where('created_by','=',$getusers->user_id)
 			->sum('orderpayment_amount');
 			if ($getachieve != 0 && $topthree <= 2) {
@@ -259,27 +344,36 @@ class dashboardController extends Controller
 			$topindex++;
 		}
 		$topagent = array_sort($topagent, 'achieve', SORT_DESC);
+		$sorttopagent = array();
+		$sortindex=0;
+		foreach($topagent as $topagents){
+			$sorttopagent[$sortindex] = $topagents;
+			$sortindex++;
+		}
 		$agenttarget = array();
 		$target=0;
 		foreach ($getuser as $getusers) {
 			$getachieve = DB::table('orderpayment')
 			->select('orderpayment_amount')
 			->where('status_id','=',1)
-			->where('orderpayment_date','like',$request->yearmonth.'%')
+			->where('brand_id','=',$request->brand_id)
+			->where('orderpayment_date','like',$setyearmonth.'%')
 			->where('created_by','=',$getusers->user_id)
 			->sum('orderpayment_amount');
 			$getpaid = DB::table('orderpayment')
 			->select('orderpayment_amount')
 			->where('status_id','=',1)
+			->where('brand_id','=',$request->brand_id)
 			->where('orderpaymentstatus_id','=',3)
-			->where('orderpayment_date','like',$request->yearmonth.'%')
+			->where('orderpayment_date','like',$setyearmonth.'%')
 			->where('created_by','=',$getusers->user_id)
 			->sum('orderpayment_amount');
 			$getcancel = DB::table('orderpayment')
 			->select('orderpayment_amount')
 			->where('status_id','=',1)
+			->where('brand_id','=',$request->brand_id)
 			->where('orderpaymentstatus_id','=',4)
-			->where('orderpayment_date','like',$request->yearmonth.'%')
+			->where('orderpayment_date','like',$setyearmonth.'%')
 			->where('created_by','=',$getusers->user_id)
 			->sum('orderpayment_amount');
 			$getusers->achieve = $getachieve;
@@ -297,7 +391,7 @@ class dashboardController extends Controller
 		->get();
 		$userpicturepath = URL::to('/')."/public/user_picture/";
 		$brandlogopath = URL::to('/')."/public/brand_logo/";
-		return response()->json(['branddetails' => $branddetails,'stats' => $stats, 'daywisepaidincome' => $daywisepaidincome, 'topagent' => $topagent, 'agenttarget' => $agenttarget, 'payments' => $payments, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
+		return response()->json(['branddetails' => $branddetails,'stats' => $stats, 'daywisepaidincome' => $daywisepaidincome, 'topagent' => $sorttopagent, 'agenttarget' => $agenttarget, 'payments' => $payments, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
 	}
 	public function portaladmindashboard(Request $request){
 		$validate = Validator::make($request->all(), [ 
@@ -306,8 +400,14 @@ class dashboardController extends Controller
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
-		$getyearandmonth = explode('-', $request->yearmonth);
-		$getfirstdate = $request->yearmonth."-01";
+		$yearmonth = explode('-',$request->yearmonth);
+		if($yearmonth[1] <= 9){
+			$setyearmonth = $yearmonth[0].'-0'.$yearmonth[1];
+		}else{
+			$setyearmonth = $yearmonth[0].'-'.$yearmonth[1];
+		}
+		$getyearandmonth = explode('-', $setyearmonth);
+		$getfirstdate = $setyearmonth."-01";
 		$getsalary = DB::connection('mysql2')->table('payrollexpense')
 		->where('elsemployees_dofjoining','<',$getfirstdate)
 		->where('elsemployees_status','=',2)
@@ -320,23 +420,23 @@ class dashboardController extends Controller
         ->select('increment_amount')
         ->sum('increment_amount');
         $raferal = DB::connection('mysql2')->table('adjustments')
-		->where('AdjMonth','=',$request->yearmonth)
+		->where('AdjMonth','=',$setyearmonth)
 		->select('adjustment')
 		->sum('adjustment');
 		$incentive = DB::connection('mysql2')->table('adjustments')
-		->where('AdjMonth','=',$request->yearmonth)
+		->where('AdjMonth','=',$setyearmonth)
 		->select('incentiveamount')
 		->sum('incentiveamount');
 		$spiff = DB::connection('mysql2')->table('adjustments')
-		->where('AdjMonth','=',$request->yearmonth)
+		->where('AdjMonth','=',$setyearmonth)
 		->select('spiffamount')
 		->sum('spiffamount');
 		$other = DB::connection('mysql2')->table('adjustments')
-		->where('AdjMonth','=',$request->yearmonth)
+		->where('AdjMonth','=',$setyearmonth)
 		->select('otheramount')
 		->sum('otheramount');
 		$last = DB::connection('mysql2')->table('adjustments')
-		->where('AdjMonth','=',$request->yearmonth)
+		->where('AdjMonth','=',$setyearmonth)
 		->select('lastamount')
 		->sum('lastamount');
 		$caramount = DB::connection('mysql2')->table('car')
@@ -344,14 +444,14 @@ class dashboardController extends Controller
 		->select('car_rent')
 		->sum('car_rent');
 		$additioncaramount = DB::connection('mysql2')->table('caraddition')
-		->where('caraddition_date','>=',$request->yearmonth)
+		->where('caraddition_date','>=',$setyearmonth)
 		->where('status_id','=',2)
 		->select('caraddition_rent')
 		->sum('caraddition_rent');
 		$sumcarrent = $caramount+$additioncaramount;
         $grosssalary = $getsalary+$getincrement+$raferal+$incentive+$spiff+$other+$last+$sumcarrent;
         $getcorrection = DB::connection('mysql2')->table('attendancecorrection')
-        ->where('attendancecorrection_affdate','like',$request->yearmonth.'%')
+        ->where('attendancecorrection_affdate','like',$setyearmonth.'%')
         ->where('attendancecorrection_status','=',"Approved")
         ->where('status_id','=',2)
         ->select('attendancecorrection_amount')
@@ -363,7 +463,7 @@ class dashboardController extends Controller
 		);
 		$getcar = DB::connection('mysql2')->table('car')
 		->select('car_id','car_name','car_rent')
-		// ->where('created_at','like',$request->yearmonth.'%')
+		// ->where('created_at','like',$setyearmonth.'%')
 		->where('status_id','=',2)
 		->get();
 		$carexpense = array();
@@ -371,14 +471,14 @@ class dashboardController extends Controller
 		foreach ($getcar as $getcars) {
 			$getcarrentaddition = DB::connection('mysql2')->table('caraddition')
 			->select('caraddition_rent')
-			->where('caraddition_date','>=',$request->yearmonth)
+			->where('caraddition_date','>=',$setyearmonth)
 			->where('status_id','=',1)
 			->where('car_id','=',$getcars->car_id)
 			->sum('caraddition_rent');
 			$getcars->car_rent = $getcars->car_rent+$getcarrentaddition;
 			$getcarassign = DB::connection('mysql2')->table('carassigndetails')
 			->select('elsemployees_name')
-			->where('carassign_month','=',$request->yearmonth)
+			->where('carassign_month','=',$setyearmonth)
 			->where('status_id','=',1)
 			->where('car_id','=',$getcars->car_id)
 			->first();
@@ -392,63 +492,64 @@ class dashboardController extends Controller
 		}
 		$sumbasiccarrent = DB::connection('mysql2')->table('car')
 		->select('car_rent')
-		// ->where('created_at','like',$request->yearmonth.'%')
+		// ->where('created_at','like',$setyearmonth.'%')
 		->where('status_id','=',2)
 		->sum('car_rent');
 		$sumcarrentaddition = DB::connection('mysql2')->table('caraddition')
 		->select('caraddition_rent')
-		->where('caraddition_date','>=',$request->yearmonth)
+		->where('caraddition_date','>=',$setyearmonth)
 		->where('status_id','=',1)
 		->sum('caraddition_rent');
 		$sumcarrent = $sumbasiccarrent+$sumcarrentaddition;
 		$fixexpense = DB::connection('mysql2')->table('expense')
 		->select('expense_title','expense_amount')
-		->where('expense_yearandmonth','=',$request->yearmonth)
+		->where('expense_yearandmonth','=',$setyearmonth)
 		->where('expense_isrecuring','=',1)
 		->where('expensetype_id','=',2)
 		->where('status_id','=',2)
 		->get();
 		$vanexpense = DB::connection('mysql2')->table('expense')
 		->select('expense_title','expense_amount')
-		->where('expense_yearandmonth','=',$request->yearmonth)
+		->where('expense_yearandmonth','=',$setyearmonth)
 		->where('expense_isrecuring','=',0)
 		->where('expensetype_id','=',4)
 		->where('status_id','=',2)
 		->get();
 		$otherexpense = DB::connection('mysql2')->table('expense')
 		->select('expense_title','expense_amount')
-		->where('expense_yearandmonth','=',$request->yearmonth)
+		->where('expense_yearandmonth','=',$setyearmonth)
 		->where('expense_isrecuring','=',0)
-		->where('expensetype_id','=',3)
+		->where('expensetype_id','=',5)
 		->where('status_id','=',2)
 		->get();
 		$sumfixexpense = DB::connection('mysql2')->table('expense')
 		->select('expense_amount')
-		->where('expense_yearandmonth','=',$request->yearmonth)
+		->where('expense_yearandmonth','=',$setyearmonth)
 		->where('expense_isrecuring','=',1)
 		->where('expensetype_id','=',4)
 		->where('status_id','=',2)
 		->sum('expense_amount');
 		$sumvanexpense = DB::connection('mysql2')->table('expense')
 		->select('expense_amount')
-		->where('expense_yearandmonth','=',$request->yearmonth)
+		->where('expense_yearandmonth','=',$setyearmonth)
 		->where('expense_isrecuring','=',0)
 		->where('expensetype_id','=',4)
 		->where('status_id','=',2)
 		->sum('expense_amount');
 		$sumotherexpense = DB::connection('mysql2')->table('expense')
 		->select('expense_amount')
-		->where('expense_yearandmonth','=',$request->yearmonth)
+		->where('expense_yearandmonth','=',$setyearmonth)
 		->where('expense_isrecuring','=',0)
 		->where('expensetype_id','!=',4)
 		->where('status_id','=',2)
 		->sum('expense_amount');
-		$grandtotal = $sumcarrent+$sumfixexpense+$sumvanexpense+$sumotherexpense;
+		$grandtotal = $sumcarrent+$sumfixexpense+$sumvanexpense+$sumotherexpense+$grosssalary;
 		$sumallexpense = array(
 			'sumcarrent' 		=> $sumcarrent,
 			'sumfixexpense' 	=> $sumfixexpense,
 			'sumvanexpense' 	=> $sumvanexpense,
 			'sumotherexpense' 	=> $sumotherexpense,
+			'netsalary' 		=> $grosssalary,
 			'grandtotal' 		=> $grandtotal,
 		);
 		$userpicturepath = URL::to('/')."/public/user_picture/";
@@ -462,26 +563,45 @@ class dashboardController extends Controller
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
+		$yearmonth = explode('-',$request->yearmonth);
+		if($yearmonth[1] <= 9){
+			$setyearmonth = $yearmonth[0].'-0'.$yearmonth[1];
+		}else{
+			$setyearmonth = $yearmonth[0].'-'.$yearmonth[1];
+		}
 		$graphdata = array();
 		$yearindex = 0;
 		for ($i=1; $i < 32 ; $i++) { 
 			if ($i <= 9) {
 				$getupcommingpayments = DB::table('orderpaymentdetails')
 				->select('order_title','orderpayment_title','orderpayment_amount','user_name','user_picture')
-				->whereIn('orderpaymentstatus_id',[1,8,9])
-				// ->where('orderpayment_duedate','=',$request->yearmonth.'-0'.$i)
+				->where('orderpaymentstatus_id','=',2)
+				->where('orderpayment_date','=',$setyearmonth.'-0'.$i)
 				->where('status_id','=',1)
 				->get();
+				$sumpayments = DB::table('orderpaymentdetails')
+				->select('orderpayment_amount')
+				->where('orderpaymentstatus_id','=',2)
+				->where('orderpayment_date','=',$setyearmonth.'-0'.$i)
+				->where('status_id','=',1)
+				->sum('orderpayment_amount');
 			}else{
 				$getupcommingpayments = DB::table('orderpaymentdetails')
 				->select('order_title','orderpayment_title','orderpayment_amount','user_name','user_picture')
-				->whereIn('orderpaymentstatus_id',[1,8,9])
-				// ->where('orderpayment_duedate','=',$request->yearmonth.'-'.$i)
+				->where('orderpaymentstatus_id','=',2)
+				->where('orderpayment_date','=',$setyearmonth.'-'.$i)
 				->where('status_id','=',1)
 				->get();
+				$sumpayments = DB::table('orderpaymentdetails')
+				->select('orderpayment_amount')
+				->where('orderpaymentstatus_id','=',2)
+				->where('orderpayment_date','=',$setyearmonth.'-'.$i)
+				->where('status_id','=',1)
+				->sum('orderpayment_amount');
 			}
 			$graphdata[$yearindex]['date'] = $i;
 			$graphdata[$yearindex]['payments'] = $getupcommingpayments;
+			$graphdata[$yearindex]['sumpayments'] = $sumpayments;
 			$yearindex++;
 		}
 		return response()->json($graphdata,200);
@@ -493,34 +613,90 @@ class dashboardController extends Controller
 		if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
-		$billingmerchantlist = DB::table('billingmerchant')
+		$yearmonth = explode('-',$request->yearmonth);
+		if($yearmonth[1] <= 9){
+			$setyearmonth = $yearmonth[0].'-0'.$yearmonth[1];
+		}else{
+			$setyearmonth = $yearmonth[0].'-'.$yearmonth[1];
+		}
+		$merchatdetail = DB::table('billingmerchant')
 		->select('*')
 		->where('status_id','=',1)
+		->groupBy('billingmerchant_email')
 		->get();
-		if(isset($billingmerchantlist)){
+		if(isset($merchatdetail)){
 			$sortbillingmerchant = array();
-			$mindex=0;
-			foreach($billingmerchantlist as $billingmerchantlists){
-				$grossamount = DB::table('orderpayment')
+			$merchantnetamount = array();
+			// mehroz start
+			$firstdatewithzero = $setyearmonth.'-01';
+        	$firstdate = $setyearmonth.'-01';
+			$stats = array();
+			$index=0;
+			foreach($merchatdetail as $merchatdetails){
+				$merchantids = DB::table('billingmerchant')
+				->select('billingmerchant_id')
+				->where('billingmerchant_email','=',$merchatdetails->billingmerchant_email)
+				->get();
+				$sortmerchantids = array();
+				foreach($merchantids as $merchantidss){
+					$sortmerchantids[] = $merchantidss->billingmerchant_id;
+				}
+				$firstbalance = $merchatdetails->billingmerchant_openingbalance;
+				$previouspaidbalance = DB::table('orderpayment')
 				->select('orderpayment_amount')
-				->where('orderpayment_date','like',$request->yearmonth.'%')
-				->where('merchant_id','=',$billingmerchantlists->billingmerchant_id)
+				->where('orderpayment_date','<',$firstdatewithzero)
+				->where('orderpaymentstatus_id','=',3)
+				->whereIn('merchant_id',$sortmerchantids)
 				->where('status_id','=',1)
 				->sum('orderpayment_amount');
-				$withdrawalamount = DB::table('withdrawal')
+				$previousfeededuction =  $merchatdetails->billingmerchant_fee / 100 * $previouspaidbalance;
+				$previoustotalwithdrawl = DB::table('withdrawal')
 				->select('withdrawal_amount')
-				->where('withdrawal_month','=',$request->yearmonth)
+				->where('withdrawal_month','<',$request->yearmonth)
+				->whereIn('billingmerchant_id',$sortmerchantids)
 				->where('status_id','=',1)
 				->sum('withdrawal_amount');
-				$netbalance = $grossamount-$withdrawalamount;
-				$billingmerchantlists->grossamount = $grossamount;
-				$billingmerchantlists->withdrawalamount = $withdrawalamount;
-				$billingmerchantlists->netamount = $netbalance;
-				$sortbillingmerchant[$mindex] = $billingmerchantlists;
-				$mindex++;
+				$previousnetbalance = $previouspaidbalance+$firstbalance-$previoustotalwithdrawl-$previousfeededuction;
+				$openingbalance = $previousnetbalance;
+				$paidbalance = DB::table('orderpayment')
+				->select('orderpayment_amount')
+				->where('orderpayment_date','like',$setyearmonth.'%')
+				->where('orderpaymentstatus_id','=',3)
+				->whereIn('merchant_id',$sortmerchantids)
+				->where('status_id','=',1)
+				->sum('orderpayment_amount');
+				$grosstotalbalance = $openingbalance+$paidbalance;
+				$totalwithdrawl = DB::table('withdrawal')
+				->select('withdrawal_amount')
+				->where('withdrawaltype_id','=',$request->withdrawal_month)
+				->whereIn('billingmerchant_id',$sortmerchantids)
+				->where('status_id','=',1)
+				->sum('withdrawal_amount');
+				$feededuction =  $merchatdetails->billingmerchant_fee / 100 * $paidbalance;
+				$netbalance = $grosstotalbalance-$totalwithdrawl-$feededuction;
+
+				$merchatdetails->billingmerchant_openingbalance 	= $openingbalance;
+				$merchatdetails->paidbalance 		= $paidbalance;
+				$merchatdetails->feededuction 		= $feededuction;
+				$merchatdetails->totalwithdrawl 	= $totalwithdrawl;
+				$merchatdetails->grosstotalbalance  = $grosstotalbalance;
+				$merchatdetails->netbalance  		= $netbalance;
+				$merchantnetamount[$index] 			= $netbalance;
+				$stats[$index] 		                = $merchatdetails;
+				$index++;
+			}
+			// mehroz end
+			$billingmerchanttitle = DB::table('billingmerchant')
+			->select('billingmerchant_title')
+			->where('status_id','=',1)
+			->groupBy('billingmerchant_email')
+			->get();
+			$merchanttitle = array();
+			foreach($billingmerchanttitle as $billingmerchanttitles){
+				$merchanttitle[] =  $billingmerchanttitles->billingmerchant_title;
 			}
 			$logopath = URL::to('/')."/public/billingmerchantlogo/";
-			return response()->json(['sortbillingmerchant' => $sortbillingmerchant, 'logopath' => $logopath,  'message' => 'Billing Merchant Details'],200);
+			return response()->json(['sortbillingmerchant' => $stats, 'merchanttitle' => $merchanttitle, 'merchantnetamount' => $merchantnetamount, 'logopath' => $logopath,  'message' => 'Billing Merchant Details'],200);
 		}else{
 			$emptyarray = array();
 			$logopath = "";
@@ -536,14 +712,26 @@ class dashboardController extends Controller
 		if ($validate->fails()) {    
 		    return response()->json($validate->errors(), 400);
 		}
-		$getyearandmonth = explode('-', $request->yearmonth);
+		$yearmonth = explode('-',$request->yearmonth);
+		if($yearmonth[1] <= 9){
+			$setyearmonth = $yearmonth[0].'-0'.$yearmonth[1];
+		}else{
+			$setyearmonth = $yearmonth[0].'-'.$yearmonth[1];
+		}
+		$getyearandmonth = explode('-', $setyearmonth);
 		$getuser = DB::table('user')
 		->select('*')
 		->where('user_id','=',$request->id)
 		->where('status_id','=',1)
 		->first();
 		$list=array();
-		$noofdays = date('t');
+		if($yearmonth[1] == "1" || $yearmonth[1] == "3" || $yearmonth[1] == "5" || $yearmonth[1] == "7" || $yearmonth[1] == "8" || $yearmonth[1] == "10" || $yearmonth[1] == "12"){
+			$noofdays = 31;
+		}elseif($yearmonth[1] == "2"){
+			$noofdays = 28;
+		}else{
+			$noofdays = 30;
+		}
 		for($d=1; $d<=$noofdays; $d++)
 		{
 			$time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
@@ -559,15 +747,15 @@ class dashboardController extends Controller
 		->where('status_id','=',1)
 		->where('task_workby','=',$request->id)
 		->where('task_date','=',$lists)
-		->count('order_id');
+		->count('task_id');
 		$completeorders = DB::table('task')
 		->select('task_id')
 		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
-		->where('taskstatus_id','=',3)
+		->where('taskstatus_id','>=',3)
 		->where('task_workby','=',$request->id)
 		->where('task_date','=',$lists)
-		->count('order_id');
+		->count('task_id');
 		$datewiseordercount[$index]['totalorders'] = $totalorders;
 		$datewiseordercount[$index]['completeorders'] = $completeorders;
 		$datewiseordercount[$index]['orderdate'] = $lists;
@@ -578,16 +766,16 @@ class dashboardController extends Controller
 		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
 		->where('task_workby','=',$request->id)
-		->where('task_date','=',$lists)
-		->count('order_id');
+		->where('task_date','like',$setyearmonth.'%')
+		->count('task_id');
 		$monthlycompleteorders = DB::table('task')
 		->select('task_id')
 		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
-		->where('taskstatus_id','=',3)
+		->where('taskstatus_id','>=',3)
 		->where('task_workby','=',$request->id)
-		->where('task_date','=',$lists)
-		->count('order_id');
+		->where('task_date','like',$setyearmonth.'%')
+		->count('task_id');
 		$monthlyremainingorders = $monthlytotalorders-$monthlycompleteorders;
 		$ordercounts = array();
 		$ordercounts['totalorder'] = $monthlytotalorders;
@@ -615,20 +803,34 @@ class dashboardController extends Controller
 		if ($validate->fails()) {    
 		    return response()->json($validate->errors(), 400);
 		}
-		$getyearandmonth = explode('-', $request->yearmonth);
+		$yearmonth = explode('-',$request->yearmonth);
+		if($yearmonth[1] <= 9){
+			$setyearmonth = $yearmonth[0].'-0'.$yearmonth[1];
+		}else{
+			$setyearmonth = $yearmonth[0].'-'.$yearmonth[1];
+		}
+		$getyearandmonth = explode('-', $setyearmonth);
 		$getuser = DB::table('user')
 		->select('*')
 		->where('user_id','=',$request->id)
 		->where('status_id','=',1)
 		->first();
 		$list=array();
-		$noofdays = date('t');
-		$from = $request->yearmonth.'-01';
-		$to = $request->yearmonth.'-'.$noofdays;
+		if($yearmonth[1] == "1" || $yearmonth[1] == "3" || $yearmonth[1] == "5" || $yearmonth[1] == "7" || $yearmonth[1] == "8" || $yearmonth[1] == "10" || $yearmonth[1] == "12"){
+			$noofdays = 31;
+		}elseif($yearmonth[1] == "2"){
+			$noofdays = 28;
+		}else{
+			$noofdays = 30;
+		}
+		$from = $setyearmonth.'-01';
+		$to = $setyearmonth.'-'.$noofdays;
+		$year = $getyearandmonth[0];
+		$month = $getyearandmonth[1];
 		for($d=1; $d<=$noofdays; $d++)
 		{
-			$time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
-			if (date('m', $time)==$getyearandmonth[1])       
+			$time=mktime(12, 0, 0, $month, $d, $year);          
+			if (date('m', $time)==$month)       
 				$list[]=date('Y-m-d', $time);
 		}
 		function countDays($year, $month, $ignore) {
@@ -658,6 +860,7 @@ class dashboardController extends Controller
 		->where('status_id','=',1)
 		->where('created_by','=',$request->id)
 		->where('orderpayment_date','=',$lists)
+		->where('orderpaymentstatus_id','!=',1)
 		->where('brand_id','=',$request->brand_id)
 		->sum('orderpayment_amount');
 		$datewiseordercount[$index]['orderscount'] = $orderscount;
@@ -678,7 +881,7 @@ class dashboardController extends Controller
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
 		->where('created_by','=',$request->id)
-		->where('orderpaymentstatus_id','=',4)
+		->where('orderpaymentstatus_id','=',3)
 		->whereBetween('orderpayment_date', [$from, $to])
 		->where('brand_id','=',$request->brand_id)
 		->sum('orderpayment_amount');	
@@ -701,7 +904,7 @@ class dashboardController extends Controller
 		$targetincrement = DB::table('usertarget')
 		->select('usertarget_target')
 		->where('user_id','=',$request->id)
-		->where('usertarget_month','<=',$request->yearmonth)
+		->where('usertarget_month','<=',$setyearmonth)
 		->where('status_id','=',1)
 		->sum('usertarget_target');
 		$usertarget = $getuser->user_target+$targetincrement;
@@ -717,12 +920,12 @@ class dashboardController extends Controller
 		$countcompleteorders = DB::table('order')
 		->select('order_id')
 		->where('status_id','=',1)
-		->whereIn('orderstatus_id',[8,9,10,11])
+		->whereNotIn('orderstatus_id',[5,8,9,10])
 		->where('created_by','=',$request->id)
 		->whereBetween('order_date', [$from, $to])
 		->where('brand_id','=',$request->brand_id)
 		->count('order_id');
-		$countpaidorders = DB::table('order')
+		$countapproveorders = DB::table('order')
 		->select('order_id')
 		->where('status_id','=',1)
 		->where('orderstatus_id','=',11)
@@ -734,11 +937,11 @@ class dashboardController extends Controller
 		->select('order_id')
 		->where('status_id','=',1)
 		->where('created_by','=',$request->id)
-		->where('orderstatus_id','=',12)
+		->where('orderstatus_id','=',6)
 		->whereBetween('order_date', [$from, $to])
 		->where('brand_id','=',$request->brand_id)
 		->count('order_id');
-		$countpendingorders = $countcompleteorders-$countpaidorders-$countcancel;
+		$countpendingorders = $countcompleteorders-$countapproveorders-$countcancel;
 		$target['user_target'] = $usertarget;
 		$target['achieved'] = $targetachieved;
 		$target['paid'] = $targetpaid;
@@ -749,7 +952,7 @@ class dashboardController extends Controller
 		$target['cancel'] = $targetcancel;
 		$target['counttotalorders'] = $counttotalorders;
 		$target['countcompleteorders'] = $countcompleteorders;
-		$target['countpaidorders'] = $countpaidorders;
+		$target['countapproveorders'] = $countapproveorders;
 		$target['countcancel'] = $countcancel;
 		$userpicturepath = URL::to('/')."/public/user_picture/";
 		$branddetail = DB::table('branddetail')
@@ -773,16 +976,28 @@ class dashboardController extends Controller
 		if ($validate->fails()) {    
 		    return response()->json($validate->errors(), 400);
 		}
-		$getyearandmonth = explode('-', $request->yearmonth);
+		$yearmonth = explode('-',$request->yearmonth);
+		if($yearmonth[1] <= 9){
+			$setyearmonth = $yearmonth[0].'-0'.$yearmonth[1];
+		}else{
+			$setyearmonth = $yearmonth[0].'-'.$yearmonth[1];
+		}
+		$getyearandmonth = explode('-', $setyearmonth);
 		$getuser = DB::table('user')
 		->select('*')
 		->where('user_id','=',$request->id)
 		->where('status_id','=',1)
 		->first();
 		$list=array();
-		$noofdays = date('t');
-		$from = $request->yearmonth.'-01';
-		$to = $request->yearmonth.'-'.$noofdays;
+		if($yearmonth[1] == "1" || $yearmonth[1] == "3" || $yearmonth[1] == "5" || $yearmonth[1] == "7" || $yearmonth[1] == "8" || $yearmonth[1] == "10" || $yearmonth[1] == "12"){
+			$noofdays = 31;
+		}elseif($yearmonth[1] == "2"){
+			$noofdays = 28;
+		}else{
+			$noofdays = 30;
+		}
+		$from = $setyearmonth.'-01';
+		$to = $setyearmonth.'-'.$noofdays;
 		for($d=1; $d<=$noofdays; $d++)
 		{
 			$time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          

@@ -19,6 +19,11 @@ use App\Http\Controllers\targetController;
 use App\Http\Controllers\commissionController;
 use App\Http\Controllers\requestquoteController;
 use App\Http\Controllers\leadgenerateController;
+use App\Http\Controllers\uiorderController;
+use App\Http\Controllers\vendorController;
+use App\Http\Controllers\patchController;
+use App\Http\Controllers\searchleadController;
+use App\Http\Controllers\patchqueryController;
 
 Route::any('/downloadclientattachment', [taskController::class, 'downloadclientattachment']);
 Route::any('/downloadworkattachment', [taskController::class, 'downloadworkattachment']);
@@ -38,6 +43,8 @@ Route::any('/leadstatus', [settingsController::class, 'leadstatus']);
 Route::any('/orderstatus', [settingsController::class, 'orderstatus']);
 Route::any('/taskstatus', [settingsController::class, 'taskstatus']);
 Route::any('/orderquestion', [settingsController::class, 'orderquestion']);
+Route::any('/orderpaymentstatus', [settingsController::class, 'orderpaymentstatus']);
+Route::any('/patchquerystatus', [settingsController::class, 'patchquerystatus']);
 
 Route::any('/createbrand', [brandController::class, 'createbrand']);
 Route::any('/updatebrand', [brandController::class, 'updatebrand']);
@@ -71,6 +78,9 @@ Route::any('/picklead', [leadController::class, 'picklead']);
 Route::any('/unpicklead', [leadController::class, 'unpicklead']);
 Route::any('/cancellead', [leadController::class, 'cancellead']);
 Route::any('/makelead', [leadController::class, 'makelead']);
+Route::any('/searchlead', [leadController::class, 'searchlead']);
+Route::any('/clientrevenuereport', [leadController::class, 'clientrevenuereport']);
+Route::any('/transferclient', [leadController::class, 'transferclient']);
 
 Route::any('/createorder', [orderController::class, 'createorder']);
 Route::any('/updateorder', [orderController::class, 'updateorder']);
@@ -90,6 +100,7 @@ Route::any('/updateorderpaymentstatus', [orderController::class, 'updateorderpay
 Route::any('/grouporderlist', [orderController::class, 'grouporderlist']);
 Route::any('/clientwiseorderlist', [orderController::class, 'clientwiseorderlist']);
 Route::any('/previousorderhistory', [orderController::class, 'previousorderhistory']);
+Route::any('/updatemultiorderstatus', [orderController::class, 'updatemultiorderstatus']);
 
 Route::any('/creattask', [taskController::class, 'creattask']);
 Route::any('/updatetask', [taskController::class, 'updatetask']);
@@ -144,6 +155,9 @@ Route::any('/statuswisepaymentlist', [billingController::class, 'statuswisepayme
 Route::any('/mergestatuswisepaymentlist', [billingController::class, 'mergestatuswisepaymentlist']);
 Route::any('/paymentamount', [billingController::class, 'paymentamount']);
 Route::any('/sumpaymentamount', [billingController::class, 'sumpaymentamount']);
+Route::any('/multiupdatepaymentstatus', [billingController::class, 'multiupdatepaymentstatus']);
+Route::any('/savebillingorderfollowup', [billingController::class, 'savebillingorderfollowup']);
+Route::any('/billingorderfollowuplist', [billingController::class, 'billingorderfollowuplist']);
 
 Route::any('/savefreshlead', [freshleadController::class, 'savefreshlead']);
 Route::any('/freshleadlist', [freshleadController::class, 'freshleadlist']);
@@ -157,6 +171,8 @@ Route::any('/billingmerchantdetails', [billingmerchantController::class, 'billin
 Route::any('/deletebillingmerchant', [billingmerchantController::class, 'deletebillingmerchant']);
 Route::any('/addwithdrawalamount', [billingmerchantController::class, 'addwithdrawalamount']);
 Route::any('/withdrawalamountlist', [billingmerchantController::class, 'withdrawalamountlist']);
+Route::any('/billingmerchantreport', [billingmerchantController::class, 'billingmerchantreport']);
+Route::any('/withdrawaltype', [billingmerchantController::class, 'withdrawaltype']);
 
 Route::any('/addtarget', [targetController::class, 'addtarget']);
 Route::any('/updatetarget', [targetController::class, 'updatetarget']);
@@ -176,7 +192,42 @@ Route::any('/quotedetails', [requestquoteController::class, 'quotedetails']);
 Route::any('/deletequote', [requestquoteController::class, 'deletequote']);
 Route::any('/movequoterequest', [requestquoteController::class, 'movequoterequest']);
 Route::any('/updatequoterequest', [requestquoteController::class, 'updatequoterequest']);
+Route::any('/chekprojectcost', [requestquoteController::class, 'chekprojectcost']);
+Route::any('/deletequotepayment', [requestquoteController::class, 'deletequotepayment']);
 
 Route::any('/generatelead', [leadgenerateController::class, 'generatelead']);
+
+Route::any('/createuiorder', [uiorderController::class, 'createuiorder']);
+Route::any('/uiorderlist', [uiorderController::class, 'uiorderlist']);
+Route::any('/updateuiorderstatus', [uiorderController::class, 'updateuiorderstatus']);
+Route::any('/uiorderdetail', [uiorderController::class, 'uiorderdetail']);
+
+Route::any('/vendortype', [vendorController::class, 'vendortype']);
+Route::any('/addvendor', [vendorController::class, 'addvendor']);
+Route::any('/vendorlist', [vendorController::class, 'vendorlist']);
+Route::any('/vendordetails', [vendorController::class, 'vendordetails']);
+Route::any('/deletevendor', [vendorController::class, 'deletevendor']);
+
+Route::any('/patchtype', [patchController::class, 'patchtype']);
+Route::any('/patchback', [patchController::class, 'patchback']);
+Route::any('/createpatchorder', [patchController::class, 'createpatchorder']);
+Route::any('/patchorderlist', [patchController::class, 'patchorderlist']);
+Route::any('/updatepatchorder', [patchController::class, 'updatepatchorder']);
+Route::any('/patchorderdetails', [patchController::class, 'patchorderdetails']);
+Route::any('/deletepatchorder', [patchController::class, 'deletepatchorder']);
+Route::any('/movepatchorder', [patchController::class, 'movepatchorder']);
+Route::any('/updatebillingpatchstatus', [patchController::class, 'updatebillingpatchstatus']);
+Route::any('/patchbillingorderlist', [patchController::class, 'patchbillingorderlist']);
+
+Route::any('/searchlead', [searchleadController::class, 'searchlead']);
+Route::any('/movesearchlead', [searchleadController::class, 'movesearchlead']);
+Route::any('/randomsearchlead', [searchleadController::class, 'randomsearchlead']);
+
+Route::any('/createpatchquery', [patchqueryController::class, 'createpatchquery']);
+Route::any('/patchquerylist', [patchqueryController::class, 'patchquerylist']);
+Route::any('/patchquerydetails', [patchqueryController::class, 'patchquerydetails']);
+Route::any('/movepatchquery', [patchqueryController::class, 'movepatchquery']);
+Route::any('/updatepatchquery', [patchqueryController::class, 'updatepatchquery']);
+Route::any('/deletepatchquery', [patchqueryController::class, 'deletepatchquery']);
 });
 });

@@ -127,6 +127,17 @@ class settingsController extends Controller
 			return response()->json(['data' => $emptyarray,'message' => 'Order Status List'],200);
 		}
 	}
+	public function orderpaymentstatus(Request $request){
+		$orderpaymentstatuslist = DB::table('orderpaymentstatus')
+		->select('*')
+		->where('status_id','=',1)
+		->get();
+		if(isset($orderpaymentstatuslist)){
+			return response()->json(['data' => $orderpaymentstatuslist, 'message' => 'Order Payment Status List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray,'message' => 'Order Payment Status List'],200);
+		}
+	}
 	public function taskstatus(Request $request){
 		if($request->role_id > 11){
 			$taskstatuslist = DB::table('taskstatus')
@@ -169,6 +180,17 @@ class settingsController extends Controller
 			return response()->json(['data' => $orderquestionlist, 'message' => 'Order Question List'],200);
 		}else{
 			return response()->json(['data' => $emptyarray,'message' => 'Order Question List'],200);
+		}
+	}
+	public function patchquerystatus(Request $request){
+		$list = DB::table('patchquerystatus')
+		->select('*')
+		->where('status_id','=',1)
+		->get();
+		if($list){
+			return response()->json(['data' => $list, 'message' => 'Patch Query Status List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray,'message' => 'Patch Query Status List'],200);
 		}
 	}
 }

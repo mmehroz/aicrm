@@ -36,6 +36,32 @@ class requestquoteController extends Controller
 		if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
+		$removefeaturedash = explode(',', $request->quote_feature);
+		$feature = array();
+		foreach($removefeaturedash as $removefeaturedashs){
+			if($removefeaturedashs != "-"){
+				$feature[] = $removefeaturedashs;
+			}
+		}
+		$mergefeature = implode(',', $feature);
+
+		$removedevplatformdash = explode(',', $request->quote_devplatform);
+		$devplatform = array();
+		foreach($removedevplatformdash as $removedevplatformdashs){
+			if($removedevplatformdashs != "-"){
+				$devplatform[] = $removedevplatformdashs;
+			}
+		}
+		$mergedevplatform = implode(',', $devplatform);
+
+		$removerefrencedash = explode(',', $request->quote_refrence);
+		$refrence = array();
+		foreach($removerefrencedash as $removerefrencedashs){
+			if($removerefrencedashs != "-"){
+				$refrence[] = $removerefrencedashs;
+			}
+		}
+		$mergerefrence = implode(',', $refrence);
 		$add = array(
 		'quote_title'		    => $request->quote_title,
 		'quote_deadlinedate'    => $request->quote_deadlinedate,
@@ -43,9 +69,9 @@ class requestquoteController extends Controller
         'quote_maxbudget'	    => $request->quote_maxbudget,
 		'quote_description'	    => $request->quote_description,
 		'quote_projecttype'     => $request->quote_projecttype,
-        'quote_feature'		    => $request->quote_feature,
-		'quote_devplatform'	    => $request->quote_devplatform,
-		'quote_refrence' 		=> $request->quote_refrence,
+        'quote_feature'		    => $mergefeature,
+		'quote_devplatform'	    => $mergedevplatform,
+		'quote_refrence' 		=> $mergerefrence,
         'quote_comment' 		=> $request->quote_comment,
         'quote_date' 		    => $request->quote_date,
         'quotestatus_id' 		=> $request->quotestatus_id,
@@ -120,11 +146,22 @@ class requestquoteController extends Controller
 		->where('quote_id','=',$request->quote_id)
 		->where('status_id','=',1)
 		->first();
+		$assignedusersids = explode(',', $quotedetails->quote_assignedusers);
+		$assignedusers = DB::table('user')
+		->select('user_id','user_name')
+		->whereIn('user_id',$assignedusersids)
+		->where('status_id','=',1)
+		->get();
 		$projecttype = explode(',', $quotedetails->quote_projecttype);
 		$feature = explode(',', $quotedetails->quote_feature);
 		$devplatform = explode(',', $quotedetails->quote_devplatform);
 		$refrence = explode(',', $quotedetails->quote_refrence);
 	    $attachments = DB::table('quoteattachment')
+		->select('*')
+        ->where('quote_id','=',$request->quote_id)
+		->where('status_id','=',1)
+		->get();
+		$payments = DB::table('quotepayment')
 		->select('*')
         ->where('quote_id','=',$request->quote_id)
 		->where('status_id','=',1)
@@ -137,8 +174,9 @@ class requestquoteController extends Controller
         $quotepath = URL::to('/')."/public/quote/".$request->quote_id;
 		$brandlogopath = URL::to('/')."/public/brand_logo/";
 		$brandcoverpath = URL::to('/')."/public/brand_cover/";
+		$brandproposalpath = URL::to('/')."/public/brand_proposal/";
 		if($quotedetails){
-			return response()->json(['quotedetails' => $quotedetails, 'attachments' => $attachments, 'branddetails' => $branddetails, 'quotepath' => $quotepath, 'projecttype' => $projecttype, 'features' => $feature, 'devplatform' => $devplatform, 'refrence' => $refrence, 'brandlogopath' => $brandlogopath, 'brandcoverpath' => $brandcoverpath, 'message' => 'Quotation Details'],200);
+			return response()->json(['quotedetails' => $quotedetails, 'payments' => $payments, 'assignedusers' => $assignedusers, 'attachments' => $attachments, 'branddetails' => $branddetails, 'quotepath' => $quotepath, 'projecttype' => $projecttype, 'features' => $feature, 'devplatform' => $devplatform, 'refrence' => $refrence, 'brandlogopath' => $brandlogopath, 'brandcoverpath' => $brandcoverpath , 'brandproposalpath' => $brandproposalpath, 'message' => 'Quotation Details'],200);
 		}else{
 			return response()->json(['message' => 'Oops! Something Went Wrong.'],400);
 		}
@@ -199,6 +237,37 @@ class requestquoteController extends Controller
 		if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
+		if($request->isArray == 1){
+			$assignedusers = implode(',', $request->assignedusers);	
+		}else{
+			$assignedusers = $request->assignedusers;	
+		}
+		$removefeaturedash = explode(',', $request->quote_feature);
+		$feature = array();
+		foreach($removefeaturedash as $removefeaturedashs){
+			if($removefeaturedashs != "-"){
+				$feature[] = $removefeaturedashs;
+			}
+		}
+		$mergefeature = implode(',', $feature);
+
+		$removedevplatformdash = explode(',', $request->quote_devplatform);
+		$devplatform = array();
+		foreach($removedevplatformdash as $removedevplatformdashs){
+			if($removedevplatformdashs != "-"){
+				$devplatform[] = $removedevplatformdashs;
+			}
+		}
+		$mergedevplatform = implode(',', $devplatform);
+
+		$removerefrencedash = explode(',', $request->quote_refrence);
+		$refrence = array();
+		foreach($removerefrencedash as $removerefrencedashs){
+			if($removerefrencedashs != "-"){
+				$refrence[] = $removerefrencedashs;
+			}
+		}
+		$mergerefrence = implode(',', $refrence);
 		$data = array(
 		'quote_title'		    => $request->quote_title,
 		'quote_deadlinedate'    => $request->quote_deadlinedate,
@@ -206,10 +275,13 @@ class requestquoteController extends Controller
         'quote_maxbudget'	    => $request->quote_maxbudget,
 		'quote_description'	    => $request->quote_description,
 		'quote_projecttype'     => $request->quote_projecttype,
-        'quote_feature'		    => $request->quote_feature,
-		'quote_devplatform'	    => $request->quote_devplatform,
-		'quote_refrence' 		=> $request->quote_refrence,
+        'quote_feature'		    => $mergefeature,
+		'quote_devplatform'	    => $mergedevplatform,
+		'quote_refrence' 		=> $mergerefrence,
         'quote_comment' 		=> $request->quote_comment,
+		'quote_days' 			=> $request->days,
+		'quote_sumcost' 		=> $request->sumcost,
+		'quote_assignedusers' 	=> $assignedusers,
         'quotestatus_id' 		=> $request->quotestatus_id,
         'updated_by'	 		=> $request->user_id,
 		'updated_at'	 		=> date('Y-m-d h:i:s'),
@@ -244,10 +316,93 @@ class requestquoteController extends Controller
 	    	DB::table('quoteattachment')->insert($saveattachment);
 	    	}
     	}
+		if (isset($request->payment)) {
+			foreach ($request->payment as $payments) {
+				if ($payments['quotepayment_id'] ==  "-") {
+					$payment = array(
+					'quotepayment_title'		=> $payments['quotepayment_title'],
+					'quotepayment_description'	=> $payments['quotepayment_description'],
+					'quotepayment_amount'		=> $payments['quotepayment_amount'],
+					'quotepayment_duedate'		=> $payments['quotepayment_duedate'],
+					'quote_id'					=> $request->quote_id,
+					'status_id' 				=> 1,
+					'created_by'				=> $request->user_id,
+					'created_at'				=> date('Y-m-d h:i:s'),
+					);
+					DB::table('quotepayment')->insert($payment);	
+				}else{
+					DB::table('quotepayment')
+					->where('quotepayment_id','=',$payments['quotepayment_id'])
+					->update([
+					'quotepayment_title'		=> $payments['quotepayment_title'],
+					'quotepayment_description'	=> $payments['quotepayment_description'],
+					'quotepayment_amount'		=> $payments['quotepayment_amount'],
+					'quotepayment_duedate'		=> $payments['quotepayment_duedate'],
+					'updated_by'				=> $request->user_id,
+					'updated_at'				=> date('Y-m-d h:i:s'),
+					]);
+				}
+			}
+		}
 		if($update){
-			return response()->json(['message' => 'Quote Saved Successfully'],200);
+			return response()->json(['message' => 'Quote Updated Successfully'],200);
 		}else{
 			return response()->json(['message' => 'Oops! Something Went Wrong.'],400);
+		}
+	}
+	public function chekprojectcost(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'assignedusers'	=> 'required',
+		  'days'			=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$cost = array();
+		foreach($request->assignedusers as $assigneduserss){
+			$batchid = DB::table('user')
+			->where('user_id','=',$assigneduserss)
+			->select('user_batchid')
+			->first();
+			$salary = DB::connection('mysql2')->table('payrollsalaries')
+			->where('EMP_BADGE_ID','=',$batchid->user_batchid)
+			->select('Salary')
+			->sum('Salary');
+			$increment = DB::connection('mysql2')->table('increment')
+			->where('elsemployees_batchid','=',$batchid->user_batchid)
+			->where('status_id','=',2)
+			->select('increment_amount')
+			->sum('increment_amount');
+			$decrement = DB::connection('mysql2')->table('decrement')
+			->where('elsemployees_batchid','=',$batchid->user_batchid)
+			->where('status_id','=',2)
+			->select('decrement_amount')
+			->sum('decrement_amount');
+			$sumsalary = $salary+$increment+$decrement;
+			$perdaysalary = $sumsalary/22;
+			$cost[] = $perdaysalary*$request->days;
+		}
+		$sumcost = array_sum($cost);
+		return response()->json(['sumcost' => $sumcost, 'message' => 'Project Estimated Cost'],200);
+	}
+	public function deletequotepayment(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'quotepayment_id'    => 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$delete  = DB::table('quotepayment')
+		->where('quotepayment_id','=',$request->quotepayment_id)
+		->update([
+		'status_id' 	=> 2,
+		'deleted_by'	=> $request->user_id,
+		'deleted_at'	=> date('Y-m-d h:i:s'),
+		]); 
+		if($delete){
+			return response()->json(['message' => 'Quote Payment Deleted Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
 }

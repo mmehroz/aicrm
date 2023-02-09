@@ -22,7 +22,7 @@ class leadgenerateController extends Controller
 		$checkemail = DB::table('lead')
 		->select('lead_email')
 		->where('lead_email','=',$request->lead_email)
-		->where('status_id','=',1)
+		->where('status_id','!=',2)
 		->where('brand_id','=',$request->brand_id)
 		->first();
 		if (isset($checkemail)) {
@@ -68,15 +68,10 @@ class leadgenerateController extends Controller
             'order_deadlinedate'	=> 'required',
         ]);
         if ($validate->fails()) {    
-              return response()->json($validate->errors(), 400);
+            return response()->json($validate->errors(), 400);
         }
           $order_token = openssl_random_pseudo_bytes(7);
           $order_token = bin2hex($order_token);
-          $brand = DB::table('lead')
-          ->select('brand_id')
-          ->where('lead_id','=',$request->lead_id)
-          ->where('status_id','=',1)
-          ->first();
               $basic = array(
               'order_title' 		=> $request->order_title,
               'order_deadlinedate' 	=> $request->order_deadlinedate,
@@ -85,7 +80,7 @@ class leadgenerateController extends Controller
               'order_token' 		=> $order_token,
               'order_date' 			=> date('Y-m-d'),
               'ordertype_id'		=> $request->ordertype_id,
-              'lead_id'				=> $request->lead_id,
+              'lead_id'				=> $lead_id,
               'brand_id'			=> $request->brand_id,
               'orderstatus_id'		=> 2,
               'status_id'			=> 3,
@@ -95,21 +90,21 @@ class leadgenerateController extends Controller
               DB::table('order')->insert($basic);
               $order_id = DB::getPdo()->lastInsertId();
               if (isset($request->payment)) {
-                  foreach ($request->payment as $payments) {
-                      $payment = array(
-                      'orderpayment_title'	    => $payments['orderpayment_title'],
-                      'orderpayment_amount'	    => $payments['orderpayment_amount'],
-                      'orderpayment_duedate'	=> $payments['orderpayment_duedate'],
-                      'order_id'				=> $order_id,
-                      'brand_id'				=> $request->brand_id,
-                      'lead_id'				    => $request->lead_id,
-                      'order_token' 			=> $order_token,
-                      'status_id' 			    => 3,
-                      'created_by'			    => $request->user_id,
-                      'created_at'			    => date('Y-m-d h:i:s'),
-                      );
-                      DB::table('orderpayment')->insert($payment);
-                  }
+                    foreach ($request->payment as $payments) {
+                        $payment = array(
+                        'orderpayment_title'	=> $payments['orderpayment_title'],
+                        'orderpayment_amount'	=> $payments['orderpayment_amount'],
+                        'orderpayment_duedate'	=> $payments['orderpayment_duedate'],
+                        'order_id'				=> $order_id,
+                        'brand_id'				=> $request->brand_id,
+                        'lead_id'				=> $lead_id,
+                        'order_token' 			=> $order_token,
+                        'status_id' 			=> 3,
+                        'created_by'			=> $request->user_id,
+                        'created_at'			=> date('Y-m-d h:i:s'),
+                        );
+                        DB::table('orderpayment')->insert($payment);
+                    }
               }
               if (isset($request->refrence)) {
                   foreach ($request->refrence as $refrences) {

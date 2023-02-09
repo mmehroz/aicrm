@@ -17,7 +17,7 @@ use Validator;
 use ZipArchive;
 use URL;
 
-class requestquoteController extends Controller
+class uiorderController extends Controller
 {
 	public function createuiorder(Request $request){
 		$validate = Validator::make($request->all(), [ 
@@ -28,7 +28,7 @@ class requestquoteController extends Controller
             'uiorder_images'  	     => 'required',
             'uiorder_document'  	 => 'required',
             'uiorder_theme'  	     => 'required',
-            'uiorder_other'  	     => 'required',
+            // 'uiorder_other'  	     => 'required',
         ]);
 		if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
@@ -37,8 +37,8 @@ class requestquoteController extends Controller
 		'uiorder_title'		    => $request->uiorder_title,
 		'uiorder_deadlinedate'  => $request->uiorder_deadlinedate,
 		'uiorder_detail' 		=> $request->uiorder_detail,
-        'uiorder_date' 		    => $request->uiorder_date,
-        'uiorderstatus_id' 		=> $request->uiorderstatus_id,
+        'uiorder_date' 		    => date('Y-m-d'),
+        'uiorderstatus_id' 		=> 1,
         'brand_id' 		        => $request->brand_id,
 		'status_id'		 		=> 1,
 		'created_by'	 		=> $request->user_id,
@@ -192,24 +192,124 @@ class requestquoteController extends Controller
 			return response()->json(['message' => 'Oops! Something Went Wrong.'],400);
 		}
 	}
-    public function quotelist(Request $request){
+    public function uiorderlist(Request $request){
 		$validate = Validator::make($request->all(), [ 
 	    	'brand_id'  		=> 'required',
-	    ]);
+		]);
 		if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
-        $basic = DB::table('quote')
-		->select('*')
-		->where('status_id','=',1)
-		->where('quotestatus_id','=',$request->quotestatus_id)
-        ->where('brand_id','=',$request->brand_id)
-		->paginate(30);
+		if($request->role_id == 1 || $request->role_id == 3 || $request->role_id == 10 || $request->role_id == 11){
+			$basic = DB::table('uiorderdetail')
+			->select('*')
+			->where('status_id','=',1)
+			->where('brand_id','=',$request->brand_id)
+			->paginate(30);
+		}else if($request->role_id == 6 || $request->role_id == 7){
+			$basic = DB::table('uiorderdetail')
+			->select('*')
+			->where('status_id','=',1)
+			->where('created_by','=',$request->user_id)
+			->where('brand_id','=',$request->brand_id)
+			->paginate(30);
+		}else{
+			$basic = DB::table('uiorderdetail')
+			->select('*')
+			->where('status_id','=',1)
+			->where('uiorder_assignto','=',$request->user_id)
+			->where('brand_id','=',$request->brand_id)
+			->paginate(30);
+		}
 	    if($basic){
-			return response()->json([ 'data' => $basic, 'message' => 'Quotion List'],200);
+			return response()->json([ 'data' => $basic, 'message' => 'Ui Order List'],200);
 		}else{
 			return response()->json(['message' => 'Oops! Something Went Wrong.'],400);
 		}
 	}
-  
+	public function updateuiorderstatus(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'uiorder_id'			=> 'required',
+		]);
+     	if ($validate->fails()) {    
+			return response()->json("UI Order Id Is Required", 400);
+		}
+		if($request->uiorderstatus_id == 2){
+			$validate = Validator::make($request->all(), [ 
+				'uiorder_assignto'	=> 'required',
+			]);
+			if ($validate->fails()) {    
+				return response()->json("Assign User Id Is Required", 400);
+			}
+			$update  = DB::table('uiorder')
+			->where('uiorder_id','=',$request->uiorder_id)
+			->update([
+				'uiorder_assignto'	=> $request->uiorder_assignto,
+				'uiorderstatus_id'	=> 2,
+			]); 
+		}else{
+			$update  = DB::table('uiorder')
+			->where('uiorder_id','=',$request->uiorder_id)
+			->update([
+				'uiorderstatus_id'	=> 3,
+			]); 
+		}
+		if($update){
+			return response()->json(['message' => 'Ui Order Status Updated Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function uiorderdetail(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	    	'uiorder_id'  		=> 'required',
+		]);
+		if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$data = DB::table('uiorderdetail')
+		->select('*')
+		->where('status_id','=',1)
+		->where('uiorder_id','=',$request->uiorder_id)
+		->first();
+		$logo = DB::table('uiattachment')
+		->select('*')
+		->where('status_id','=',1)
+		->where('uiattachmenttype_id','=',1)
+		->where('uiorder_id','=',$request->uiorder_id)
+		->get();
+		$images = DB::table('uiattachment')
+		->select('*')
+		->where('status_id','=',1)
+		->where('uiattachmenttype_id','=',2)
+		->where('uiorder_id','=',$request->uiorder_id)
+		->get();
+		$document = DB::table('uiattachment')
+		->select('*')
+		->where('status_id','=',1)
+		->where('uiattachmenttype_id','=',3)
+		->where('uiorder_id','=',$request->uiorder_id)
+		->get();
+		$theme = DB::table('uiattachment')
+		->select('*')
+		->where('status_id','=',1)
+		->where('uiattachmenttype_id','=',4)
+		->where('uiorder_id','=',$request->uiorder_id)
+		->get();
+		$other = DB::table('uiattachment')
+		->select('*')
+		->where('status_id','=',1)
+		->where('uiattachmenttype_id','=',5)
+		->where('uiorder_id','=',$request->uiorder_id)
+		->get();
+		$logopath = URL::to('/')."/public/uiorder_logo/".$request->uiorder_id.'/';
+		$imagespath = URL::to('/')."/public/uiorder_images/".$request->uiorder_id.'/';
+		$documentpath = URL::to('/')."/public/uiorder_document/".$request->uiorder_id.'/';
+		$themepath = URL::to('/')."/public/uiorder_theme/".$request->uiorder_id.'/';
+		$otherpath = URL::to('/')."/public/uiorder_other/".$request->uiorder_id.'/';
+		if($data){
+			return response()->json(['data' => $data, 'logo' => $logo, 'images' => $images, 'document' => $document, 'theme' => $theme, 'other' => $other, 'logopath' => $logopath, 'imagespath' => $imagespath, 'documentpath' => $documentpath, 'themepath' => $themepath, 'otherpath' => $otherpath, 'message' => 'Ui Order Detail'],200);
+		}else{
+			return response()->json(['message' => 'Oops! Something Went Wrong.'],400);
+		}
+	}
 }
