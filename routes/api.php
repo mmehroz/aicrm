@@ -229,5 +229,7 @@ Route::any('/patchquerydetails', [patchqueryController::class, 'patchquerydetail
 Route::any('/movepatchquery', [patchqueryController::class, 'movepatchquery']);
 Route::any('/updatepatchquery', [patchqueryController::class, 'updatepatchquery']);
 Route::any('/deletepatchquery', [patchqueryController::class, 'deletepatchquery']);
+Route::any('/savepatchqueryfollowup', [patchqueryController::class, 'savepatchqueryfollowup']);
+Route::any('/patchqueryfollowuplist', [patchqueryController::class, 'patchqueryfollowuplist']);
 });
 });

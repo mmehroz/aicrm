@@ -25,14 +25,7 @@ class searchleadController extends Controller
 		if ($validate->fails()) {
 			return response()->json($validate->errors(), 400);
 		}
-		if($request->brand_id == 5){
-			$search = DB::table('searchlead')
-			->select('*')
-			->where('searchleadstatus_id','=',1)
-			->whereIn('brand_id',[4,5])
-			->inRandomOrder()
-			->first();
-		}elseif($request->brand_id == 1){
+		if($request->brand_id == 1){
 			$search = DB::table('lead')
 			->select('lead_id as searchlead_id','lead_bussinessname as searchlead_bussinessname','lead_phone as searchlead_phone','lead_name as searchlead_name','lead_email as searchlead_email','lead_altemail as searchlead_altemail','lead_bussinessphone as searchlead_altphone')
 			->where('leadstatus_id','=',3)
