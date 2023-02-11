@@ -81,6 +81,7 @@ Route::any('/makelead', [leadController::class, 'makelead']);
 Route::any('/searchlead', [leadController::class, 'searchlead']);
 Route::any('/clientrevenuereport', [leadController::class, 'clientrevenuereport']);
 Route::any('/transferclient', [leadController::class, 'transferclient']);
+Route::any('/allclientlist', [leadController::class, 'allclientlist']);
 
 Route::any('/createorder', [orderController::class, 'createorder']);
 Route::any('/updateorder', [orderController::class, 'updateorder']);
@@ -219,9 +220,9 @@ Route::any('/movepatchorder', [patchController::class, 'movepatchorder']);
 Route::any('/updatebillingpatchstatus', [patchController::class, 'updatebillingpatchstatus']);
 Route::any('/patchbillingorderlist', [patchController::class, 'patchbillingorderlist']);
 
-Route::any('/searchlead', [searchleadController::class, 'searchlead']);
-Route::any('/movesearchlead', [searchleadController::class, 'movesearchlead']);
 Route::any('/randomsearchlead', [searchleadController::class, 'randomsearchlead']);
+Route::any('/movesearchlead', [searchleadController::class, 'movesearchlead']);
+Route::any('/searchleadlist', [searchleadlistController::class, 'searchlead']);
 
 Route::any('/createpatchquery', [patchqueryController::class, 'createpatchquery']);
 Route::any('/patchquerylist', [patchqueryController::class, 'patchquerylist']);
@@ -231,5 +232,6 @@ Route::any('/updatepatchquery', [patchqueryController::class, 'updatepatchquery'
 Route::any('/deletepatchquery', [patchqueryController::class, 'deletepatchquery']);
 Route::any('/savepatchqueryfollowup', [patchqueryController::class, 'savepatchqueryfollowup']);
 Route::any('/patchqueryfollowuplist', [patchqueryController::class, 'patchqueryfollowuplist']);
+Route::any('/patchqueryandleaddetails', [patchqueryController::class, 'patchqueryandleaddetails']);
 });
 });

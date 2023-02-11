@@ -50,6 +50,7 @@ class searchleadController extends Controller
         $validate = Validator::make($request->all(), [ 
 	    	'searchlead_id'  	 	=> 'required',
 			'searchlead_comment'  	=> 'required',
+			'searchleadstatus_id'  	=> 'required',
 		]);
 		if ($validate->fails()) {
 			return response()->json($validate->errors(), 400);
@@ -92,7 +93,7 @@ class searchleadController extends Controller
 		}	
 	}
 	public function searchleadlist(Request $request){
-        $validate = Validator::make($request->all(), [ 
+        $validate = Validator::make($request->all(), [
 	    	'brand_id'  	 		=> 'required',
 			'searchleadstatus_id'  	=> 'required',
 		]);

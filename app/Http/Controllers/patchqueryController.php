@@ -23,7 +23,8 @@ class patchqueryController extends Controller
 		$validate = Validator::make($request->all(), [ 
 	      'patchtype_id' 		    	=> 'required',
 	      'patchback_id'		    	=> 'required',
-	      'patchquery_title'	    	=> 'required',
+		  'patchquery_clientemail'	   	=> 'required', 
+		  'patchquery_title'	    	=> 'required',
 	      'patchquery_height'			=> 'required',
 	      'patchquery_width' 	    	=> 'required',
 	      'patchquery_quantity'	    	=> 'required',
@@ -35,8 +36,15 @@ class patchqueryController extends Controller
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
+		$patchquery_islead = DB::table('lead')
+		->select('lead_id')
+		->where('lead_email','=',$request->patchquery_clientemail )
+		->where('brand_id','=',$request->brand_id )
+		->where('status_id','=',1)
+		->count();
         $adds[] = array(
-            'patchquery_title' 				=> $request->patchquery_title,
+            'patchquery_clientemail' 		=> $request->patchquery_clientemail,
+			'patchquery_title' 				=> $request->patchquery_title,
             'patchquery_height'				=> $request->patchquery_height,
             'patchquery_width' 		    	=> $request->patchquery_width,
             'patchquery_shippingaddress'	=> $request->patchquery_shippingaddress,
@@ -45,12 +53,13 @@ class patchqueryController extends Controller
             'patchtype_id'			    	=> $request->patchtype_id,
 			'patchback_id'			    	=> $request->patchback_id,
             'patchquery_otherdetails'		=> $request->patchquery_otherdetails,
+			'patchquery_islead'				=> $request->patchquery_islead,
 			'patchquery_date'				=> date('Y-m-d'),
 			'patchquerystatus_id'			=> 1,
-			'brand_id'				    => $request->brand_id,
-            'status_id'		 		    => 1,
-            'created_by'	 		    => $request->user_id,
-            'created_at'	 		    => date('Y-m-d h:i:s'),
+			'brand_id'				    	=> $request->brand_id,
+            'status_id'		 		    	=> 1,
+            'created_by'	 		    	=> $request->user_id,
+            'created_at'	 		    	=> date('Y-m-d h:i:s'),
         );
         $save = DB::table('patchquery')->insert($adds);
         $patchquery_id = DB::getPdo()->lastInsertId();
@@ -109,7 +118,7 @@ class patchqueryController extends Controller
 		}
 		if($request->role_id <= 2){
 			$data = DB::table('patchquery')
-			->select('patchquery_id','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead')
 			->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 			->where('status_id','=',1)
 			->paginate(30);
@@ -124,14 +133,14 @@ class patchqueryController extends Controller
 				$sortbrand[] = $brands->brand_id;
 			}
 			$data = DB::table('patchquery')
-			->select('patchquery_id','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead')
 			->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 			->whereIn('brand_id',$sortbrand)
 			->where('status_id','=',1)
 			->paginate(30);
 		}else{
 			$data = DB::table('patchquery')
-			->select('patchquery_id','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead')
 			->where('created_by','=',$request->user_id)
 			->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 			->where('status_id','=',1)
@@ -221,12 +230,15 @@ class patchqueryController extends Controller
 			'patchquery_id' 	        => 'required',
 			'patchtype_id' 		        => 'required',
 			'patchback_id'		        => 'required',
+			'patchquery_clientemail'    => 'required',
 			'patchquery_title'	        => 'required',
 			'patchquery_height'		    => 'required',
 			'patchquery_width' 	        => 'required',
 			'patchquery_quantity'	    => 'required',
 			'patchquery_shippingaddress'=> 'required',
 			'patchquery_amount'	        => 'required',
+			'patchquery_marketcost'	    => 'required',
+			'patchquery_proposalquote'	=> 'required',
 			'patchquery_deliverycost'	=> 'required',
 			'patchquery_otherdetails'	=> 'required',
 			'vendorproduction_id'		=> 'required',
@@ -238,12 +250,15 @@ class patchqueryController extends Controller
 		$updatequery  = DB::table('patchquery')
 		->where('patchquery_id','=',$request->patchquery_id)
 		->update([
+			'patchquery_clientemail' 		=> $request->patchquery_clientemail,
 			'patchquery_title' 				=> $request->patchquery_title,
 			'patchquery_height'				=> $request->patchquery_height,
 			'patchquery_width' 		    	=> $request->patchquery_width,
 			'patchquery_quantity'			=> $request->patchquery_quantity,
 			'patchquery_shippingaddress'	=> $request->patchquery_shippingaddress,
 			'patchquery_amount'	        	=> $request->patchquery_amount,
+			'patchquery_marketcost'	       	=> $request->patchquery_marketcost,
+			'patchquery_proposalquote'	    => $request->patchquery_proposalquote,
 			'patchquery_deliverycost'		=> $request->patchquery_deliverycost,
             'patchquery_otherdetails'		=> $request->patchquery_otherdetails,
 			'patchtype_id'			    	=> $request->patchtype_id,
@@ -379,6 +394,30 @@ class patchqueryController extends Controller
 		->get();
 		if($followups){
 			return response()->json(['data' => $followups,'message' => 'Followup List'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function patchqueryandleaddetails(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'patchquery_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Patch Query Id Required", 400);
+		}
+        $data = DB::table('patchquerydetails')
+		->select('*')
+		->where('status_id','=',1)
+		->where('patchquery_id','=',$request->patchquery_id)
+        ->first();
+		$lead = DB::table('lead')
+		->select('lead_id')
+		->where('lead_email','=',$data->patchquery_clientemail)
+		->where('brand_id','=',$data->brand_id )
+		->where('status_id','=',1)
+		->first();
+		if($data){
+			return response()->json(['data' => $data, 'lead' => $lead, 'message' => 'Patch Query And Lead Details'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

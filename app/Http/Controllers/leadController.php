@@ -63,6 +63,13 @@ class leadController extends Controller
 		);
 		$save = DB::table('lead')->insert($adds);
 		if($save){
+			if(isset($request->patchquery_id)){
+				DB::table('patchquery')
+				->where('patchquery_id','=',$request->patchquery_id)
+				->update([
+					'patchquery_islead' 	=> 1,
+				]);
+			}
 			return response()->json(['message' => 'Lead Created Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
@@ -518,16 +525,36 @@ class leadController extends Controller
 			return response()->json($validate->errors(), 400);
 		}
 		$transfer  = DB::table('lead')
-			->where('lead_id','=',$request->lead_id)
-			->update([
-				'lead_pickby' 	=> $request->id,
-				'brand_id' 		=> $request->brand_id,
-				'created_by' 	=> $request->id,
-			]);
+		->where('lead_id','=',$request->lead_id)
+		->update([
+			'lead_pickby' 	=> $request->id,
+			'brand_id' 		=> $request->brand_id,
+			'created_by' 	=> $request->id,
+		]);
 		if(isset($transfer)){
 			return response()->json(['message' => 'Client Transfer Successfully'],200);
 		}else{
 			return response()->json(['message' => 'Oops! Something Went Wrong'],200);
+		}
+	}
+	public function allclientlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+			'brand_id'	=> 'required',
+		]);
+		if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$clients = DB::table('leaddetail')
+		->select('*')
+		->where('brand_id','=',$request->brand_id)
+		->where('leadstatus_id','=',3)
+		->where('status_id','=',1)
+		->orderBy('lead_id','DESC')
+		->paginate(30);
+		if(isset($clients)){
+			return response()->json(['data' => $clients,'message' => 'All Client List List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'All Client List List'],200);
 		}
 	}
 }
