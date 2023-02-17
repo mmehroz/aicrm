@@ -510,6 +510,7 @@ class billingController extends Controller
 				->update([
 					'merchant_id'				=> $request->merchant_id,
 					'orderpayment_invoiceno'	=> $request->orderpayment_invoiceno,
+					'orderpaymentstatus_id'		=> $request->orderpaymentstatus_id,
 				]); 	
 			}elseif ($request->orderpaymentstatus_id == 3) {
 				$update  = DB::table('orderpayment')
@@ -562,6 +563,7 @@ class billingController extends Controller
 						->update([
 							'orderpayment_invoiceno'	=> $request->orderpayment_invoiceno,
 							'merchant_id'				=> $request->merchant_id,
+							'orderpaymentstatus_id'		=> $request->orderpaymentstatus_id,
 						]); 
 				}else{
 					$validate = Validator::make($request->all(), [ 

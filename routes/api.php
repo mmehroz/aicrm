@@ -222,7 +222,7 @@ Route::any('/patchbillingorderlist', [patchController::class, 'patchbillingorder
 
 Route::any('/randomsearchlead', [searchleadController::class, 'randomsearchlead']);
 Route::any('/movesearchlead', [searchleadController::class, 'movesearchlead']);
-Route::any('/searchleadlist', [searchleadlistController::class, 'searchlead']);
+Route::any('/searchleadlist', [searchleadController::class, 'searchleadlist']);
 
 Route::any('/createpatchquery', [patchqueryController::class, 'createpatchquery']);
 Route::any('/patchquerylist', [patchqueryController::class, 'patchquerylist']);
