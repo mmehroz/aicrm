@@ -199,7 +199,7 @@ class dashboardController extends Controller
 		->get();
 		$pendingtask = DB::table('tasklist')
 		->select('task_id','task_title','task_deadlinedate','taskstatus_name','creator')
-		->where('taskstatus_id','>',2)
+		// ->where('taskstatus_id','>',2)
 		->where('status_id','=',1)
 		->where('task_date','=',date('Y-m-d'))
 		->get();

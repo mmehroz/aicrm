@@ -158,17 +158,52 @@ class billingController extends Controller
 				->paginate(30);	
 			}
 		}else{
-			$paymentlist = DB::table('orderpaymentdetails')
-			->select('*')
-			->whereNotIn('order_token', $getmergedealtoken)
-			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
-			->where('brand_id','=',$request->brand_id)
-			// ->where('orderpayment_pickby','=',$request->user_id)
-			->whereBetween('orderpayment_date',[$request->from, $request->to])
-			->where('status_id','=',1)
-			->groupBy('order_token')
-			->orderBy('orderpayment_id','DESC')
-			->paginate(30);	
+			if($request->orderpaymentstatus_id == 3){
+				$validate = Validator::make($request->all(), [ 
+					'billingmerchant_id'	=> 'required',
+				]);
+				if ($validate->fails()) {
+					return response()->json($validate->errors(), 400);
+				}
+				if($request->billingmerchant_id == 0){
+					$paymentlist = DB::table('orderpaymentdetails')
+					->select('*')
+					->whereNotIn('order_token', $getmergedealtoken)
+					->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+					->where('brand_id','=',$request->brand_id)
+					// ->where('orderpayment_pickby','=',$request->user_id)
+					->whereBetween('orderpayment_date',[$request->from, $request->to])
+					->where('status_id','=',1)
+					->groupBy('order_token')
+					->orderBy('orderpayment_id','DESC')
+					->paginate(30);
+				}else{
+					$paymentlist = DB::table('orderpaymentdetails')
+					->select('*')
+					->whereNotIn('order_token', $getmergedealtoken)
+					->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+					->where('brand_id','=',$request->brand_id)
+					->where('merchant_id','=',$request->billingmerchant_id)
+					// ->where('orderpayment_pickby','=',$request->user_id)
+					->whereBetween('orderpayment_date',[$request->from, $request->to])
+					->where('status_id','=',1)
+					->groupBy('order_token')
+					->orderBy('orderpayment_id','DESC')
+					->paginate(30);
+				}
+			}else{
+				$paymentlist = DB::table('orderpaymentdetails')
+				->select('*')
+				->whereNotIn('order_token', $getmergedealtoken)
+				->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+				->where('brand_id','=',$request->brand_id)
+				// ->where('orderpayment_pickby','=',$request->user_id)
+				->whereBetween('orderpayment_date',[$request->from, $request->to])
+				->where('status_id','=',1)
+				->groupBy('order_token')
+				->orderBy('orderpayment_id','DESC')
+				->paginate(30);
+			}
 		}
 		if(isset($paymentlist)){
 			return response()->json(['data' => $paymentlist,'message' => 'Picked Order List'],200);
@@ -223,17 +258,52 @@ class billingController extends Controller
 				->paginate(30);
 			}
 		}else{
-			$paymentlist = DB::table('mergepaymentdetails')
-			->select('*')
-			->whereIn('order_token', $getmergedealtoken)
-			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
-			->where('brand_id','=',$request->brand_id)
-			// ->where('orderpayment_pickby','=',$request->user_id)
-			->whereBetween('orderpayment_date',[$request->from, $request->to])
-			->where('status_id','=',1)
-			->groupBy('mergedeal_token')
-			->orderBy('orderpayment_id','DESC')
-			->paginate(30);
+			if($request->orderpaymentstatus_id == 3){
+				$validate = Validator::make($request->all(), [ 
+					'billingmerchant_id'	=> 'required',
+				]);
+				if ($validate->fails()) {
+					return response()->json($validate->errors(), 400);
+				}
+				if($request->billingmerchant_id == 0){
+					$paymentlist = DB::table('mergepaymentdetails')
+					->select('*')
+					->whereIn('order_token', $getmergedealtoken)
+					->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+					->where('brand_id','=',$request->brand_id)
+					// ->where('orderpayment_pickby','=',$request->user_id)
+					->whereBetween('orderpayment_date',[$request->from, $request->to])
+					->where('status_id','=',1)
+					->groupBy('mergedeal_token')
+					->orderBy('orderpayment_id','DESC')
+					->paginate(30);
+				}else{
+					$paymentlist = DB::table('mergepaymentdetails')
+					->select('*')
+					->whereIn('order_token', $getmergedealtoken)
+					->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+					->where('brand_id','=',$request->brand_id)
+					->where('merchant_id','=',$request->billingmerchant_id)
+					// ->where('orderpayment_pickby','=',$request->user_id)
+					->whereBetween('orderpayment_date',[$request->from, $request->to])
+					->where('status_id','=',1)
+					->groupBy('mergedeal_token')
+					->orderBy('orderpayment_id','DESC')
+					->paginate(30);
+				}
+			}else{
+				$paymentlist = DB::table('mergepaymentdetails')
+				->select('*')
+				->whereIn('order_token', $getmergedealtoken)
+				->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+				->where('brand_id','=',$request->brand_id)
+				// ->where('orderpayment_pickby','=',$request->user_id)
+				->whereBetween('orderpayment_date',[$request->from, $request->to])
+				->where('status_id','=',1)
+				->groupBy('mergedeal_token')
+				->orderBy('orderpayment_id','DESC')
+				->paginate(30);
+			}
 		}
 		if(isset($paymentlist)){
 			return response()->json(['data' => $paymentlist,'message' => 'Picked Order List'],200);

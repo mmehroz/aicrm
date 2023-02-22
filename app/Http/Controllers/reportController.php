@@ -79,6 +79,7 @@ class reportController extends Controller
 		$sumbasictarget = DB::table('user')
 		->select('user_target')
 		->whereIn('role_id',[6,7])
+		->whereIn('user_id',$sortuserids)
 		->where('status_id','=',1)
 		->sum('user_target');
 		$sumtargetincrement = DB::table('usertarget')
@@ -91,12 +92,14 @@ class reportController extends Controller
 		$sumachieved = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
+		->whereIn('created_by',$sortuserids)
 		// ->where('ordertype_id','=',$request->ordertype_id)
 		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumpaid = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
+		->whereIn('created_by',$sortuserids)
 		->where('orderpaymentstatus_id','=',3)
 		// ->where('ordertype_id','=',$request->ordertype_id)
 		->whereBetween('orderpayment_date', [$setfrom, $setto])
@@ -104,6 +107,7 @@ class reportController extends Controller
 		$sumcancel = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
+		->whereIn('created_by',$sortuserids)
 		->where('orderpaymentstatus_id','=',4)
 		// ->where('ordertype_id','=',$request->ordertype_id)
 		->whereBetween('orderpayment_date', [$setfrom, $setto])
@@ -111,6 +115,7 @@ class reportController extends Controller
 		$sumrefund = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
+		->whereIn('created_by',$sortuserids)
 		->where('orderpaymentstatus_id','=',5)
 		// ->where('ordertype_id','=',$request->ordertype_id)
 		->whereBetween('orderpayment_date', [$setfrom, $setto])
@@ -118,6 +123,7 @@ class reportController extends Controller
 		$sumchargeback = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
+		->whereIn('created_by',$sortuserids)
 		->where('orderpaymentstatus_id','=',6)
 		// ->where('ordertype_id','=',$request->ordertype_id)
 		->whereBetween('orderpayment_date', [$setfrom, $setto])
@@ -125,6 +131,7 @@ class reportController extends Controller
 		$sumrecovery = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
+		->whereIn('created_by',$sortuserids)
 		->where('orderpaymentstatus_id','=',7)
 		// ->where('ordertype_id','=',$request->ordertype_id)
 		->whereBetween('orderpayment_date', [$setfrom, $setto])
@@ -133,12 +140,14 @@ class reportController extends Controller
 		$sumcountachieved = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
+		->whereIn('created_by',$sortuserids)
 		// ->where('ordertype_id','=',$request->ordertype_id)
 		->whereBetween('orderpayment_date', [$setfrom, $setto])
 		->sum('orderpayment_amount');
 		$sumcountpaid = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
+		->whereIn('created_by',$sortuserids)
 		->where('orderpaymentstatus_id','=',3)
 		// ->where('ordertype_id','=',$request->ordertype_id)
 		->whereBetween('orderpayment_date', [$setfrom, $setto])
@@ -146,6 +155,7 @@ class reportController extends Controller
 		$sumcountcancel = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
+		->whereIn('created_by',$sortuserids)
 		->where('orderpaymentstatus_id','=',4)
 		// ->where('ordertype_id','=',$request->ordertype_id)
 		->whereBetween('orderpayment_date', [$setfrom, $setto])
@@ -153,6 +163,7 @@ class reportController extends Controller
 		$sumcountrefund = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
+		->whereIn('created_by',$sortuserids)
 		->where('orderpaymentstatus_id','=',5)
 		// ->where('ordertype_id','=',$request->ordertype_id)
 		->whereBetween('orderpayment_date', [$setfrom, $setto])
@@ -160,6 +171,7 @@ class reportController extends Controller
 		$sumcountchargeback = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
+		->whereIn('created_by',$sortuserids)
 		->where('orderpaymentstatus_id','=',6)
 		// ->where('ordertype_id','=',$request->ordertype_id)
 		->whereBetween('orderpayment_date', [$setfrom, $setto])
@@ -167,6 +179,7 @@ class reportController extends Controller
 		$sumcountrecovery = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('status_id','=',1)
+		->whereIn('created_by',$sortuserids)
 		->where('orderpaymentstatus_id','=',7)
 		// ->where('ordertype_id','=',$request->ordertype_id)
 		->whereBetween('orderpayment_date', [$setfrom, $setto])
@@ -332,6 +345,7 @@ class reportController extends Controller
 		$designerlist = DB::table('user')
 		->select('user_id','role_id','user_name','user_target','user_picture')
 		->where('role_id','=',15)
+		->whereIn('user_id',$sortuserids)
 		->where('status_id','=',1)
 		->get();
 		$designerindex=0;
@@ -377,6 +391,7 @@ class reportController extends Controller
 		$digitizerlist = DB::table('user')
 		->select('user_id','role_id','user_name','user_target','user_picture')
 		->where('role_id','=',16)
+		->whereIn('user_id',$sortuserids)
 		->where('status_id','=',1)
 		->get();
 		$digitizerdetails = array();
@@ -418,9 +433,85 @@ class reportController extends Controller
 				$digitizerdetails[$digitizerindex] = $digitizerlist;
 			}
 		}
+		$unitheadlist = DB::table('user')
+		->select('user_id','role_id','user_name','user_target','user_picture')
+		->where('role_id','=',3)
+		->whereIn('user_id',$sortuserids)
+		->where('status_id','=',1)
+		->get();
+		$unitheaddetails = array();
+		$unitheadindex=0;
+		$unitheadcommission = 0;
+		foreach ($unitheadlist as $unitheadlist) {
+			if(isset($unitheadlist->user_id)){
+				$unituserbrand = DB::table('userbarnd')
+				->select('brand_id')
+				->where('user_id','=',$unitheadlist->user_id)
+				->where('status_id','=',1)
+				->get();
+				$unitsortbrand = array();
+				foreach($unituserbrand as $unitbrands){
+					$unitsortbrand[] = $unitbrands->brand_id;
+				}
+				$unituserids = DB::table('userbarnd')
+				->select('user_id')
+				->whereIn('brand_id',$unitsortbrand)
+				->where('status_id','=',1)
+				->get();
+				$unitsortuserids = array();
+				foreach($unituserids as $unituserids){
+					$unitsortuserids[] = $unituserids->user_id;
+				}
+				$unitsumbasictarget = DB::table('user')
+				->select('user_target')
+				->whereIn('user_id',$unitsortuserids)
+				->whereIn('role_id',[6,7])
+				->where('status_id','=',1)
+				->sum('user_target');
+				$unitsumtargetincrement = DB::table('usertarget')
+				->select('usertarget_target')
+				->whereIn('user_id',$unitsortuserids)
+				->where('usertarget_month','<=',$targetdate)
+				->where('status_id','=',1)
+				->sum('usertarget_target');
+				$unitsumtarget = $unitsumbasictarget+$unitsumtargetincrement;
+				$unitsumachieved = DB::table('orderpayment')
+				->select('orderpayment_amount')
+				->where('status_id','=',1)
+				->whereIn('created_by',$unitsortuserids)
+				->whereBetween('orderpayment_date', [$setfrom, $setto])
+				->sum('orderpayment_amount');
+				$unitgetcommission = DB::table('commission')
+				->select('*')
+				->where('status_id','=',1)
+				->where('user_id','=',$unitheadlist->user_id)
+				->orderBy('commission_id','DESC')
+				->get();
+				$unitcommissionindex = 0;
+				foreach ($unitgetcommission as $unitgetcommissions) {
+					if ($unitsumachieved >= $unitgetcommissions->commission_from && $unitsumachieved >= $unitgetcommissions->commission_to && $commissionindex == 0) {
+						$unitheadcommission = $unitgetcommissions->commission_rate;
+						$unitcommissionindex++;
+						break;
+					}else{
+						$unitheadcommission = 0;
+					}
+				}
+				$unitheadlist->target = $unitsumtarget;
+				$unitheadlist->achieved = $unitsumachieved;
+				$unitheadlist->commission = $unitheadcommission;
+				$unitheaddetails[$unitheadindex] = $unitheadlist;
+				$unitheadindex++;
+			}else{
+				$unitheadlist->target = 0;
+				$unitheadlist->achieved = 0;
+				$unitheadlist->commission = 0;
+				$unitheaddetails[$unitheadindex] = $unitheadlist;
+			}
+		}
 		$profilepath = URL::to('/')."/public/user_picture/";
       	if(isset($userdetails)){
-		    return response()->json(['userdetails' => $userdetails, 'summreport' => $summreport, 'profilepath' => $profilepath, 'designerdetails' => $designerdetails, 'digitizerdetails' => $digitizerdetails, 'message' => 'Monthly Sales Target Report'],200);
+		    return response()->json(['userdetails' => $userdetails, 'summreport' => $summreport, 'profilepath' => $profilepath, 'designerdetails' => $designerdetails, 'digitizerdetails' => $digitizerdetails, 'unitheaddetails' => $unitheaddetails, 'message' => 'Monthly Sales Target Report'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

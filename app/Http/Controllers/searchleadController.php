@@ -104,6 +104,7 @@ class searchleadController extends Controller
 		->select('*')
 		->where('searchleadstatus_id','=',$request->searchleadstatus_id)
 		->where('brand_id','=',$request->brand_id)
+		->where('searchlead_by','=',$request->user_id)
 		->get();
 		if($data){
 			return response()->json(['data' => $data,'message' => 'Search Lead List'],200);
