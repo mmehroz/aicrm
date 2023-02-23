@@ -140,6 +140,31 @@ class patchqueryController extends Controller
 			->where('status_id','=',1)
 			->orderBy('patchquery_id','DESC')
 			->paginate(30);
+		}elseif($request->role_id == 6){
+			if($request->patchquerystatus_id == 1){
+				$data = DB::table('patchquery')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id')
+				// ->where('created_by','=',$request->user_id)
+				->where('patchquerystatus_id','=',$request->patchquerystatus_id)
+				->where('patchquery_manager','=',null)
+				->where('status_id','=',1)
+				->orderBy('patchquery_id','DESC')
+				->paginate(30);	
+			}else{
+				$data = DB::table('patchquery')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id')
+				->where('patchquery_manager','=',$request->user_id)
+				->where('status_id','=',1)
+				->orderBy('patchquery_id','DESC')
+				->paginate(30);	
+			}
+			$data = DB::table('patchquery')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id')
+			// ->where('created_by','=',$request->user_id)
+			->where('patchquerystatus_id','=',$request->patchquerystatus_id)
+			->where('status_id','=',1)
+			->orderBy('patchquery_id','DESC')
+			->paginate(30);
 		}else{
 			$data = DB::table('patchquery')
 			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id')
@@ -421,6 +446,44 @@ class patchqueryController extends Controller
 		->first();
 		if($data){
 			return response()->json(['data' => $data, 'lead' => $lead, 'message' => 'Patch Query And Lead Details'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function pickpatchquery(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'patchquery_id'			=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Patch Query Id Required", 400);
+		}
+		$update  = DB::table('patchquery')
+		->where('patchquery_id','=',$request->patchquery_id)
+		->update([
+			'patchquery_manager'	=> $request->user_id,
+			'patchquerystatus_id'	=> 9,
+		]); 
+		if($update){
+			return response()->json(['message' => 'Query Pick Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function unpickpatchquery(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'patchquery_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Patch Query Id Required", 400);
+		}
+		$update  = DB::table('patchquery')
+		->where('patchquery_id','=',$request->patchquery_id)
+		->update([
+			'patchquery_manager'	=> null,
+			'patchquerystatus_id'	=> 1,
+		]); 
+		if($update){
+			return response()->json(['message' => 'Query Un-Pick Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

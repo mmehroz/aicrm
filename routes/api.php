@@ -233,5 +233,7 @@ Route::any('/deletepatchquery', [patchqueryController::class, 'deletepatchquery'
 Route::any('/savepatchqueryfollowup', [patchqueryController::class, 'savepatchqueryfollowup']);
 Route::any('/patchqueryfollowuplist', [patchqueryController::class, 'patchqueryfollowuplist']);
 Route::any('/patchqueryandleaddetails', [patchqueryController::class, 'patchqueryandleaddetails']);
+Route::any('/pickpatchquery', [patchqueryController::class, 'pickpatchquery']);
+Route::any('/unpickpatchquery', [patchqueryController::class, 'unpickpatchquery']);
 });
 });
