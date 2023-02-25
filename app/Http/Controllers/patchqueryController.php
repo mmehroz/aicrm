@@ -110,15 +110,126 @@ class patchqueryController extends Controller
 		}
 	}
     public function patchquerylist(Request $request){
-		$validate = Validator::make($request->all(), [ 
-			'patchquerystatus_id'	=> 'required',
-		]);
-		if ($validate->fails()) {    
-			return response()->json($validate->errors(), 400);
-		}
 		if($request->role_id <= 2){
-			$data = DB::table('patchquery')
-			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id')
+			if($request->patchquerystatus_id == 1){
+				$data = DB::table('patchquerylist')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->where('patchquerystatus_id','=',$request->patchquerystatus_id )
+				->where('patchquery_manager','=',null)
+				->where('status_id','=',1)
+				->orderBy('patchquery_id','DESC')
+				->paginate(30);
+			}else{
+				$data = DB::table('patchquerylist')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->where('status_id','=',1)
+				->where('patchquery_manager','!=',null)
+				->whereNotIn('patchquerystatus_id',[6,7])
+				->orderBy('patchquery_id','DESC')
+				->paginate(30);
+			}
+		}elseif($request->role_id == 3){
+			$brand = DB::table('userbarnd')
+			->select('brand_id')
+			->where('user_id','=',$request->user_id)
+			->where('status_id','=',1)
+			->get();
+			$sortbrand = array();
+			foreach($brand as $brands){
+				$sortbrand[] = $brands->brand_id;
+			}
+			if($request->patchquerystatus_id == 1){
+				$data = DB::table('patchquerylist')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->where('patchquerystatus_id','=',$request->patchquerystatus_id )
+				->whereIn('brand_id',$sortbrand)
+				->where('status_id','=',1)
+				->orderBy('patchquery_id','DESC')
+				->paginate(30);
+			}else{
+				$data = DB::table('patchquerylist')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->whereIn('brand_id',$sortbrand)
+				->whereNotIn('patchquerystatus_id',[6,7])
+				->where('status_id','=',1)
+				->orderBy('patchquery_id','DESC')
+				->paginate(30);
+			}
+		}elseif($request->role_id == 20){
+			$brand = DB::table('userbarnd')
+			->select('brand_id')
+			->where('user_id','=',$request->user_id)
+			->where('status_id','=',1)
+			->get();
+			$sortbrand = array();
+			foreach($brand as $brands){
+				$sortbrand[] = $brands->brand_id;
+			}
+			if($request->patchquerystatus_id == 1){
+				$data = DB::table('patchquerylist')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->where('patchquerystatus_id','=',$request->patchquerystatus_id )
+				->whereIn('brand_id',$sortbrand)
+				->where('status_id','=',1)
+				->orderBy('patchquery_id','DESC')
+				->paginate(30);
+			}else{
+				$data = DB::table('patchquerylist')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->whereIn('brand_id',$sortbrand)
+				->whereNotIn('patchquerystatus_id',[6,7])
+				->where('status_id','=',1)
+				->orderBy('patchquery_id','DESC')
+				->paginate(30);
+			}
+		}elseif($request->role_id == 6){
+			if($request->patchquerystatus_id == 1){
+				$data = DB::table('patchquerylist')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				// ->where('created_by','=',$request->user_id)
+				->where('patchquerystatus_id','=',$request->patchquerystatus_id)
+				->where('patchquery_manager','=',null)
+				->where('status_id','=',1)
+				->orderBy('patchquery_id','DESC')
+				->paginate(30);	
+			}else{
+				$data = DB::table('patchquerylist')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->where('patchquery_manager','=',$request->user_id)
+				->whereNotIn('patchquerystatus_id',[6,7])
+				->where('status_id','=',1)
+				->orderBy('patchquery_id','DESC')
+				->paginate(30);	
+			}
+		}else{
+			if($request->patchquerystatus_id == 1){
+				$data = DB::table('patchquerylist')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->where('created_by','=',$request->user_id)
+				->where('patchquerystatus_id','=',$request->patchquerystatus_id )
+				->where('status_id','=',1)
+				->orderBy('patchquery_id','DESC')
+				->paginate(30);
+			}else{
+				$data = DB::table('patchquerylist')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->where('created_by','=',$request->user_id)
+				->whereNotIn('patchquerystatus_id',[6,7])
+				->where('status_id','=',1)
+				->orderBy('patchquery_id','DESC')
+				->paginate(30);
+			}
+		}
+		if(isset($data)){
+			return response()->json(['data' => $data, 'message' => 'Patch Query List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Patch Query List'],200);
+		}
+	}
+	public function statuswisepatchquerylist(Request $request){
+		if($request->role_id <= 2){
+			$data = DB::table('patchquerylist')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
 			->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 			->where('status_id','=',1)
 			->orderBy('patchquery_id','DESC')
@@ -133,41 +244,41 @@ class patchqueryController extends Controller
 			foreach($brand as $brands){
 				$sortbrand[] = $brands->brand_id;
 			}
-			$data = DB::table('patchquery')
-			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id')
+			$data = DB::table('patchquerylist')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+			->where('patchquerystatus_id','=',$request->patchquerystatus_id )
+			->whereIn('brand_id',$sortbrand)
+			->where('status_id','=',1)
+			->orderBy('patchquery_id','DESC')
+			->paginate(30);
+		}elseif($request->role_id == 20){
+			$brand = DB::table('userbarnd')
+			->select('brand_id')
+			->where('user_id','=',$request->user_id)
+			->where('status_id','=',1)
+			->get();
+			$sortbrand = array();
+			foreach($brand as $brands){
+				$sortbrand[] = $brands->brand_id;
+			}
+			$data = DB::table('patchquerylist')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
 			->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 			->whereIn('brand_id',$sortbrand)
 			->where('status_id','=',1)
 			->orderBy('patchquery_id','DESC')
 			->paginate(30);
 		}elseif($request->role_id == 6){
-			if($request->patchquerystatus_id == 1){
-				$data = DB::table('patchquery')
-				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id')
-				// ->where('created_by','=',$request->user_id)
-				->where('patchquerystatus_id','=',$request->patchquerystatus_id)
-				->where('patchquery_manager','=',null)
-				->where('status_id','=',1)
-				->orderBy('patchquery_id','DESC')
-				->paginate(30);	
-			}else{
-				$data = DB::table('patchquery')
-				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id')
-				->where('patchquery_manager','=',$request->user_id)
-				->where('status_id','=',1)
-				->orderBy('patchquery_id','DESC')
-				->paginate(30);	
-			}
-			$data = DB::table('patchquery')
-			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id')
-			// ->where('created_by','=',$request->user_id)
+			$data = DB::table('patchquerylist')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
 			->where('patchquerystatus_id','=',$request->patchquerystatus_id)
+			->where('patchquery_manager','=',$request->user_id)
 			->where('status_id','=',1)
 			->orderBy('patchquery_id','DESC')
-			->paginate(30);
+			->paginate(30);	
 		}else{
-			$data = DB::table('patchquery')
-			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id')
+			$data = DB::table('patchquerylist')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
 			->where('created_by','=',$request->user_id)
 			->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 			->where('status_id','=',1)
@@ -265,15 +376,21 @@ class patchqueryController extends Controller
 			'patchquery_quantity'	    => 'required',
 			'patchquery_shippingaddress'=> 'required',
 			'patchquery_amount'	        => 'required',
-			'patchquery_marketcost'	    => 'required',
-			'patchquery_proposalquote'	=> 'required',
-			// 'patchquery_deliverycost'	=> 'required',
 			'patchquery_otherdetails'	=> 'required',
 			'vendorproduction_id'		=> 'required',
 			'patchquerystatus_id'	    => 'required',
 		]);
 		if ($validate->fails()) {    
 		  	return response()->json($validate->errors(), 400);
+		}
+		if($request->role_id == 6){
+			$validate = Validator::make($request->all(), [ 
+				'patchquery_marketcost'	    => 'required',
+				'patchquery_proposalquote'	=> 'required',
+			]);
+			if ($validate->fails()) {    
+				  return response()->json($validate->errors(), 400);
+			}
 		}
 		$updatequery  = DB::table('patchquery')
 		->where('patchquery_id','=',$request->patchquery_id)

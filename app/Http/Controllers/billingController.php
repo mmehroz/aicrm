@@ -21,8 +21,8 @@ class billingController extends Controller
 	public $emptyarray = array();
 	public function forwardedpaymentlist(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'from'	=> 'required',
-	      'to'		=> 'required',
+	    //   'from'	=> 'required',
+	    //   'to'		=> 'required',
 	    ]);
      	if ($validate->fails()) {
 			return response()->json("From And To Date Is Required", 400);
@@ -31,7 +31,7 @@ class billingController extends Controller
 		->select('*')
 		->where('orderpaymentstatus_id','=',8)
 		->where('orderpayment_pickby','=',null)
-		->whereBetween('orderpayment_date',[$request->from, $request->to])
+		// ->whereBetween('orderpayment_date',[$request->from, $request->to])
 		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
 		->groupBy('order_token')
@@ -45,8 +45,8 @@ class billingController extends Controller
 	}
 	public function pickedpaymentlist(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'from'					=> 'required',
-	      'to'						=> 'required',
+	    //   'from'					=> 'required',
+	    //   'to'						=> 'required',
 	      'orderpaymentstatus_id'	=> 'required',
 	    ]);
      	if ($validate->fails()) {
@@ -65,7 +65,7 @@ class billingController extends Controller
 		->whereNotIn('order_token', $getmergedealtoken)
 		->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
 		// ->where('orderpayment_pickby','=',$request->user_id)
-		->whereBetween('orderpayment_date',[$request->from, $request->to])
+		// ->whereBetween('orderpayment_date',[$request->from, $request->to])
 		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
 		->groupBy('order_token')
@@ -79,8 +79,8 @@ class billingController extends Controller
 	}
 	public function mergepickedpaymentlist(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'from'					=> 'required',
-	      'to'						=> 'required',
+	    //   'from'					=> 'required',
+	    //   'to'						=> 'required',
 	      'orderpaymentstatus_id'	=> 'required',
 	    ]);
      	if ($validate->fails()) {
@@ -99,7 +99,7 @@ class billingController extends Controller
 		->whereIn('order_token', $getmergedealtoken)
 		->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
 		// ->where('orderpayment_pickby','=',$request->user_id)
-		->whereBetween('orderpayment_date',[$request->from, $request->to])
+		// ->whereBetween('orderpayment_date',[$request->from, $request->to])
 		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
 		->groupBy('mergedeal_token')

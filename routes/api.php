@@ -226,6 +226,7 @@ Route::any('/searchleadlist', [searchleadController::class, 'searchleadlist']);
 
 Route::any('/createpatchquery', [patchqueryController::class, 'createpatchquery']);
 Route::any('/patchquerylist', [patchqueryController::class, 'patchquerylist']);
+Route::any('/statuswisepatchquerylist', [patchqueryController::class, 'statuswisepatchquerylist']);
 Route::any('/patchquerydetails', [patchqueryController::class, 'patchquerydetails']);
 Route::any('/movepatchquery', [patchqueryController::class, 'movepatchquery']);
 Route::any('/updatepatchquery', [patchqueryController::class, 'updatepatchquery']);
