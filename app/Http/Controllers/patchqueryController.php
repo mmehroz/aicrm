@@ -113,7 +113,7 @@ class patchqueryController extends Controller
 		if($request->role_id <= 2){
 			if($request->patchquerystatus_id == 1){
 				$data = DB::table('patchquerylist')
-				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 				->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 				->where('patchquery_manager','=',null)
 				->where('status_id','=',1)
@@ -121,7 +121,7 @@ class patchqueryController extends Controller
 				->paginate(30);
 			}else{
 				$data = DB::table('patchquerylist')
-				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 				->where('status_id','=',1)
 				->where('patchquery_manager','!=',null)
 				->whereNotIn('patchquerystatus_id',[6,7])
@@ -140,7 +140,7 @@ class patchqueryController extends Controller
 			}
 			if($request->patchquerystatus_id == 1){
 				$data = DB::table('patchquerylist')
-				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 				->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 				->whereIn('brand_id',$sortbrand)
 				->where('status_id','=',1)
@@ -148,7 +148,7 @@ class patchqueryController extends Controller
 				->paginate(30);
 			}else{
 				$data = DB::table('patchquerylist')
-				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 				->whereIn('brand_id',$sortbrand)
 				->whereNotIn('patchquerystatus_id',[6,7])
 				->where('status_id','=',1)
@@ -167,7 +167,7 @@ class patchqueryController extends Controller
 			}
 			if($request->patchquerystatus_id == 1){
 				$data = DB::table('patchquerylist')
-				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 				->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 				->whereIn('brand_id',$sortbrand)
 				->where('status_id','=',1)
@@ -175,7 +175,7 @@ class patchqueryController extends Controller
 				->paginate(30);
 			}else{
 				$data = DB::table('patchquerylist')
-				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 				->whereIn('brand_id',$sortbrand)
 				->whereNotIn('patchquerystatus_id',[6,7])
 				->where('status_id','=',1)
@@ -185,7 +185,7 @@ class patchqueryController extends Controller
 		}elseif($request->role_id == 6){
 			if($request->patchquerystatus_id == 1){
 				$data = DB::table('patchquerylist')
-				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 				// ->where('created_by','=',$request->user_id)
 				->where('patchquerystatus_id','=',$request->patchquerystatus_id)
 				->where('patchquery_manager','=',null)
@@ -194,7 +194,7 @@ class patchqueryController extends Controller
 				->paginate(30);	
 			}else{
 				$data = DB::table('patchquerylist')
-				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 				->where('patchquery_manager','=',$request->user_id)
 				->whereNotIn('patchquerystatus_id',[6,7])
 				->where('status_id','=',1)
@@ -204,7 +204,7 @@ class patchqueryController extends Controller
 		}else{
 			if($request->patchquerystatus_id == 1){
 				$data = DB::table('patchquerylist')
-				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 				->where('created_by','=',$request->user_id)
 				->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 				->where('status_id','=',1)
@@ -212,7 +212,7 @@ class patchqueryController extends Controller
 				->paginate(30);
 			}else{
 				$data = DB::table('patchquerylist')
-				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+				->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 				->where('created_by','=',$request->user_id)
 				->whereNotIn('patchquerystatus_id',[6,7])
 				->where('status_id','=',1)
@@ -229,7 +229,7 @@ class patchqueryController extends Controller
 	public function statuswisepatchquerylist(Request $request){
 		if($request->role_id <= 2){
 			$data = DB::table('patchquerylist')
-			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 			->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 			->where('status_id','=',1)
 			->orderBy('patchquery_id','DESC')
@@ -245,7 +245,7 @@ class patchqueryController extends Controller
 				$sortbrand[] = $brands->brand_id;
 			}
 			$data = DB::table('patchquerylist')
-			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 			->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 			->whereIn('brand_id',$sortbrand)
 			->where('status_id','=',1)
@@ -262,7 +262,7 @@ class patchqueryController extends Controller
 				$sortbrand[] = $brands->brand_id;
 			}
 			$data = DB::table('patchquerylist')
-			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 			->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 			->whereIn('brand_id',$sortbrand)
 			->where('status_id','=',1)
@@ -270,7 +270,7 @@ class patchqueryController extends Controller
 			->paginate(30);
 		}elseif($request->role_id == 6){
 			$data = DB::table('patchquerylist')
-			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 			->where('patchquerystatus_id','=',$request->patchquerystatus_id)
 			->where('patchquery_manager','=',$request->user_id)
 			->where('status_id','=',1)
@@ -278,7 +278,7 @@ class patchqueryController extends Controller
 			->paginate(30);	
 		}else{
 			$data = DB::table('patchquerylist')
-			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name')
+			->select('patchquery_id','patchquery_clientemail','patchquery_title','patchquery_date','patchquery_clientbudget','patchquery_amount','patchquery_deliverycost','patchquery_islead','patchquerystatus_id','patchquerystatus_name','user_name')
 			->where('created_by','=',$request->user_id)
 			->where('patchquerystatus_id','=',$request->patchquerystatus_id )
 			->where('status_id','=',1)

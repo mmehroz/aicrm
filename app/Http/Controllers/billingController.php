@@ -130,33 +130,32 @@ class billingController extends Controller
 			$getmergedealtoken[] = $getmergedeals->order_token;
 		}
 		if($request->orderpaymentstatus_id == 2){
-			if($request->topaid == 1){
-				$paymentlist = DB::table('orderpaymentdetails')
-				->select('*')
-				->whereNotIn('order_token', $getmergedealtoken)
-				->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
-				->where('brand_id','=',$request->brand_id)
-				// ->where('orderpayment_pickby','=',$request->user_id)
-				->whereBetween('orderpayment_date',[$request->from, $request->to])
-				->where('orderpayment_lastpaiddate','>=',date('Y-m-d'))
-				->where('status_id','=',1)
-				->groupBy('order_token')
-				->orderBy('orderpayment_id','DESC')
-				->paginate(30);	
-			}else{
-				$paymentlist = DB::table('orderpaymentdetails')
-				->select('*')
-				->whereNotIn('order_token', $getmergedealtoken)
-				->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
-				->where('brand_id','=',$request->brand_id)
-				// ->where('orderpayment_pickby','=',$request->user_id)
-				->whereBetween('orderpayment_date',[$request->from, $request->to])
-				->where('orderpayment_lastpaiddate','<',date('Y-m-d'))
-				->where('status_id','=',1)
-				->groupBy('order_token')
-				->orderBy('orderpayment_id','DESC')
-				->paginate(30);	
-			}
+			$paymentlisttopaid = DB::table('orderpaymentdetails')
+			->select('*', DB::raw("1 as topaid"))
+			->whereNotIn('order_token', $getmergedealtoken)
+			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+			->where('brand_id','=',$request->brand_id)
+			// ->where('orderpayment_pickby','=',$request->user_id)
+			->whereBetween('orderpayment_date',[$request->from, $request->to])
+			->where('orderpayment_lastpaiddate','>=',date('Y-m-d'))
+			->where('status_id','=',1)
+			->groupBy('order_token')
+			->orderBy('orderpayment_id','DESC')
+			->get()->toArray();	
+			$paymentlisttorecovery = DB::table('orderpaymentdetails')
+			->select('*', DB::raw("0 as topaid"))
+			->whereNotIn('order_token', $getmergedealtoken)
+			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+			->where('brand_id','=',$request->brand_id)
+			// ->where('orderpayment_pickby','=',$request->user_id)
+			->whereBetween('orderpayment_date',[$request->from, $request->to])
+			->where('orderpayment_lastpaiddate','<',date('Y-m-d'))
+			->where('status_id','=',1)
+			->groupBy('order_token')
+			->orderBy('orderpayment_id','DESC')
+			->get()->toArray();	
+			$paymentlist = array_merge($paymentlisttopaid,$paymentlisttorecovery);
+			rsort($paymentlist);
 		}else{
 			if($request->orderpaymentstatus_id == 3){
 				$validate = Validator::make($request->all(), [ 
@@ -230,33 +229,32 @@ class billingController extends Controller
 			$getmergedealtoken[] = $getmergedeals->order_token;
 		}
 		if($request->orderpaymentstatus_id == 2){
-			if($request->topaid == 1){
-				$paymentlist = DB::table('mergepaymentdetails')
-				->select('*')
-				->whereIn('order_token', $getmergedealtoken)
-				->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
-				->where('brand_id','=',$request->brand_id)
-				// ->where('orderpayment_pickby','=',$request->user_id)
-				->whereBetween('orderpayment_date',[$request->from, $request->to])
-				->where('orderpayment_lastpaiddate','>=',date('Y-m-d'))
-				->where('status_id','=',1)
-				->groupBy('mergedeal_token')
-				->orderBy('orderpayment_id','DESC')
-				->paginate(30);
-			}else{
-				$paymentlist = DB::table('mergepaymentdetails')
-				->select('*')
-				->whereIn('order_token', $getmergedealtoken)
-				->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
-				->where('brand_id','=',$request->brand_id)
-				// ->where('orderpayment_pickby','=',$request->user_id)
-				->whereBetween('orderpayment_date',[$request->from, $request->to])
-				->where('orderpayment_lastpaiddate','<',date('Y-m-d'))
-				->where('status_id','=',1)
-				->groupBy('mergedeal_token')
-				->orderBy('orderpayment_id','DESC')
-				->paginate(30);
-			}
+			$paymentlisttopaid = DB::table('mergepaymentdetails')
+			->select('*')
+			->whereIn('order_token', $getmergedealtoken)
+			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+			->where('brand_id','=',$request->brand_id)
+			// ->where('orderpayment_pickby','=',$request->user_id)
+			->whereBetween('orderpayment_date',[$request->from, $request->to])
+			->where('orderpayment_lastpaiddate','>=',date('Y-m-d'))
+			->where('status_id','=',1)
+			->groupBy('mergedeal_token')
+			->orderBy('orderpayment_id','DESC')
+			->get()->toArray();
+			$paymentlisttorecovery = DB::table('mergepaymentdetails')
+			->select('*')
+			->whereIn('order_token', $getmergedealtoken)
+			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+			->where('brand_id','=',$request->brand_id)
+			// ->where('orderpayment_pickby','=',$request->user_id)
+			->whereBetween('orderpayment_date',[$request->from, $request->to])
+			->where('orderpayment_lastpaiddate','<',date('Y-m-d'))
+			->where('status_id','=',1)
+			->groupBy('mergedeal_token')
+			->orderBy('orderpayment_id','DESC')
+			->get()->toArray();
+			$paymentlist = array_merge($paymentlisttopaid,$paymentlisttorecovery);
+			rsort($paymentlist);
 		}else{
 			if($request->orderpaymentstatus_id == 3){
 				$validate = Validator::make($request->all(), [ 

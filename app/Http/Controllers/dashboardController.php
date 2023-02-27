@@ -1142,103 +1142,252 @@ class dashboardController extends Controller
 		foreach($totalbrand as $totalbrands){
 			$brands[] =  $totalbrands->brand_id;
 		}
-		$forwardedtoproduction = DB::table('patch')
+		$sumforwardedtoproduction = DB::table('patch')
 		->select('patch_amount')
-		->whereIn('patch_date', $list)
+		// ->whereIn('patch_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchstatus_id','=',1)
 		->where('status_id','=',1)
 		->sum('patch_amount');
-		$returnfromproduction = DB::table('patch')
+		$sumreturnfromproduction = DB::table('patch')
 		->select('patch_amount')
-		->whereIn('patch_date', $list)
+		// ->whereIn('patch_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchstatus_id','=',2)
 		->where('status_id','=',1)
 		->sum('patch_amount');
-		$ondelivery = DB::table('patch')
+		$sumondelivery = DB::table('patch')
 		->select('patch_amount')
-		->whereIn('patch_date', $list)
+		// ->whereIn('patch_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchstatus_id','=',3)
 		->where('status_id','=',1)
 		->sum('patch_amount');
-		$delivered = DB::table('patch')
+		$sumdelivered = DB::table('patch')
 		->select('patch_amount')
-		->whereIn('patch_date', $list)
+		// ->whereIn('patch_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchstatus_id','=',4)
 		->where('status_id','=',1)
 		->sum('patch_amount');
+		$forwardedtoproduction = DB::table('patch')
+		->select('patch_is')
+		// ->whereIn('patch_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchstatus_id','=',1)
+		->where('status_id','=',1)
+		->count();
+		$returnfromproduction = DB::table('patch')
+		->select('patch_is')
+		// ->whereIn('patch_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchstatus_id','=',2)
+		->where('status_id','=',1)
+		->count();
+		$ondelivery = DB::table('patch')
+		->select('patch_is')
+		// ->whereIn('patch_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchstatus_id','=',3)
+		->where('status_id','=',1)
+		->count();
+		$delivered = DB::table('patch')
+		->select('patch_is')
+		// ->whereIn('patch_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchstatus_id','=',4)
+		->where('status_id','=',1)
+		->count();
 		$orderdata = array(
 			'forwardedtoproduction' 	=> $forwardedtoproduction,
 			'returnfromproduction' 		=> $returnfromproduction,
 			'ondelivery' 				=> $ondelivery,
 			'delivered' 				=> $delivered,
+			'sumforwardedtoproduction' 	=> $sumforwardedtoproduction,
+			'sumreturnfromproduction' 	=> $sumreturnfromproduction,
+			'sumondelivery' 			=> $sumondelivery,
+			'sumdelivered' 				=> $sumdelivered,
 		);
-
 		$forwardedtomanager = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchquerystatus_id','=',1)
 		->where('status_id','=',1)
 		->count();
 		$pickbymanager = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchquerystatus_id','=',9)
 		->where('status_id','=',1)
 		->count();
 		$forwardedtovendor = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchquerystatus_id','=',2)
 		->where('status_id','=',1)
 		->count();
 		$returntomanager = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchquerystatus_id','=',3)
 		->where('status_id','=',1)
 		->count();
 		$returntoagent = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchquerystatus_id','=',4)
 		->where('status_id','=',1)
 		->count();
 		$senttoclient = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchquerystatus_id','=',5)
 		->where('status_id','=',1)
 		->count();
 		$approve = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchquerystatus_id','=',6)
 		->where('status_id','=',1)
 		->count();
 		$reject = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchquerystatus_id','=',7)
 		->where('status_id','=',1)
 		->count();
 		$editbyclient = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
 		->where('patchquerystatus_id','=',8)
 		->where('status_id','=',1)
 		->count();
+		$sumforwardedtomanager = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchquerystatus_id','=',1)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumpickbymanager = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchquerystatus_id','=',9)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumforwardedtovendor = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchquerystatus_id','=',2)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumreturntomanager = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchquerystatus_id','=',3)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumreturntoagent = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchquerystatus_id','=',4)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumsenttoclient = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchquerystatus_id','=',5)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumapprove = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchquerystatus_id','=',6)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumreject = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchquerystatus_id','=',7)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumeditbyclient = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patchquerystatus_id','=',8)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
 		$querydata = array(
-			'forwardedtomanager' 	=> $forwardedtomanager,
-			'pickbymanager' 		=> $pickbymanager,
-			'forwardedtovendor' 	=> $forwardedtovendor,
-			'returntomanager' 		=> $returntomanager,
-			'returntoagent' 		=> $returntoagent,
-			'senttoclient' 			=> $senttoclient,
-			'approve' 				=> $approve,
-			'reject' 				=> $reject,
-			'editbyclient' 			=> $editbyclient,
+			'forwardedtomanager' 		=> $forwardedtomanager,
+			'pickbymanager' 			=> $pickbymanager,
+			'forwardedtovendor' 		=> $forwardedtovendor,
+			'returntomanager' 			=> $returntomanager,
+			'returntoagent' 			=> $returntoagent,
+			'senttoclient' 				=> $senttoclient,
+			'approve' 					=> $approve,
+			'reject' 					=> $reject,
+			'editbyclient' 				=> $editbyclient,
+			'sumforwardedtomanager' 	=> $sumforwardedtomanager,
+			'sumpickbymanager' 			=> $sumpickbymanager,
+			'sumforwardedtovendor' 		=> $sumforwardedtovendor,
+			'sumreturntomanager' 		=> $sumreturntomanager,
+			'sumreturntoagent' 			=> $sumreturntoagent,
+			'sumsenttoclient' 			=> $sumsenttoclient,
+			'sumapprove' 				=> $sumapprove,
+			'sumreject' 				=> $sumreject,
+			'sumeditbyclient' 			=> $sumeditbyclient,
 		);
-		return response()->json(['orderdata' => $orderdata,'querydata' => $querydata,'message' => 'Admin Dashboard'],200);
+		$total = DB::table('patch')
+		->select('patch_amount')
+		// ->whereIn('patch_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$pending = DB::table('patch')
+		->select('patch_amount')
+		// ->whereIn('patch_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patch_biillingstatus','=',"Pending")
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$paid = DB::table('patch')
+		->select('patch_amount')
+		// ->whereIn('patch_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patch_biillingstatus','=',"Paid")
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$cancel = DB::table('patch')
+		->select('patch_amount')
+		// ->whereIn('patch_date', $list)
+		->whereIn('brand_id', $brands)
+		->where('patch_biillingstatus','=',"Cancel")
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$billingdata = array(
+			'total' 	=> $total,
+			'pending' 	=> $pending,
+			'paid' 		=> $paid,
+			'cancel' 	=> $cancel,
+		);
+		return response()->json(['orderdata' => $orderdata,'querydata' => $querydata,'billingdata' => $billingdata,'message' => 'Admin Dashboard'],200);
 	}
 	public function patchbranddetails(Request $request){
 		$validate = Validator::make($request->all(), [ 
@@ -1468,6 +1617,346 @@ class dashboardController extends Controller
 		$userpicturepath = URL::to('/')."/public/user_picture/";
 		$brandlogopath = URL::to('/')."/public/brand_logo/";
 		return response()->json(['branddetails' => $branddetails,'orderdata' => $orderdata, 'querydata' => $querydata, 'topagent' => $sorttopagent, 'agenttarget' => $agenttarget, 'orders' => $orders, 'query' => $query,  'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Patch Brand Dashboard'],200);
+	}
+	public function salespatchdashboard(Request $request){
+		$validate = Validator::make($request->all(), [ 
+			'yearmonth'	=> 'required',
+			'brand_id'	=> 'required',
+			'id'		=> 'required',
+		]);
+		if ($validate->fails()) {    
+		    return response()->json($validate->errors(), 400);
+		}
+		$yearmonth = explode('-',$request->yearmonth);
+		if($yearmonth[1] <= 9){
+			$setyearmonth = $yearmonth[0].'-0'.$yearmonth[1];
+		}else{
+			$setyearmonth = $yearmonth[0].'-'.$yearmonth[1];
+		}
+		$getyearandmonth = explode('-', $setyearmonth);
+		$getfirstdate = $setyearmonth."-01";
+		if($yearmonth[1] == "1" || $yearmonth[1] == "3" || $yearmonth[1] == "5" || $yearmonth[1] == "7" || $yearmonth[1] == "8" || $yearmonth[1] == "10" || $yearmonth[1] == "12"){
+			$noofdays = 31;
+		}elseif($yearmonth[1] == "2"){
+			$noofdays = 28;
+		}else{
+			$noofdays = 30;
+		}
+		$list=array();
+		for($d=1; $d<=$noofdays; $d++)
+		{
+		    $time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
+		    if (date('m', $time)==$getyearandmonth[1])       
+		        $list[]=date('Y-m-d', $time);
+		}
+		$forwardedtoproduction = DB::table('patch')
+		->select('patch_amount')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchstatus_id','=',1)
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$returnfromproduction = DB::table('patch')
+		->select('patch_amount')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchstatus_id','=',2)
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$ondelivery = DB::table('patch')
+		->select('patch_amount')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchstatus_id','=',3)
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$delivered = DB::table('patch')
+		->select('patch_amount')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchstatus_id','=',4)
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$sumforwardedtoproduction = DB::table('patch')
+		->select('patch_amount')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchstatus_id','=',1)
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$sumreturnfromproduction = DB::table('patch')
+		->select('patch_amount')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchstatus_id','=',2)
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$sumondelivery = DB::table('patch')
+		->select('patch_amount')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchstatus_id','=',3)
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$sumdelivered = DB::table('patch')
+		->select('patch_amount')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchstatus_id','=',4)
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$forwardedtoproduction = DB::table('patch')
+		->select('patch_is')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchstatus_id','=',1)
+		->where('status_id','=',1)
+		->count();
+		$returnfromproduction = DB::table('patch')
+		->select('patch_is')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchstatus_id','=',2)
+		->where('status_id','=',1)
+		->count();
+		$ondelivery = DB::table('patch')
+		->select('patch_is')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchstatus_id','=',3)
+		->where('status_id','=',1)
+		->count();
+		$delivered = DB::table('patch')
+		->select('patch_is')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchstatus_id','=',4)
+		->where('status_id','=',1)
+		->count();
+		$orderdata = array(
+			'forwardedtoproduction' 	=> $forwardedtoproduction,
+			'returnfromproduction' 		=> $returnfromproduction,
+			'ondelivery' 				=> $ondelivery,
+			'delivered' 				=> $delivered,
+			'sumforwardedtoproduction' 	=> $sumforwardedtoproduction,
+			'sumreturnfromproduction' 	=> $sumreturnfromproduction,
+			'sumondelivery' 			=> $sumondelivery,
+			'sumdelivered' 				=> $sumdelivered,
+		);
+		$forwardedtomanager = DB::table('patchquery')
+		->select('patchquery_id')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',1)
+		->where('status_id','=',1)
+		->count();
+		$pickbymanager = DB::table('patchquery')
+		->select('patchquery_id')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',9)
+		->where('status_id','=',1)
+		->count();
+		$forwardedtovendor = DB::table('patchquery')
+		->select('patchquery_id')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',2)
+		->where('status_id','=',1)
+		->count();
+		$returntomanager = DB::table('patchquery')
+		->select('patchquery_id')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',3)
+		->where('status_id','=',1)
+		->count();
+		$returntoagent = DB::table('patchquery')
+		->select('patchquery_id')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',4)
+		->where('status_id','=',1)
+		->count();
+		$senttoclient = DB::table('patchquery')
+		->select('patchquery_id')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',5)
+		->where('status_id','=',1)
+		->count();
+		$approve = DB::table('patchquery')
+		->select('patchquery_id')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',6)
+		->where('status_id','=',1)
+		->count();
+		$reject = DB::table('patchquery')
+		->select('patchquery_id')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',7)
+		->where('status_id','=',1)
+		->count();
+		$editbyclient = DB::table('patchquery')
+		->select('patchquery_id')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',8)
+		->where('status_id','=',1)
+		->count();
+		$sumforwardedtomanager = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',1)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumpickbymanager = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',9)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumforwardedtovendor = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',2)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumreturntomanager = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',3)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumreturntoagent = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',4)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumsenttoclient = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',5)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumapprove = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',6)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumreject = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',7)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$sumeditbyclient = DB::table('patchquery')
+		->select('patchquery_amount')
+		->whereIn('patchquery_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patchquerystatus_id','=',8)
+		->where('status_id','=',1)
+		->sum('patchquery_amount');
+		$querydata = array(
+			'forwardedtomanager' 		=> $forwardedtomanager,
+			'pickbymanager' 			=> $pickbymanager,
+			'forwardedtovendor' 		=> $forwardedtovendor,
+			'returntomanager' 			=> $returntomanager,
+			'returntoagent' 			=> $returntoagent,
+			'senttoclient' 				=> $senttoclient,
+			'approve' 					=> $approve,
+			'reject' 					=> $reject,
+			'editbyclient' 				=> $editbyclient,
+			'sumforwardedtomanager' 	=> $sumforwardedtomanager,
+			'sumpickbymanager' 			=> $sumpickbymanager,
+			'sumforwardedtovendor' 		=> $sumforwardedtovendor,
+			'sumreturntomanager' 		=> $sumreturntomanager,
+			'sumreturntoagent' 			=> $sumreturntoagent,
+			'sumsenttoclient' 			=> $sumsenttoclient,
+			'sumapprove' 				=> $sumapprove,
+			'sumreject' 				=> $sumreject,
+			'sumeditbyclient' 			=> $sumeditbyclient,
+		);
+		$total = DB::table('patch')
+		->select('patch_amount')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$pending = DB::table('patch')
+		->select('patch_amount')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patch_biillingstatus','=',"Pending")
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$paid = DB::table('patch')
+		->select('patch_amount')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patch_biillingstatus','=',"Paid")
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$cancel = DB::table('patch')
+		->select('patch_amount')
+		->whereIn('patch_date', $list)
+		->where('brand_id','=',$request->brand_id)
+		->where('created_by','=',$request->id)
+		->where('patch_biillingstatus','=',"Cancel")
+		->where('status_id','=',1)
+		->sum('patch_amount');
+		$billingdata = array(
+			'total' 	=> $total,
+			'pending' 	=> $pending,
+			'paid' 		=> $paid,
+			'cancel' 	=> $cancel,
+		);
+		return response()->json(['orderdata' => $orderdata,'querydata' => $querydata,'billingdata' => $billingdata,'message' => 'Admin Dashboard'],200);
 	}
 	// patch admin dashboard end
 }
