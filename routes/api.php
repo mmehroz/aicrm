@@ -143,7 +143,6 @@ Route::any('/workerdashboard', [dashboardController::class, 'workerdashboard']);
 Route::any('/salesdashboard', [dashboardController::class, 'salesdashboard']);
 Route::any('/leadashboard', [dashboardController::class, 'leadashboard']);
 Route::any('/adminpatchdashboard', [dashboardController::class, 'adminpatchdashboard']);
-Route::any('/patchbranddetails', [dashboardController::class, 'patchbranddetails']);
 Route::any('/salespatchdashboard', [dashboardController::class, 'salespatchdashboard']);
 
 Route::any('/forwardedpaymentlist', [billingController::class, 'forwardedpaymentlist']);

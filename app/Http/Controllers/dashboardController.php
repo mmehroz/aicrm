@@ -57,8 +57,33 @@ class dashboardController extends Controller
 		foreach($totalbrand as $totalbrands){
 			$brands[] =  $totalbrands->brand_id;
 		}
-		$graphdata = array();
+		$graphdatatotal = array();
 		$index = 0;
+		foreach ($list as $lists) {
+			$totalincomeindollar = DB::table('orderpayment')
+			->select('orderpayment_amount')
+			->where('orderpayment_date','=', $lists)
+			->whereIn('brand_id',$brands)
+			->where('status_id','=',1)
+			->sum('orderpayment_amount');
+			$graphdatatotal[$index] = $totalincomeindollar;
+			$index++;
+		}
+		$graphdatapaid = array();
+		$paidindex = 0;
+		foreach ($list as $lists) {
+			$paidincomeindollar = DB::table('orderpayment')
+			->select('orderpayment_amount')
+			->where('orderpaymentstatus_id','=',3)
+			->where('orderpayment_date','=', $lists)
+			->whereIn('brand_id',$brands)
+			->where('status_id','=',1)
+			->sum('orderpayment_amount');
+			$graphdatapaid[$paidindex] = $paidincomeindollar;
+			$paidindex++;
+		}
+		$graphdataremaining = array();
+		$remainingindex = 0;
 		foreach ($list as $lists) {
 			$totalincomeindollar = DB::table('orderpayment')
 			->select('orderpayment_amount')
@@ -74,10 +99,8 @@ class dashboardController extends Controller
 			->where('status_id','=',1)
 			->sum('orderpayment_amount');
 			$remainingincomeindollar = $totalincomeindollar-$paidincomeindollar;
-			$graphdata[$index]['total'] = $totalincomeindollar;
-			$graphdata[$index]['paid'] = $paidincomeindollar;
-			$graphdata[$index]['remaining'] = $remainingincomeindollar;
-			$index++;
+			$graphdataremaining[$remainingindex] = $remainingincomeindollar;
+			$remainingindex++;
 		}
 		$grosssale = DB::table('orderpayment')
 		->select('orderpayment_amount')
@@ -205,7 +228,7 @@ class dashboardController extends Controller
 		->get();
 		$userpicturepath = URL::to('/')."/public/user_picture/";
 		$brandlogopath = URL::to('/')."/public/brand_logo/";
-		return response()->json(['topdata' => $topdata,'test' => $list, 'upcommingpayments' => $getupcommingpayments, 'pendingtask' => $pendingtask, 'graphdata' => $graphdata,'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
+		return response()->json(['topdata' => $topdata,'test' => $list, 'upcommingpayments' => $getupcommingpayments, 'pendingtask' => $pendingtask, 'graphdatatotal' => $graphdatatotal, 'graphdatapaid' => $graphdatapaid, 'graphdataremaining' => $graphdataremaining, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
 	}
 	public function adminbranddetails(Request $request){
 		$validate = Validator::make($request->all(), [ 
@@ -226,172 +249,241 @@ class dashboardController extends Controller
 		->where('brand_id','=',$request->brand_id)
 		->where('status_id','=',1)
 		->first();
-		$branddetails->brand_currency = $branddetails->brand_currency == 1 ? "$" : " £";
-		$getyearandmonth = explode('-', $setyearmonth);
-		$getfirstdate = $setyearmonth."-01";
-		if($yearmonth[1] == "1" || $yearmonth[1] == "3" || $yearmonth[1] == "5" || $yearmonth[1] == "7" || $yearmonth[1] == "8" || $yearmonth[1] == "10" || $yearmonth[1] == "12"){
-			$noofdays = 31;
-		}elseif($yearmonth[1] == "2"){
-			$noofdays = 28;
+		if($branddetails->brandtype_id == 2){
+			$data = $this->patchbranddetails($request->yearmonth, $request->brand_id);
+			return response()->json($data);
 		}else{
-			$noofdays = 30;
-		}
-		$list=array();
-		for($d=1; $d<=$noofdays; $d++)
-		{
-		    $time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
-		    if (date('m', $time)==$getyearandmonth[1])       
-		        $list[]=date('Y-m-d', $time);
-		}
-		$getbranduserid = DB::table('userbarnd')
-		->select('user_id')
-		->where('brand_id','=',$request->brand_id)
-		->where('status_id','=',1)
-		->get();
-		$sortuserbrand = array();
-		foreach ($getbranduserid as $getbranduserids) {
-			$sortuserbrand[] = $getbranduserids->user_id;
-		}
-		$ppcassignindollar = DB::table('assignppc')
-		->select('assignppc_amount')
-		->where('assignppc_month','=',$setyearmonth)
-		->whereIn('user_id',$sortuserbrand)
-		->where('status_id','=',1)
-		->sum('assignppc_amount');
-		$ppcspendindollar = DB::table('ppc')
-		->select('ppc_amount')
-		->whereIn('ppc_date', $list)
-		->where('brand_id','=',$request->brand_id)
-		->where('status_id','=',1)
-		->sum('ppc_amount');
-		$remainingppcindollar = $ppcassignindollar-$ppcspendindollar;
-		$totalincomeindollar = DB::table('orderpayment')
-		->select('orderpayment_amount')
-		->whereIn('orderpayment_date', $list)
-		->whereIn('created_by',$sortuserbrand)
-		->where('brand_id','=',$request->brand_id)
-		->where('status_id','=',1)
-		->sum('orderpayment_amount');
-		$paidincomeindollar = DB::table('orderpayment')
-		->select('orderpayment_amount')
-		->where('orderpaymentstatus_id','=',3)
-		->whereIn('orderpayment_date', $list)
-		->whereIn('created_by',$sortuserbrand)
-		->where('brand_id','=',$request->brand_id)
-		->where('status_id','=',1)
-		->sum('orderpayment_amount');
-		$remaininngincomeindollar = $totalincomeindollar-$paidincomeindollar;
-		$stats = array(
-			'ppcassignindollar' 		=> $ppcassignindollar,
-			'ppcspendindollar' 			=> $ppcspendindollar,
-			'remainingppcindollar' 		=> $remainingppcindollar,
-			'totalincomeindollar' 		=> $totalincomeindollar,
-			'paidincomeindollar' 		=> $paidincomeindollar,
-			'remaininngincomeindollar' 	=> $remaininngincomeindollar,
-		);
-		$daywisepaidincome = array();
-		$index = 0;
-		foreach ($list as $lists) {
-			$totalincomeindollar = DB::table('orderpayment')
-			->select('orderpayment_amount')
-			->where('orderpayment_date','=', $lists)
-			->whereIn('created_by',$sortuserbrand)
-			->where('brand_id','=',$request->brand_id)
-			->where('status_id','=',1)
-			->sum('orderpayment_amount');
-			$paidincomeindollar = DB::table('orderpayment')
-			->select('orderpayment_amount')
-			->where('orderpaymentstatus_id','=',3)
-			->where('orderpayment_date','=', $lists)
-			->whereIn('created_by',$sortuserbrand)
-			->where('brand_id','=',$request->brand_id)
-			->where('status_id','=',1)
-			->sum('orderpayment_amount');
-			$remainingincomeindollar = DB::table('orderpayment')
-			->select('orderpayment_amount')
-			->where('orderpaymentstatus_id','!=',3)
-			->where('orderpayment_date','=', $lists)
-			->whereIn('created_by',$sortuserbrand)
-			->where('brand_id','=',$request->brand_id)
-			->where('status_id','=',1)
-			->sum('orderpayment_amount');
-			$daywisepaidincome[$index]['total'] = $totalincomeindollar;
-			$daywisepaidincome[$index]['paid'] = $paidincomeindollar;
-			$daywisepaidincome[$index]['remaining'] = $remainingincomeindollar;
-			$index++;
-		}
-		$getuser = DB::table('user')
-		->select('user_id','user_name','user_picture','user_target')
-		->whereIn('user_id',$sortuserbrand)
-		->whereIn('role_id',[6,7])
-		->where('status_id','=',1)
-		->get();
-		$topagent = array();
-		$topindex=0;
-		$topthree=0;
-		foreach ($getuser as $getusers) {
-			$getachieve = DB::table('orderpayment')
-			->select('orderpayment_amount')
-			->where('status_id','=',1)
-			->where('orderpayment_date','like',$setyearmonth.'%')
-			->where('created_by','=',$getusers->user_id)
-			->sum('orderpayment_amount');
-			if ($getachieve != 0 && $topthree <= 2) {
-				$getusers->achieve = $getachieve;
-				$topagent[$topindex] = $getusers;	
-				$topthree++;
+			$branddetails->brand_currency = $branddetails->brand_currency == 1 ? "$" : " £";
+			$getyearandmonth = explode('-', $setyearmonth);
+			$getfirstdate = $setyearmonth."-01";
+			if($yearmonth[1] == "1" || $yearmonth[1] == "3" || $yearmonth[1] == "5" || $yearmonth[1] == "7" || $yearmonth[1] == "8" || $yearmonth[1] == "10" || $yearmonth[1] == "12"){
+				$noofdays = 31;
+			}elseif($yearmonth[1] == "2"){
+				$noofdays = 28;
+			}else{
+				$noofdays = 30;
 			}
-			$topindex++;
-		}
-		$topagent = array_sort($topagent, 'achieve', SORT_DESC);
-		$sorttopagent = array();
-		$sortindex=0;
-		foreach($topagent as $topagents){
-			$sorttopagent[$sortindex] = $topagents;
-			$sortindex++;
-		}
-		$agenttarget = array();
-		$target=0;
-		foreach ($getuser as $getusers) {
-			$getachieve = DB::table('orderpayment')
-			->select('orderpayment_amount')
-			->where('status_id','=',1)
+			$list=array();
+			for($d=1; $d<=$noofdays; $d++)
+			{
+				$time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
+				if (date('m', $time)==$getyearandmonth[1])       
+					$list[]=date('Y-m-d', $time);
+			}
+			$getbranduserid = DB::table('userbarnd')
+			->select('user_id')
 			->where('brand_id','=',$request->brand_id)
-			->where('orderpayment_date','like',$setyearmonth.'%')
-			->where('created_by','=',$getusers->user_id)
+			->where('status_id','=',1)
+			->get();
+			$sortuserbrand = array();
+			foreach ($getbranduserid as $getbranduserids) {
+				$sortuserbrand[] = $getbranduserids->user_id;
+			}
+			$ppcassignindollar = DB::table('assignppc')
+			->select('assignppc_amount')
+			->where('assignppc_month','=',$setyearmonth)
+			->whereIn('user_id',$sortuserbrand)
+			->where('status_id','=',1)
+			->sum('assignppc_amount');
+			$ppcspendindollar = DB::table('ppc')
+			->select('ppc_amount')
+			->whereIn('ppc_date', $list)
+			->where('brand_id','=',$request->brand_id)
+			->where('status_id','=',1)
+			->sum('ppc_amount');
+			$remainingppcindollar = $ppcassignindollar-$ppcspendindollar;
+			$gross = DB::table('orderpayment')
+			->select('orderpayment_amount')
+			->whereIn('orderpayment_date', $list)
+			->whereIn('created_by',$sortuserbrand)
+			->where('brand_id','=',$request->brand_id)
+			->where('status_id','=',1)
 			->sum('orderpayment_amount');
-			$getpaid = DB::table('orderpayment')
+			$forwarded = DB::table('orderpayment')
 			->select('orderpayment_amount')
-			->where('status_id','=',1)
+			->whereIn('orderpaymentstatus_id',[8,9])
+			->whereIn('orderpayment_date', $list)
+			->whereIn('created_by',$sortuserbrand)
 			->where('brand_id','=',$request->brand_id)
+			->where('status_id','=',1)
+			->sum('orderpayment_amount');
+			$invoice = DB::table('orderpayment')
+			->select('orderpayment_amount')
 			->where('orderpaymentstatus_id','=',3)
-			->where('orderpayment_date','like',$setyearmonth.'%')
-			->where('created_by','=',$getusers->user_id)
-			->sum('orderpayment_amount');
-			$getcancel = DB::table('orderpayment')
-			->select('orderpayment_amount')
-			->where('status_id','=',1)
+			->whereIn('orderpayment_date', $list)
+			->whereIn('created_by',$sortuserbrand)
 			->where('brand_id','=',$request->brand_id)
-			->where('orderpaymentstatus_id','=',4)
-			->where('orderpayment_date','like',$setyearmonth.'%')
-			->where('created_by','=',$getusers->user_id)
+			->where('status_id','=',1)
 			->sum('orderpayment_amount');
-			$getusers->achieve = $getachieve;
-			$getusers->paid = $getpaid;
-			$getusers->cancel = $getcancel;
-			$agenttarget[$target] = $getusers;	
-			$target++;
+			$paid = DB::table('orderpayment')
+			->select('orderpayment_amount')
+			->where('orderpaymentstatus_id','=',3)
+			->whereIn('orderpayment_date', $list)
+			->whereIn('created_by',$sortuserbrand)
+			->where('brand_id','=',$request->brand_id)
+			->where('status_id','=',1)
+			->sum('orderpayment_amount');
+			$cancel = DB::table('orderpayment')
+			->select('orderpayment_amount')
+			->where('orderpaymentstatus_id','=',4)
+			->whereIn('orderpayment_date', $list)
+			->whereIn('created_by',$sortuserbrand)
+			->where('brand_id','=',$request->brand_id)
+			->where('status_id','=',1)
+			->sum('orderpayment_amount');
+			$refund = DB::table('orderpayment')
+			->select('orderpayment_amount')
+			->where('orderpaymentstatus_id','=',5)
+			->whereIn('orderpayment_date', $list)
+			->whereIn('created_by',$sortuserbrand)
+			->where('brand_id','=',$request->brand_id)
+			->where('status_id','=',1)
+			->sum('orderpayment_amount');
+			$chargeback = DB::table('orderpayment')
+			->select('orderpayment_amount')
+			->where('orderpaymentstatus_id','=',6)
+			->whereIn('orderpayment_date', $list)
+			->whereIn('created_by',$sortuserbrand)
+			->where('brand_id','=',$request->brand_id)
+			->where('status_id','=',1)
+			->sum('orderpayment_amount');
+			$recovery = DB::table('orderpayment')
+			->select('orderpayment_amount')
+			->where('orderpaymentstatus_id','=',7)
+			->whereIn('orderpayment_date', $list)
+			->whereIn('created_by',$sortuserbrand)
+			->where('brand_id','=',$request->brand_id)
+			->where('status_id','=',1)
+			->sum('orderpayment_amount');
+			$totalunpaid = $gross-$forwarded-$invoice-$paid-$cancel-$refund-$chargeback-$recovery;
+			$stats = array(
+				'ppcassignindollar' 	=> $ppcassignindollar,
+				'ppcspendindollar' 		=> $ppcspendindollar,
+				'remainingppcindollar' 	=> $remainingppcindollar,
+				'gross' 				=> $gross,
+				'forwarded' 			=> $forwarded,
+				'invoice' 				=> $invoice,
+				'paid' 					=> $paid,
+				'cancel' 				=> $cancel,
+				'refund' 				=> $refund,
+				'chargeback' 			=> $chargeback,
+				'recovery' 				=> $recovery,
+				'totalunpaid'		 	=> $totalunpaid,
+			);
+			$graphdatatotal = array();
+			$totalindex = 0;
+			foreach ($list as $lists) {
+				$total = DB::table('orderpayment')
+				->select('orderpayment_amount')
+				->where('orderpayment_date','=', $lists)
+				->whereIn('created_by',$sortuserbrand)
+				->where('brand_id','=',$request->brand_id)
+				->where('status_id','=',1)
+				->sum('orderpayment_amount');
+				$graphdatatotal[$totalindex] = $total;
+				$totalindex++;
+			}
+			$graphdatapaid = array();
+			$paidindex = 0;
+			foreach ($list as $lists) {
+				$paid = DB::table('orderpayment')
+				->select('orderpayment_amount')
+				->where('orderpaymentstatus_id','=',3)
+				->where('orderpayment_date','=', $lists)
+				->whereIn('created_by',$sortuserbrand)
+				->where('brand_id','=',$request->brand_id)
+				->where('status_id','=',1)
+				->sum('orderpayment_amount');
+				$graphdatapaid[$paidindex] = $paid;
+				$paidindex++;
+			}
+			$graphdataremaining = array();
+			$remainingindex = 0;
+			foreach ($list as $lists) {
+				$remaining = DB::table('orderpayment')
+				->select('orderpayment_amount')
+				->where('orderpaymentstatus_id','!=',3)
+				->where('orderpayment_date','=', $lists)
+				->whereIn('created_by',$sortuserbrand)
+				->where('brand_id','=',$request->brand_id)
+				->where('status_id','=',1)
+				->sum('orderpayment_amount');
+				$graphdataremaining[$remainingindex] = $remaining;
+				$remainingindex++;
+			}
+			$getuser = DB::table('user')
+			->select('user_id','user_name','user_picture','user_target')
+			->whereIn('user_id',$sortuserbrand)
+			->whereIn('role_id',[6,7])
+			->where('status_id','=',1)
+			->get();
+			$topagent = array();
+			$topindex=0;
+			$topthree=0;
+			foreach ($getuser as $getusers) {
+				$getachieve = DB::table('orderpayment')
+				->select('orderpayment_amount')
+				->where('status_id','=',1)
+				->where('orderpayment_date','like',$setyearmonth.'%')
+				->where('created_by','=',$getusers->user_id)
+				->sum('orderpayment_amount');
+				if ($getachieve != 0 && $topthree <= 2) {
+					$getusers->achieve = $getachieve;
+					$topagent[$topindex] = $getusers;	
+					$topthree++;
+				}
+				$topindex++;
+			}
+			$topagent = array_sort($topagent, 'achieve', SORT_DESC);
+			$sorttopagent = array();
+			$sortindex=0;
+			foreach($topagent as $topagents){
+				$sorttopagent[$sortindex] = $topagents;
+				$sortindex++;
+			}
+			$agenttarget = array();
+			$target=0;
+			foreach ($getuser as $getusers) {
+				$getachieve = DB::table('orderpayment')
+				->select('orderpayment_amount')
+				->where('status_id','=',1)
+				->where('brand_id','=',$request->brand_id)
+				->where('orderpayment_date','like',$setyearmonth.'%')
+				->where('created_by','=',$getusers->user_id)
+				->sum('orderpayment_amount');
+				$getpaid = DB::table('orderpayment')
+				->select('orderpayment_amount')
+				->where('status_id','=',1)
+				->where('brand_id','=',$request->brand_id)
+				->where('orderpaymentstatus_id','=',3)
+				->where('orderpayment_date','like',$setyearmonth.'%')
+				->where('created_by','=',$getusers->user_id)
+				->sum('orderpayment_amount');
+				$getcancel = DB::table('orderpayment')
+				->select('orderpayment_amount')
+				->where('status_id','=',1)
+				->where('brand_id','=',$request->brand_id)
+				->where('orderpaymentstatus_id','=',4)
+				->where('orderpayment_date','like',$setyearmonth.'%')
+				->where('created_by','=',$getusers->user_id)
+				->sum('orderpayment_amount');
+				$getusers->achieve = $getachieve;
+				$getusers->paid = $getpaid;
+				$getusers->cancel = $getcancel;
+				$agenttarget[$target] = $getusers;	
+				$target++;
+			}
+			$payments = DB::table('orderpaymentdetails')
+			->select('order_title','orderpayment_title','orderpayment_amount','user_name','user_picture')
+			->where('orderpaymentstatus_id','!=',3)
+			->where('status_id','=',1)
+			->whereIn('created_by',$sortuserbrand)
+			->whereIn('orderpayment_duedate',$list)
+			->get();
+			$userpicturepath = URL::to('/')."/public/user_picture/";
+			$brandlogopath = URL::to('/')."/public/brand_logo/";
+			return response()->json(['branddetails' => $branddetails,'stats' => $stats, 'topagent' => $sorttopagent, 'agenttarget' => $agenttarget, 'payments' => $payments, 'graphdatatotal' => $graphdatatotal, 'graphdatapaid' => $graphdatapaid, 'graphdataremaining' => $graphdataremaining, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
 		}
-		$payments = DB::table('orderpaymentdetails')
-		->select('order_title','orderpayment_title','orderpayment_amount','user_name','user_picture')
-		->where('orderpaymentstatus_id','!=',3)
-		->where('status_id','=',1)
-		->whereIn('created_by',$sortuserbrand)
-		->whereIn('orderpayment_duedate',$list)
-		->get();
-		$userpicturepath = URL::to('/')."/public/user_picture/";
-		$brandlogopath = URL::to('/')."/public/brand_logo/";
-		return response()->json(['branddetails' => $branddetails,'stats' => $stats, 'daywisepaidincome' => $daywisepaidincome, 'topagent' => $sorttopagent, 'agenttarget' => $agenttarget, 'payments' => $payments, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
 	}
 	public function portaladmindashboard(Request $request){
 		$validate = Validator::make($request->all(), [ 
@@ -1103,7 +1195,6 @@ class dashboardController extends Controller
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
-	// patch admin dashboard start
 	public function adminpatchdashboard(Request $request){
 		$validate = Validator::make($request->all(), [ 
 	      'yearmonth'	=> 'required',
@@ -1144,56 +1235,56 @@ class dashboardController extends Controller
 		}
 		$sumforwardedtoproduction = DB::table('patch')
 		->select('patch_amount')
-		// ->whereIn('patch_date', $list)
+		->whereIn('patch_date', $list)
 		->whereIn('brand_id', $brands)
 		->where('patchstatus_id','=',1)
 		->where('status_id','=',1)
 		->sum('patch_amount');
 		$sumreturnfromproduction = DB::table('patch')
 		->select('patch_amount')
-		// ->whereIn('patch_date', $list)
+		->whereIn('patch_date', $list)
 		->whereIn('brand_id', $brands)
 		->where('patchstatus_id','=',2)
 		->where('status_id','=',1)
 		->sum('patch_amount');
 		$sumondelivery = DB::table('patch')
 		->select('patch_amount')
-		// ->whereIn('patch_date', $list)
+		->whereIn('patch_date', $list)
 		->whereIn('brand_id', $brands)
 		->where('patchstatus_id','=',3)
 		->where('status_id','=',1)
 		->sum('patch_amount');
 		$sumdelivered = DB::table('patch')
 		->select('patch_amount')
-		// ->whereIn('patch_date', $list)
+		->whereIn('patch_date', $list)
 		->whereIn('brand_id', $brands)
 		->where('patchstatus_id','=',4)
 		->where('status_id','=',1)
 		->sum('patch_amount');
 		$forwardedtoproduction = DB::table('patch')
 		->select('patch_is')
-		// ->whereIn('patch_date', $list)
+		->whereIn('patch_date', $list)
 		->whereIn('brand_id', $brands)
 		->where('patchstatus_id','=',1)
 		->where('status_id','=',1)
 		->count();
 		$returnfromproduction = DB::table('patch')
 		->select('patch_is')
-		// ->whereIn('patch_date', $list)
+		->whereIn('patch_date', $list)
 		->whereIn('brand_id', $brands)
 		->where('patchstatus_id','=',2)
 		->where('status_id','=',1)
 		->count();
 		$ondelivery = DB::table('patch')
 		->select('patch_is')
-		// ->whereIn('patch_date', $list)
+		->whereIn('patch_date', $list)
 		->whereIn('brand_id', $brands)
 		->where('patchstatus_id','=',3)
 		->where('status_id','=',1)
 		->count();
 		$delivered = DB::table('patch')
 		->select('patch_is')
-		// ->whereIn('patch_date', $list)
+		->whereIn('patch_date', $list)
 		->whereIn('brand_id', $brands)
 		->where('patchstatus_id','=',4)
 		->where('status_id','=',1)
@@ -1356,27 +1447,27 @@ class dashboardController extends Controller
 		);
 		$total = DB::table('patch')
 		->select('patch_amount')
-		// ->whereIn('patch_date', $list)
+		->whereIn('patch_date', $list)
 		->whereIn('brand_id', $brands)
 		->where('status_id','=',1)
 		->sum('patch_amount');
 		$pending = DB::table('patch')
 		->select('patch_amount')
-		// ->whereIn('patch_date', $list)
+		->whereIn('patch_date', $list)
 		->whereIn('brand_id', $brands)
 		->where('patch_biillingstatus','=',"Pending")
 		->where('status_id','=',1)
 		->sum('patch_amount');
 		$paid = DB::table('patch')
 		->select('patch_amount')
-		// ->whereIn('patch_date', $list)
+		->whereIn('patch_date', $list)
 		->whereIn('brand_id', $brands)
 		->where('patch_biillingstatus','=',"Paid")
 		->where('status_id','=',1)
 		->sum('patch_amount');
 		$cancel = DB::table('patch')
 		->select('patch_amount')
-		// ->whereIn('patch_date', $list)
+		->whereIn('patch_date', $list)
 		->whereIn('brand_id', $brands)
 		->where('patch_biillingstatus','=',"Cancel")
 		->where('status_id','=',1)
@@ -1389,15 +1480,8 @@ class dashboardController extends Controller
 		);
 		return response()->json(['orderdata' => $orderdata,'querydata' => $querydata,'billingdata' => $billingdata,'message' => 'Admin Dashboard'],200);
 	}
-	public function patchbranddetails(Request $request){
-		$validate = Validator::make($request->all(), [ 
-	      'yearmonth'	=> 'required',
-	      'brand_id'	=> 'required',
-	    ]);
-     	if ($validate->fails()) {    
-			return response()->json($validate->errors(), 400);
-		}
-		$yearmonth = explode('-',$request->yearmonth);
+	public function patchbranddetails($yearmonth, $brand_id){
+		$yearmonth = explode('-',$yearmonth);
 		if($yearmonth[1] <= 9){
 			$setyearmonth = $yearmonth[0].'-0'.$yearmonth[1];
 		}else{
@@ -1405,7 +1489,7 @@ class dashboardController extends Controller
 		}
 		$branddetails = DB::table('brand')
 		->select('*')
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('status_id','=',1)
 		->first();
 		$branddetails->brand_currency = $branddetails->brand_currency == 1 ? "$" : " £";
@@ -1427,7 +1511,7 @@ class dashboardController extends Controller
 		}
 		$getbranduserid = DB::table('userbarnd')
 		->select('user_id')
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('status_id','=',1)
 		->get();
 		$sortuserbrand = array();
@@ -1437,28 +1521,28 @@ class dashboardController extends Controller
 		$forwardedtoproduction = DB::table('patch')
 		->select('patch_amount')
 		->whereIn('patch_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchstatus_id','=',1)
 		->where('status_id','=',1)
 		->sum('patch_amount');
 		$returnfromproduction = DB::table('patch')
 		->select('patch_amount')
 		->whereIn('patch_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchstatus_id','=',2)
 		->where('status_id','=',1)
 		->sum('patch_amount');
 		$ondelivery = DB::table('patch')
 		->select('patch_amount')
 		->whereIn('patch_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchstatus_id','=',3)
 		->where('status_id','=',1)
 		->sum('patch_amount');
 		$delivered = DB::table('patch')
 		->select('patch_amount')
 		->whereIn('patch_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchstatus_id','=',4)
 		->where('status_id','=',1)
 		->sum('patch_amount');
@@ -1471,63 +1555,63 @@ class dashboardController extends Controller
 		$forwardedtomanager = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchquerystatus_id','=',1)
 		->where('status_id','=',1)
 		->count();
 		$pickbymanager = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchquerystatus_id','=',9)
 		->where('status_id','=',1)
 		->count();
 		$forwardedtovendor = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchquerystatus_id','=',2)
 		->where('status_id','=',1)
 		->count();
 		$returntomanager = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchquerystatus_id','=',3)
 		->where('status_id','=',1)
 		->count();
 		$returntoagent = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchquerystatus_id','=',4)
 		->where('status_id','=',1)
 		->count();
 		$senttoclient = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchquerystatus_id','=',5)
 		->where('status_id','=',1)
 		->count();
 		$approve = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchquerystatus_id','=',6)
 		->where('status_id','=',1)
 		->count();
 		$reject = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchquerystatus_id','=',7)
 		->where('status_id','=',1)
 		->count();
 		$editbyclient = DB::table('patchquery')
 		->select('patchquery_id')
 		->whereIn('patchquery_date', $list)
-		->where('brand_id','=',$request->brand_id)
+		->where('brand_id','=',$brand_id)
 		->where('patchquerystatus_id','=',8)
 		->where('status_id','=',1)
 		->count();
@@ -1578,24 +1662,24 @@ class dashboardController extends Controller
 			$getachieve = DB::table('patch')
 			->select('patch_amount')
 			->where('status_id','=',1)
-			->where('brand_id','=',$request->brand_id)
+			->where('brand_id','=',$brand_id)
 			->where('patch_date','like',$setyearmonth.'%')
 			->where('created_by','=',$getusers->user_id)
 			->sum('patch_amount');
 			$getpaid = DB::table('patch')
 			->select('patch_amount')
 			->where('status_id','=',1)
-			->where('brand_id','=',$request->brand_id)
+			->where('brand_id','=',$brand_id)
 			->where('patch_biillingstatus','=',"Paid")
-			->where('orderpayment_date','like',$setyearmonth.'%')
+			->where('patch_date','like',$setyearmonth.'%')
 			->where('created_by','=',$getusers->user_id)
 			->sum('patch_amount');
 			$getcancel = DB::table('patch')
 			->select('patch_amount')
 			->where('status_id','=',1)
-			->where('brand_id','=',$request->brand_id)
+			->where('brand_id','=',$brand_id)
 			->where('patch_biillingstatus','=',"Cancel")
-			->where('orderpayment_date','like',$setyearmonth.'%')
+			->where('patch_date','like',$setyearmonth.'%')
 			->where('created_by','=',$getusers->user_id)
 			->sum('patch_amount');
 			$getusers->achieve = $getachieve;
@@ -1604,19 +1688,62 @@ class dashboardController extends Controller
 			$agenttarget[$target] = $getusers;	
 			$target++;
 		}
+		$graphdatatotal = array();
+		$indextotal = 0;
+		foreach ($list as $lists) {
+			$total = DB::table('patch')
+			->select('patch_amount')
+			->where('patch_date','=', $lists)
+			->whereIn('created_by',$sortuserbrand)
+			->where('brand_id','=',$brand_id)
+			->where('status_id','=',1)
+			->sum('patch_amount');
+			$graphdatatotal[$indextotal] = $total;
+			$indextotal++;
+		}
+		$graphdatapaid = array();
+		$indexpaid = 0;
+		foreach ($list as $lists) {
+			$paid = DB::table('patch')
+			->select('patch_amount')
+			->where('patch_biillingstatus','=',"Paid")
+			->where('patch_date','=', $lists)
+			->whereIn('created_by',$sortuserbrand)
+			->where('brand_id','=',$brand_id)
+			->where('status_id','=',1)
+			->sum('patch_amount');
+			$graphdatapaid[$indexpaid] = $paid;
+			$indexpaid++;
+		}
+		$graphdataramaining = array();
+		$indexcancel = 0;
+		foreach ($list as $lists) {
+			$cancel = DB::table('patch')
+			->select('patch_amount')
+			->where('patch_biillingstatus','=',"Cancel")
+			->where('patch_date','=', $lists)
+			->whereIn('created_by',$sortuserbrand)
+			->where('brand_id','=',$brand_id)
+			->where('status_id','=',1)
+			->sum('patch_amount');
+			$graphdataramaining[$indexcancel] = $cancel;
+			$indexcancel++;
+		}
 		$orders = DB::table('patch')
 		->select('patch_title','patch_quantity','patch_amount','patch_deliverycost','patch_date')
+		->whereIn('patch_date',$list)
 		->where('status_id','=',1)
 		->whereIn('created_by',$sortuserbrand)
 		->get();
-		$query = DB::table('patchquery')
-		->select('patchquery_title','patchquery_quantity','patchquery_amount','patchquery_deliverycost','patchquery_date')
+		$query = DB::table('patchquerylist')
+		->select('patchquery_title','patchquery_quantity','patchquery_amount','patchquery_deliverycost','patchquery_date','patchquerystatus_name','user_name')
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
 		->whereIn('created_by',$sortuserbrand)
 		->get();
 		$userpicturepath = URL::to('/')."/public/user_picture/";
 		$brandlogopath = URL::to('/')."/public/brand_logo/";
-		return response()->json(['branddetails' => $branddetails,'orderdata' => $orderdata, 'querydata' => $querydata, 'topagent' => $sorttopagent, 'agenttarget' => $agenttarget, 'orders' => $orders, 'query' => $query,  'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Patch Brand Dashboard'],200);
+		return array('branddetails' => $branddetails,'orderdata' => $orderdata,'querydata' => $querydata,'sorttopagent' =>$sorttopagent,'agenttarget' => $agenttarget,'orders' => $orders,'query' => $query,'graphdatatotal' => $graphdatatotal,'graphdatapaid' => $graphdatapaid,'graphdataramaining' => $graphdataramaining,'userpicturepath' => $userpicturepath,'brandlogopath' => $brandlogopath);
 	}
 	public function salespatchdashboard(Request $request){
 		$validate = Validator::make($request->all(), [ 

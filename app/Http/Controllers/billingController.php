@@ -131,7 +131,7 @@ class billingController extends Controller
 		}
 		if($request->orderpaymentstatus_id == 2){
 			$paymentlisttopaid = DB::table('orderpaymentdetails')
-			->select('*', DB::raw("1 as topaid"))
+			->select('*', DB::raw("0 as topaid"))
 			->whereNotIn('order_token', $getmergedealtoken)
 			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
 			->where('brand_id','=',$request->brand_id)
@@ -143,7 +143,7 @@ class billingController extends Controller
 			->orderBy('orderpayment_id','DESC')
 			->get()->toArray();	
 			$paymentlisttorecovery = DB::table('orderpaymentdetails')
-			->select('*', DB::raw("0 as topaid"))
+			->select('*', DB::raw("1 as topaid"))
 			->whereNotIn('order_token', $getmergedealtoken)
 			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
 			->where('brand_id','=',$request->brand_id)
@@ -230,7 +230,7 @@ class billingController extends Controller
 		}
 		if($request->orderpaymentstatus_id == 2){
 			$paymentlisttopaid = DB::table('mergepaymentdetails')
-			->select('*')
+			->select('*', DB::raw("0 as topaid"))
 			->whereIn('order_token', $getmergedealtoken)
 			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
 			->where('brand_id','=',$request->brand_id)
@@ -242,7 +242,7 @@ class billingController extends Controller
 			->orderBy('orderpayment_id','DESC')
 			->get()->toArray();
 			$paymentlisttorecovery = DB::table('mergepaymentdetails')
-			->select('*')
+			->select('*', DB::raw("1 as topaid"))
 			->whereIn('order_token', $getmergedealtoken)
 			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
 			->where('brand_id','=',$request->brand_id)
