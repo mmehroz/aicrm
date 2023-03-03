@@ -494,7 +494,6 @@ class reportController extends Controller
 		$validate = Validator::make($request->all(), [ 
             'from'		=> 'required',
             'to'		=> 'required',
-			'date'		=> 'required',
 			'id'		=> 'required',
         ]);
         if ($validate->fails()) {
@@ -507,15 +506,14 @@ class reportController extends Controller
 		}else{
 			$setfrom = $from[0].'-'.$from[1].'-'.$from[2];
 		}
-		$date = $request->date;
-		$date = $request->date;
-		$date = explode('-',$request->date);
-		if($date[1] <= 9){
-			$setdate = $date[0].'-0'.$date[1].'-'.$date[2];
+		$date = $request->to;
+		$to = explode('-',$request->to);
+		if($to[1] <= 9){
+			$setto = $to[0].'-0'.$to[1].'-'.$to[2];
 		}else{
-			$setdate = $date[0].'-'.$date[1].'-'.$date[2];
+			$setto = $to[0].'-'.$to[1].'-'.$to[2];
 		}
-		$getyearandmonth = explode('-', $setdate);
+		$getyearandmonth = explode('-', $setfrom);
 		$list=array();
 		$year = $getyearandmonth[0];
 		$month = $getyearandmonth[1];
@@ -583,9 +581,28 @@ class reportController extends Controller
 					$achieveddate = $lists;
 					$indexforallpaidorders++;
 					}
-				$finalcommisionamount = $commissions['rate']*$getpaidorders;
-				$finalrecoveryamount = $commissions['rate']*$getrecoveryorders;
-				$finalrate = $commissions['rate'];
+					if($setfrom >= "2023-01-31"){
+						$targetachieved = DB::table('orderpayment')
+						->select('orderpayment_amount')
+						->where('status_id','=',1)
+						->where('created_by','=',$request->id)
+						->where('orderpaymentstatus_id','!=',1)
+						->whereIn('orderpayment_date', $list)
+						->sum('orderpayment_amount');
+						if($targetachieved >= 4000){
+							$finalcommisionamount = $getpaidorders*200;
+							$finalrecoveryamount = $getrecoveryorders*200;
+							$finalrate = 200;
+						}else{
+							$finalcommisionamount = $getpaidorders*100;
+							$finalrecoveryamount = $getrecoveryorders*100;
+							$finalrate = 100;
+						}
+					}else{
+						$finalcommisionamount = $commissions['rate']*$getpaidorders;
+						$finalrecoveryamount = $commissions['rate']*$getrecoveryorders;
+						$finalrate = $commissions['rate'];
+					}
 				$finalpaidorders = $getpaidorders;
 				$finalrecoveryorders = $getrecoveryorders;
 				break;
