@@ -51,6 +51,8 @@ class patchController extends Controller
 	      'patch_quantity'	        => 'required',
           'patch_amount'	        => 'required',
           'patch_deliverycost'	    => 'required',
+		  'patch_vendorcost'	    => 'required',
+		  'patch_isorderorsample'	=> 'required',
           'patch_shippingaddress'	=> 'required',
 		  'vendorproduction_id'		=> 'required',
 		  'vendordelivery_id'		=> 'required',
@@ -67,6 +69,8 @@ class patchController extends Controller
             'patch_quantity'		=> $request->patch_quantity,
             'patch_amount' 		    => $request->patch_amount,
             'patch_deliverycost'	=> $request->patch_deliverycost,
+			'patch_vendorcost'		=> $request->patch_vendorcost,
+			'patch_isorderorsample'	=> $request->patch_isorderorsample,
             'patch_shippingaddress'	=> $request->patch_shippingaddress,
 			'patchtype_id'			=> $request->patchtype_id,
 			'patchback_id'			=> $request->patchback_id,
@@ -239,6 +243,8 @@ class patchController extends Controller
 			'patch_quantity'	    => 'required',
 			'patch_amount'	        => 'required',
 			'patch_deliverycost'	=> 'required',
+			'patch_vendorcost'		=> 'required',
+			'patch_isorderorsample'	=> 'required',
 			'patch_shippingaddress'	=> 'required',
 			'vendorproduction_id'	=> 'required',
 			'vendordelivery_id'		=> 'required',
@@ -256,6 +262,8 @@ class patchController extends Controller
 			'patch_quantity'		=> $request->patch_quantity,
 			'patch_amount' 		    => $request->patch_amount,
 			'patch_deliverycost'	=> $request->patch_deliverycost,
+			'patch_vendorcost'		=> $request->patch_vendorcost,
+			'patch_isorderorsample'	=> $request->patch_isorderorsample,
 			'patch_shippingaddress'	=> $request->patch_shippingaddress,
 			'patchtype_id'			=> $request->patchtype_id,
 			'patchback_id'			=> $request->patchback_id,
@@ -342,6 +350,50 @@ class patchController extends Controller
 			return response()->json(['data' => $data, 'message' => 'Billing Patch Orders List'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'Billing Patch Order List'],200);
+		}
+	}
+	public function addpatchpayment(Request $request){
+        $validate = Validator::make($request->all(), [ 
+			'patchpayment_amount'	=> 'required',
+			'patchpayment_comment'	=> 'required',
+            'patch_id'				=> 'required',
+			'patchpaymenttype_id'	=> 'required',
+        ]);
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 400);
+        }
+		$adds[] = array(
+			'patchpayment_amount' 	=> $request->patchpayment_amount,
+			'patchpayment_comment' 	=> $request->patchpayment_comment,
+			'patch_id' 				=> $request->patch_id,
+			'patchpaymenttype_id' 	=> $request->patchpaymenttype_id,
+			'status_id'				=> 1,
+			'created_by'			=> $request->user_id,
+			'created_at'			=> date('Y-m-d h:i:s'),
+		); 
+        $save = DB::table('patchpayment')->insert($adds);
+		if($save){
+			return response()->json(['message' => 'Payment Added Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function patchpaymentlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+            'patch_id'	=> 'required',
+        ]);
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 400);
+        }
+		$data = DB::table('patchpaymentdetails')
+		->select('*')
+		->where('patch_id','=',$request->patch_id)
+		->where('status_id','=',1)
+		->get();
+		if(isset($data)){
+			return response()->json(['data' => $data, 'message' => 'Patch Payment List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Patch Payment List'],200);
 		}
 	}
 }

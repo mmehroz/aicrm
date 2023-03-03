@@ -255,11 +255,37 @@ class taskController extends Controller
 		}
 	}
 	public function tasklist(Request $request){
-		$tasklist = DB::table('tasklist')
-		->select('*')
-		->where('status_id','=',1)
-		->orderBy('task_id','DESC')
-		->paginate(30);
+		if ($request->role_id <= 3) {
+			$tasklist = DB::table('tasklist')
+			->select('*')
+			->where('status_id','=',1)
+			->orderBy('task_id','DESC')
+			->paginate(30);
+		}else if ($request->role_id == 6 || $request->role_id == 7) {
+			$tasklist = DB::table('tasklist')
+			->select('*')
+			->where('ordercreator','=',$request->user_id)
+			->where('status_id','=',1)
+			->orderBy('task_id','DESC')
+			->paginate(30);
+		}else if ($request->role_id == 10) {
+			$tasklist = DB::table('tasklist')
+			->select('*')
+			->where('created_by','=',$request->user_id)
+			->where('status_id','=',1)
+			->orderBy('task_id','DESC')
+			->paginate(30);
+		}else{
+			$tasklist =  DB::table('memberstasklist')
+			->select('*')
+			->where('taskuser_id','=',$request->user_id)
+			->where('task_workby','=',$request->user_id)
+			->where('memberstatus_id','=',1)
+			->where('status_id','=',1)
+			->groupBy('task_id')
+			->orderBy('task_id','DESC')
+			->paginate(30);
+		}
 		if(isset($tasklist)){
 			return response()->json(['data' => $tasklist, 'message' => 'Task List'],200);
 		}else{

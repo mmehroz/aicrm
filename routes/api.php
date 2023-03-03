@@ -45,6 +45,7 @@ Route::any('/taskstatus', [settingsController::class, 'taskstatus']);
 Route::any('/orderquestion', [settingsController::class, 'orderquestion']);
 Route::any('/orderpaymentstatus', [settingsController::class, 'orderpaymentstatus']);
 Route::any('/patchquerystatus', [settingsController::class, 'patchquerystatus']);
+Route::any('/patchpaymenttype', [settingsController::class, 'patchpaymenttype']);
 
 Route::any('/createbrand', [brandController::class, 'createbrand']);
 Route::any('/updatebrand', [brandController::class, 'updatebrand']);
@@ -144,6 +145,7 @@ Route::any('/salesdashboard', [dashboardController::class, 'salesdashboard']);
 Route::any('/leadashboard', [dashboardController::class, 'leadashboard']);
 Route::any('/adminpatchdashboard', [dashboardController::class, 'adminpatchdashboard']);
 Route::any('/salespatchdashboard', [dashboardController::class, 'salespatchdashboard']);
+Route::any('/adminpatchandquerylist', [dashboardController::class, 'adminpatchandquerylist']);
 
 Route::any('/forwardedpaymentlist', [billingController::class, 'forwardedpaymentlist']);
 Route::any('/pickedpaymentlist', [billingController::class, 'pickedpaymentlist']);
@@ -221,6 +223,8 @@ Route::any('/deletepatchorder', [patchController::class, 'deletepatchorder']);
 Route::any('/movepatchorder', [patchController::class, 'movepatchorder']);
 Route::any('/updatebillingpatchstatus', [patchController::class, 'updatebillingpatchstatus']);
 Route::any('/patchbillingorderlist', [patchController::class, 'patchbillingorderlist']);
+Route::any('addpatchpayment', [patchController::class, 'addpatchpayment']);
+Route::any('patchpaymentlist', [patchController::class, 'patchpaymentlist']);
 
 Route::any('/randomsearchlead', [searchleadController::class, 'randomsearchlead']);
 Route::any('/movesearchlead', [searchleadController::class, 'movesearchlead']);

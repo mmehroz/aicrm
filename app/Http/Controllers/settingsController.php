@@ -193,4 +193,15 @@ class settingsController extends Controller
 			return response()->json(['data' => $emptyarray,'message' => 'Patch Query Status List'],200);
 		}
 	}
+	public function patchpaymenttype(Request $request){
+		$list = DB::table('patchpaymenttype')
+		->select('*')
+		->where('status_id','=',1)
+		->get();
+		if($list){
+			return response()->json(['data' => $list, 'message' => 'Patch payment Types'],200);
+		}else{
+			return response()->json(['data' => $emptyarray,'message' => 'Patch payment Types'],200);
+		}
+	}
 }
