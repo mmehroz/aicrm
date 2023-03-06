@@ -719,7 +719,6 @@ class dashboardController extends Controller
 		if(isset($merchatdetail)){
 			$sortbillingmerchant = array();
 			$merchantnetamount = array();
-			// mehroz start
 			$firstdatewithzero = $setyearmonth.'-01';
         	$firstdate = $setyearmonth.'-01';
 			$stats = array();
@@ -777,7 +776,6 @@ class dashboardController extends Controller
 				$stats[$index] 		                = $merchatdetails;
 				$index++;
 			}
-			// mehroz end
 			$billingmerchanttitle = DB::table('billingmerchant')
 			->select('billingmerchant_title')
 			->where('status_id','=',1)
@@ -1556,7 +1554,7 @@ class dashboardController extends Controller
 		}
 		$patchquery = DB::table('patchquerylist')
 		->select('patchquery_id','patchquery_title','user_name','patchquerystatus_id')
-		// ->whereIn('patchquery_date', $list)
+		->whereIn('patchquery_date', $list)
 		->where('status_id','=',1)
 		->get();
 		$patchquerydata = array();
@@ -1574,24 +1572,42 @@ class dashboardController extends Controller
 			$patchquerydata[$pindex] = $patchquerys;
 			$pindex++;
 		}
-		$patchorder = DB::table('patchdetails')
-		->select('patch_id','user_name','patch_date','lead_name','patch_title','patch_isorderorsample','patch_quantity','delivery_vendor','production_vendor','patch_amount','patch_deliverycost','patch_vendorcost','patchstatus_name')
-		// ->whereIn('patch_date', $list)
+		$patchorder = DB::table('patch')
+		->select('patch_title','patch_amount','patch_deliverycost','patch_vendorcost','patch_deliverycost')
+		->whereIn('patch_date', $list)
 		->where('status_id','=',1)
 		->get();
-		$patchorderdata = array();
-		$poindex=0;
+		$title = array();
+		$tiindex=0;
 		foreach($patchorder as $patchorders){
-			$patchorders->vendorcostperpiece = $patchorders->patch_vendorcost/$patchorders->patch_quantity;
-			$patchorders->paidtovendor = 0;
-			$patchorders->vendorremaining = 0;
-			$patchorders->paidtoshipper = 0;
-			$patchorders->shipperremaining = 0;
-			$patchorders->totalcost = $patchorders->patch_vendorcost+$patchorders->patch_deliverycost;
-			$patchorderdata[$poindex] = $patchorders;
-			$poindex++;
+			$title[$tiindex] = $patchorders->patch_title;
+			$tiindex++;
 		}
-		return response()->json(['patchorderdata' => $patchorderdata,'patchquerydata' => $patchquerydata, 'message' => 'Admin Dashboard'],200);
+		$amount = array();
+		$aindex=0;
+		foreach($patchorder as $patchorders){
+			$amount[$aindex] = $patchorders->patch_amount;
+			$aindex++;
+		}
+		$deliverycost = array();
+		$dindex=0;
+		foreach($patchorder as $patchorders){
+			$deliverycost[$dindex] = $patchorders->patch_deliverycost;
+			$dindex++;
+		}
+		$vendorcost = array();
+		$vindex=0;
+		foreach($patchorder as $patchorders){
+			$vendorcost[$vindex] = $patchorders->patch_vendorcost;
+			$vindex++;
+		}
+		$totalcost = array();
+		$tindex=0;
+		foreach($patchorder as $patchorders){
+			$totalcost[$tindex] = $patchorders->patch_vendorcost+$patchorders->patch_deliverycost;
+			$tindex++;
+		}
+		return response()->json(['title' => $title,'amount' => $amount,'deliverycost' => $deliverycost,'vendorcost' => $vendorcost,'totalcost' => $totalcost,'patchquerydata' => $patchquerydata, 'message' => 'Admin Dashboard'],200);
 	}
 	public function patchbranddetails($yearmonth, $brand_id){
 		$yearmonth = explode('-',$yearmonth);

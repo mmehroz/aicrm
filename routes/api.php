@@ -225,6 +225,7 @@ Route::any('/updatebillingpatchstatus', [patchController::class, 'updatebillingp
 Route::any('/patchbillingorderlist', [patchController::class, 'patchbillingorderlist']);
 Route::any('addpatchpayment', [patchController::class, 'addpatchpayment']);
 Route::any('patchpaymentlist', [patchController::class, 'patchpaymentlist']);
+Route::any('patchorderreport', [patchController::class, 'patchorderreport']);
 
 Route::any('/randomsearchlead', [searchleadController::class, 'randomsearchlead']);
 Route::any('/movesearchlead', [searchleadController::class, 'movesearchlead']);

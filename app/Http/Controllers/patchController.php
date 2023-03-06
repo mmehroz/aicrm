@@ -396,4 +396,52 @@ class patchController extends Controller
 			return response()->json(['data' => $emptyarray, 'message' => 'Patch Payment List'],200);
 		}
 	}
+	public function patchorderreport(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'yearmonth'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$yearmonth = explode('-',$request->yearmonth);
+		if($yearmonth[1] <= 9){
+			$setyearmonth = $yearmonth[0].'-0'.$yearmonth[1];
+		}else{
+			$setyearmonth = $yearmonth[0].'-'.$yearmonth[1];
+		}
+		$getyearandmonth = explode('-', $setyearmonth);
+		$getfirstdate = $setyearmonth."-01";
+		if($yearmonth[1] == "1" || $yearmonth[1] == "3" || $yearmonth[1] == "5" || $yearmonth[1] == "7" || $yearmonth[1] == "8" || $yearmonth[1] == "10" || $yearmonth[1] == "12"){
+			$noofdays = 31;
+		}elseif($yearmonth[1] == "2"){
+			$noofdays = 28;
+		}else{
+			$noofdays = 30;
+		}
+		$list=array();
+		for($d=1; $d<=$noofdays; $d++)
+		{
+		    $time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
+		    if (date('m', $time)==$getyearandmonth[1])       
+		        $list[]=date('Y-m-d', $time);
+		}
+		$patchorder = DB::table('patchdetails')
+		->select('patch_id','user_name','patch_date','lead_name','patch_title','patch_isorderorsample','patch_quantity','delivery_vendor','production_vendor','patch_amount','patch_deliverycost','patch_vendorcost','patchstatus_name')
+		->whereIn('patch_date', $list)
+		->where('status_id','=',1)
+		->get();
+		$patchorderdata = array();
+		$poindex=0;
+		foreach($patchorder as $patchorders){
+			$patchorders->vendorcostperpiece = $patchorders->patch_vendorcost/$patchorders->patch_quantity;
+			$patchorders->paidtovendor = 0;
+			$patchorders->vendorremaining = 0;
+			$patchorders->paidtoshipper = 0;
+			$patchorders->shipperremaining = 0;
+			$patchorders->totalcost = $patchorders->patch_vendorcost+$patchorders->patch_deliverycost;
+			$patchorderdata[$poindex] = $patchorders;
+			$poindex++;
+		}
+		return response()->json(['patchorderdata' => $patchorderdata, 'message' => 'Patch Order Report'],200);
+	}
 }
