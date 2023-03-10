@@ -309,7 +309,7 @@ class dashboardController extends Controller
 			->sum('orderpayment_amount');
 			$invoice = DB::table('orderpayment')
 			->select('orderpayment_amount')
-			->where('orderpaymentstatus_id','=',3)
+			->where('orderpaymentstatus_id','=',2)
 			->whereIn('orderpayment_date', $list)
 			->whereIn('created_by',$sortuserbrand)
 			->where('brand_id','=',$request->brand_id)
@@ -355,7 +355,7 @@ class dashboardController extends Controller
 			->where('brand_id','=',$request->brand_id)
 			->where('status_id','=',1)
 			->sum('orderpayment_amount');
-			$totalunpaid = $gross-$forwarded-$invoice-$paid-$cancel-$refund-$chargeback-$recovery;
+			$totalunpaid = $gross-$forwarded-$paid-$cancel-$refund-$chargeback-$recovery;
 			$stats = array(
 				'ppcassignindollar' 	=> $ppcassignindollar,
 				'ppcspendindollar' 		=> $ppcspendindollar,

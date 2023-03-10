@@ -336,7 +336,7 @@ class billingController extends Controller
 				->where('brand_id','=',$request->brand_id)
 				// ->where('orderpayment_pickby','=',$request->user_id)
 				->whereBetween('orderpayment_date',[$request->from, $request->to])
-				->where('orderpayment_lastpaiddate','>=',date('Y-m-d'))
+				// ->where('orderpayment_lastpaiddate','>=',date('Y-m-d'))
 				->where('status_id','=',1)
 				->sum('orderpayment_amount');
 				$mergepaymentamount = DB::table('mergepaymentdetails')
@@ -346,7 +346,7 @@ class billingController extends Controller
 				->where('brand_id','=',$request->brand_id)
 				// ->where('orderpayment_pickby','=',$request->user_id)
 				->whereBetween('orderpayment_date',[$request->from, $request->to])
-				->where('orderpayment_lastpaiddate','>=',date('Y-m-d'))
+				// ->where('orderpayment_lastpaiddate','>=',date('Y-m-d'))
 				->where('status_id','=',1)
 				->where('orderstatus','=',1)
 				->sum('orderpayment_amount');
@@ -358,7 +358,7 @@ class billingController extends Controller
 				->where('brand_id','=',$request->brand_id)
 				// ->where('orderpayment_pickby','=',$request->user_id)
 				->whereBetween('orderpayment_date',[$request->from, $request->to])
-				->where('orderpayment_lastpaiddate','<',date('Y-m-d'))
+				// ->where('orderpayment_lastpaiddate','<',date('Y-m-d'))
 				->where('status_id','=',1)
 				->sum('orderpayment_amount');
 				$mergepaymentamount = DB::table('mergepaymentdetails')
@@ -368,7 +368,7 @@ class billingController extends Controller
 				->where('brand_id','=',$request->brand_id)
 				// ->where('orderpayment_pickby','=',$request->user_id)
 				->whereBetween('orderpayment_date',[$request->from, $request->to])
-				->where('orderpayment_lastpaiddate','<',date('Y-m-d'))
+				// ->where('orderpayment_lastpaiddate','<',date('Y-m-d'))
 				->where('status_id','=',1)
 				->where('orderstatus','=',1)
 				->sum('orderpayment_amount');

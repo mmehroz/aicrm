@@ -237,50 +237,50 @@ class reportController extends Controller
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',7)
-				->whereBetween('orderpayment_date', [$setfrom, $setto])
+				->whereBetween('orderpayment_recoverydate', [$setfrom, $setto])
 				->sum('orderpayment_amount');
 				$unpaid = $achieved-$paid;
 				$countachieved = DB::table('orderwithpayment')
-				->select('orderpayment_amount')
+				->select('orderpayment_id')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->whereBetween('orderpayment_date', [$setfrom, $setto])
-				->sum('orderpayment_amount');
+				->count('orderpayment_id');
 				$countpaid = DB::table('orderwithpayment')
-				->select('orderpayment_amount')
+				->select('orderpayment_id')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',3)
 				->whereBetween('orderpayment_date', [$setfrom, $setto])
-				->sum('orderpayment_amount');
+				->count('orderpayment_id');
 				$countcancel = DB::table('orderwithpayment')
-				->select('orderpayment_amount')
+				->select('orderpayment_id')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',4)
 				->whereBetween('orderpayment_date', [$setfrom, $setto])
-				->sum('orderpayment_amount');
+				->count('orderpayment_id');
 				$countrefund = DB::table('orderwithpayment')
-				->select('orderpayment_amount')
+				->select('orderpayment_id')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',5)
 				->whereBetween('orderpayment_date', [$setfrom, $setto])
-				->sum('orderpayment_amount');
+				->count('orderpayment_id');
 				$countchargeback = DB::table('orderwithpayment')
-				->select('orderpayment_amount')
+				->select('orderpayment_id')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',6)
 				->whereBetween('orderpayment_date', [$setfrom, $setto])
-				->sum('orderpayment_amount');
+				->count('orderpayment_id');
 				$countrecovery = DB::table('orderwithpayment')
-				->select('orderpayment_amount')
+				->select('orderpayment_id')
 				->where('status_id','=',1)
 				->where('created_by','=',$userlist->user_id)
 				->where('orderpaymentstatus_id','=',7)
-				->whereBetween('orderpayment_date', [$setfrom, $setto])
-				->sum('orderpayment_amount');
+				->whereBetween('orderpayment_recoverydate', [$setfrom, $setto])
+				->count('orderpayment_id');
 				$countunpaid = $countachieved-$countpaid;
 				$userlist->user_target = $user_target;
 				$userlist->achieved = $achieved;
@@ -591,7 +591,7 @@ class reportController extends Controller
 						->sum('orderpayment_amount');
 						if($targetachieved >= 4000){
 							$finalcommisionamount = $getpaidorders*200;
-							$finalrecoveryamount = $getrecoveryorders*200;
+							$finalrecoveryamount = $getrecoveryorders*100;
 							$finalrate = 200;
 						}else{
 							$finalcommisionamount = $getpaidorders*100;
