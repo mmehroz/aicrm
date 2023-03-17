@@ -26,8 +26,16 @@ class searchleadController extends Controller
 			return response()->json($validate->errors(), 400);
 		}
 		if($request->brand_id == 1){
+			$leaddate = DB::table('lead')
+			->select('lead_date')
+			->where('leadstatus_id','=',3)
+			->where('status_id','=',1)
+			->orderByDesc('lead_id')
+			->first();
+			$datebeforethreemonths = date('Y-m-d', strtotime($leaddate->lead_date . "-3 months") );
 			$search = DB::table('lead')
 			->select('lead_id as searchlead_id','lead_bussinessname as searchlead_bussinessname','lead_phone as searchlead_phone','lead_name as searchlead_name','lead_email as searchlead_email','lead_altemail as searchlead_altemail','lead_bussinessphone as searchlead_altphone')
+			->where('lead_date','<',$datebeforethreemonths)
 			->where('leadstatus_id','=',3)
 			->where('status_id','=',1)
 			->inRandomOrder()
@@ -41,7 +49,7 @@ class searchleadController extends Controller
 			->first();
 		}
 		if($search){
-			return response()->json(['data' => $search,'message' => 'Search Lead Details'],200);
+			return response()->json(['data' => $search,'id' => $datebeforethreemonths,'message' => 'Search Lead Details'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}	
