@@ -1060,6 +1060,22 @@ class dashboardController extends Controller
 			->whereBetween('order_date', [$from, $to])
 			->where('brand_id','=',$request->brand_id)
 			->count('order_id');
+			$countpaid = DB::table('orderpayment')
+			->select('orderpayment_id')
+			->where('status_id','=',1)
+			->where('created_by','=',$request->id)
+			->where('orderpaymentstatus_id','=',3)
+			->whereBetween('orderpayment_date', [$from, $to])
+			->where('brand_id','=',$request->brand_id)
+			->count('orderpayment_id');	
+			$countrecovery = DB::table('orderpayment')
+			->select('orderpayment_id')
+			->where('status_id','=',1)
+			->where('created_by','=',$request->id)
+			->where('orderpaymentstatus_id','=',7)
+			->whereBetween('orderpayment_recoverydate', [$from, $to])
+			->where('brand_id','=',$request->brand_id)
+			->count('orderpayment_id');
 			$countpendingorders = $countcompleteorders-$countapproveorders-$countcancel;
 			$target['user_target'] = $usertarget;
 			$target['achieved'] = $targetachieved;
@@ -1073,6 +1089,8 @@ class dashboardController extends Controller
 			$target['countcompleteorders'] = $countcompleteorders;
 			$target['countapproveorders'] = $countapproveorders;
 			$target['countcancel'] = $countcancel;
+			$target['countpaid'] = $countpaid;
+			$target['countrecovery'] = $countrecovery;
 			$userpicturepath = URL::to('/')."/public/user_picture/";
 			$logopath = URL::to('/')."/public/brand_logo/";
 			if(isset($getuser)){
