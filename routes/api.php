@@ -24,6 +24,7 @@ use App\Http\Controllers\vendorController;
 use App\Http\Controllers\patchController;
 use App\Http\Controllers\searchleadController;
 use App\Http\Controllers\patchqueryController;
+use App\Http\Controllers\rawdataController;
 
 Route::any('/downloadclientattachment', [taskController::class, 'downloadclientattachment']);
 Route::any('/downloadworkattachment', [taskController::class, 'downloadworkattachment']);
@@ -243,5 +244,11 @@ Route::any('/patchqueryfollowuplist', [patchqueryController::class, 'patchqueryf
 Route::any('/patchqueryandleaddetails', [patchqueryController::class, 'patchqueryandleaddetails']);
 Route::any('/pickpatchquery', [patchqueryController::class, 'pickpatchquery']);
 Route::any('/unpickpatchquery', [patchqueryController::class, 'unpickpatchquery']);
+
+Route::any('/rawdatasheetlist', [rawdataController::class, 'rawdatasheetlist']);
+Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);
+Route::any('/rawdatadetails', [rawdataController::class, 'rawdatadetails']);
+Route::any('/saverawdatafollowup', [rawdataController::class, 'saverawdatafollowup']);
+Route::any('/rawdatafollowuplist', [rawdataController::class, 'rawdatafollowuplist']);
 });
 });
