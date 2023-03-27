@@ -231,6 +231,7 @@ Route::any('patchorderreport', [patchController::class, 'patchorderreport']);
 Route::any('/randomsearchlead', [searchleadController::class, 'randomsearchlead']);
 Route::any('/movesearchlead', [searchleadController::class, 'movesearchlead']);
 Route::any('/searchleadlist', [searchleadController::class, 'searchleadlist']);
+Route::any('/dmeorderdetails', [searchleadController::class, 'dmeorderdetails']);
 
 Route::any('/createpatchquery', [patchqueryController::class, 'createpatchquery']);
 Route::any('/patchquerylist', [patchqueryController::class, 'patchquerylist']);
@@ -250,5 +251,6 @@ Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);
 Route::any('/rawdatadetails', [rawdataController::class, 'rawdatadetails']);
 Route::any('/saverawdatafollowup', [rawdataController::class, 'saverawdatafollowup']);
 Route::any('/rawdatafollowuplist', [rawdataController::class, 'rawdatafollowuplist']);
+Route::any('/uploadrawdata', [rawdataController::class, 'uploadrawdata']);
 });
 });
