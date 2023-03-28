@@ -72,18 +72,18 @@ class searchleadController extends Controller
 		if ($validate->fails()) {
 			return response()->json($validate->errors(), 400);
 		}
-		if($request->brand_id == 1){
-			$lead = DB::table('lead')
+		if($request->role_id == 21){
+			$lead = DB::connection('mysql3')->table('dmeclient')
 			->select('*')
-			->where('lead_id','=',$request->searchlead_id)
+			->where('dmeclient_id','=',$request->searchlead_id)
 			->first();
 			$adds[] = array(
-				'searchlead_bussinessname' 	=> $lead->lead_bussinessname,
-				'searchlead_phone' 			=> $lead->lead_phone,
-				'searchlead_name'			=> $lead->lead_name,
-				'searchlead_email' 			=> $lead->lead_email,
-				'searchlead_altemail' 		=> $lead->lead_altemail,
-				'searchlead_altphone' 		=> $lead->lead_bussinessphone,
+				'searchlead_bussinessname' 	=> $lead->dmeclient_lastname,
+				'searchlead_phone' 			=> $lead->dmeclient_homephone,
+				'searchlead_name'			=> $lead->dmeclient_name,
+				'searchlead_email' 			=> $lead->dmeclient_email,
+				'searchlead_altemail' 		=> $lead->dmeclient_email,
+				'searchlead_altphone' 		=> $lead->dmeclient_cellphone,
 				'searchlead_city' 			=> "",
 				'searchlead_state' 			=> "",
 				'searchlead_by'				=> $request->user_id,
@@ -94,20 +94,43 @@ class searchleadController extends Controller
 				);
 				$move = DB::table('searchlead')->insert($adds);
 		}else{
-			$move  = DB::table('searchlead')
-			->where('searchlead_id','=',$request->searchlead_id )
-			->update([
-				'searchlead_by'			=> $request->user_id,
-				'searchlead_comment'	=> $request->searchlead_comment,
-				'searchleadstatus_id'	=> $request->searchleadstatus_id,
-				'searchlead_date'		=> date('Y-m-d'),
-			]);
+			if($request->brand_id == 1){
+				$lead = DB::table('lead')
+				->select('*')
+				->where('lead_id','=',$request->searchlead_id)
+				->first();
+				$adds[] = array(
+					'searchlead_bussinessname' 	=> $lead->lead_bussinessname,
+					'searchlead_phone' 			=> $lead->lead_phone,
+					'searchlead_name'			=> $lead->lead_name,
+					'searchlead_email' 			=> $lead->lead_email,
+					'searchlead_altemail' 		=> $lead->lead_altemail,
+					'searchlead_altphone' 		=> $lead->lead_bussinessphone,
+					'searchlead_city' 			=> "",
+					'searchlead_state' 			=> "",
+					'searchlead_by'				=> $request->user_id,
+					'searchlead_comment'		=> $request->searchlead_comment,
+					'searchleadstatus_id'		=> $request->searchleadstatus_id,
+					'searchlead_date'			=> date('Y-m-d'),
+					'brand_id'					=> $request->brand_id,
+					);
+					$move = DB::table('searchlead')->insert($adds);
+			}else{
+				$move  = DB::table('searchlead')
+				->where('searchlead_id','=',$request->searchlead_id )
+				->update([
+					'searchlead_by'			=> $request->user_id,
+					'searchlead_comment'	=> $request->searchlead_comment,
+					'searchleadstatus_id'	=> $request->searchleadstatus_id,
+					'searchlead_date'		=> date('Y-m-d'),
+				]);
+			}
 		}
 		if($move){
 			return response()->json(['message' => 'Moved Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
-		}
+		}	
 	}
 	public function searchleadlist(Request $request){
         $validate = Validator::make($request->all(), [
