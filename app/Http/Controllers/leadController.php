@@ -178,8 +178,36 @@ class leadController extends Controller
 		->where('lead_id','=',$request->lead_id)
 		->where('status_id','!=',2)
 		->first();
+		$revenue = array();
+		$totalrevenue = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('lead_id','=',$request->lead_id)
+		->sum('orderpayment_amount');
+		$paidrevenue = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('lead_id','=',$request->lead_id)
+		->where('orderpaymentstatus_id','=',3)
+		->sum('orderpayment_amount');
+		$cancelrevenue = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('lead_id','=',$request->lead_id)
+		->where('orderpaymentstatus_id','=',4)
+		->sum('orderpayment_amount');
+		$unpaidrevenue = $totalrevenue-$paidrevenue-$cancelrevenue;
+		for($i=0; $i<3; $i++){
+			if($i == 0){
+				$revenue[$i] = $paidrevenue;
+			}elseif($i == 1){
+				$revenue[$i] = $cancelrevenue;
+			}else{
+				$revenue[$i] = $unpaidrevenue;
+			}
+		}
 		if($getdetails){
-			return response()->json(['data' => $getdetails,'message' => 'Lead Details'],200);
+			return response()->json(['data' => $getdetails, 'revenue' => $revenue, 'message' => 'Lead Details'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

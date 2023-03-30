@@ -25,6 +25,7 @@ use App\Http\Controllers\patchController;
 use App\Http\Controllers\searchleadController;
 use App\Http\Controllers\patchqueryController;
 use App\Http\Controllers\rawdataController;
+use App\Http\Controllers\twilioController;
 
 Route::any('/downloadclientattachment', [taskController::class, 'downloadclientattachment']);
 Route::any('/downloadworkattachment', [taskController::class, 'downloadworkattachment']);
@@ -252,5 +253,7 @@ Route::any('/rawdatadetails', [rawdataController::class, 'rawdatadetails']);
 Route::any('/saverawdatafollowup', [rawdataController::class, 'saverawdatafollowup']);
 Route::any('/rawdatafollowuplist', [rawdataController::class, 'rawdatafollowuplist']);
 Route::any('/uploadrawdata', [rawdataController::class, 'uploadrawdata']);
+
+Route::any('/sendsms', [twilioController::class, 'sendsms']);
 });
 });

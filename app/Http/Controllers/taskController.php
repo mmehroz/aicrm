@@ -389,11 +389,18 @@ class taskController extends Controller
 		->where('attachmenttype','=',3)
 		->where('status_id','=',1)
 		->get();
+		$workattachmentdetail = DB::table('taskattachmentdetails')
+		->select('*')
+		->where('task_id','=',$request->task_id)
+		->where('attachmenttype','=',2)
+		->where('status_id','=',1)
+		->get();
+		$taskworkpath = URL::to('/')."/public/taskwork/";
 		$taskpath = URL::to('/')."/public/task/".$basicdetail->task_token."/";
 		$forwardedtaskpath = URL::to('/')."/public/order/".$basicdetail->order_token."/";
 		$memberpath = URL::to('/')."/public/user_picture/";
 		if($basicdetail){
-			return response()->json(['basicdetail' => $basicdetail, 'attachmentdetail' => $attachmentdetail, 'forwardedattachmentdetail' => $forwardedattachmentdetail, 'taskpath' => $taskpath, 'forwardedtaskpath' => $forwardedtaskpath, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
+			return response()->json(['basicdetail' => $basicdetail, 'attachmentdetail' => $attachmentdetail, 'forwardedattachmentdetail' => $forwardedattachmentdetail, 'workattachmentdetail' => $workattachmentdetail, 'taskworkpath' => $taskworkpath, 'taskpath' => $taskpath, 'forwardedtaskpath' => $forwardedtaskpath, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
@@ -559,7 +566,7 @@ class taskController extends Controller
 		->select('task_id','task_title','task_description','task_token','taskstatus_id')
 		->whereIn('order_id',$sortoredrid)
 		->where('status_id','=',1)
-		->paginate(30);
+		->get();
 		if(isset($tasklist)){
 			return response()->json(['data' => $tasklist, 'message' => 'Task List'],200);
 		}else{
