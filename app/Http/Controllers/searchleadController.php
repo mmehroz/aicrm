@@ -91,6 +91,7 @@ class searchleadController extends Controller
 				'searchleadstatus_id'		=> $request->searchleadstatus_id,
 				'searchlead_date'			=> date('Y-m-d'),
 				'brand_id'					=> $request->brand_id,
+				'dmeclient_id' 				=> $lead->dmeclient_id,
 				);
 				$move = DB::table('searchlead')->insert($adds);
 		}else{
@@ -171,6 +172,46 @@ class searchleadController extends Controller
 		->first();
 		if($getorderdetails){
 			return response()->json(['data' => $getorderdetails, 'otherdata' => $getotherorderdetails, 'message' => 'Order Details'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function savesearchleadfollowup(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'searchleadfollowup_comment'	=> 'required',
+	      'searchlead_id'			=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$adds[] = array(
+		'searchleadfollowup_comment' 	=> $request->searchleadfollowup_comment,
+		'searchlead_id' 				=> $request->searchlead_id,
+		'status_id'		 				=> 1,
+		'created_by'	 				=> $request->user_id,
+		'created_at'	 				=> date('Y-m-d h:i:s'),
+		);
+		$save = DB::table('searchleadfollowup')->insert($adds);
+		if($save){
+			return response()->json(['message' => 'Followup Saved Successfully'],200);
+		}else{
+			return response()->json("Oops! Something went wrong", 400);
+		}
+	}
+	public function getsearchleadfollowup(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'searchlead_id'	=> 'required',
+	    ]);
+	 	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$getdealfollowup = DB::table('getsearchleadfollowup')
+		->select('*')
+		->where('searchlead_id','=',$request->searchlead_id)
+		->where('status_id','=',1)
+		->get();
+		if($getdealfollowup){
+			return response()->json(['data' => $getdealfollowup,'message' => 'Followup List'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

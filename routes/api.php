@@ -26,6 +26,7 @@ use App\Http\Controllers\searchleadController;
 use App\Http\Controllers\patchqueryController;
 use App\Http\Controllers\rawdataController;
 use App\Http\Controllers\twilioController;
+use App\Http\Controllers\notesController;
 
 Route::any('/downloadclientattachment', [taskController::class, 'downloadclientattachment']);
 Route::any('/downloadworkattachment', [taskController::class, 'downloadworkattachment']);
@@ -233,6 +234,8 @@ Route::any('/randomsearchlead', [searchleadController::class, 'randomsearchlead'
 Route::any('/movesearchlead', [searchleadController::class, 'movesearchlead']);
 Route::any('/searchleadlist', [searchleadController::class, 'searchleadlist']);
 Route::any('/dmeorderdetails', [searchleadController::class, 'dmeorderdetails']);
+Route::any('/savesearchleadfollowup', [searchleadController::class, 'savesearchleadfollowup']);
+Route::any('/getsearchleadfollowup', [searchleadController::class, 'getsearchleadfollowup']);
 
 Route::any('/createpatchquery', [patchqueryController::class, 'createpatchquery']);
 Route::any('/patchquerylist', [patchqueryController::class, 'patchquerylist']);
@@ -255,5 +258,9 @@ Route::any('/rawdatafollowuplist', [rawdataController::class, 'rawdatafollowupli
 Route::any('/uploadrawdata', [rawdataController::class, 'uploadrawdata']);
 
 Route::any('/sendsms', [twilioController::class, 'sendsms']);
+
+Route::any('/savenotes', [notesController::class, 'savenotes']);
+Route::any('/noteslist', [notesController::class, 'noteslist']);
+Route::any('/notesdetails', [notesController::class, 'notesdetails']);
 });
 });
