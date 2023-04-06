@@ -201,6 +201,7 @@ class rawdataController extends Controller
 							'rawdata_random14'		=> $importData[48],
 							'rawdata_random15'		=> $importData[49],
 							'rawdata_random16'		=> $importData[50],
+							'declient_id'			=> $importData[51],
 							'rawdatasheet_id'		=> $request->rawdatasheet_id,
 							'status_id'				=> 1,
 							'created_by'			=> $request->user_id,
@@ -221,6 +222,31 @@ class rawdataController extends Controller
 			}
 		} else {
 				return response()->json("No File Uploaded, Invalid Upload", 400);
+		}
+	}
+	public function dedealdetails(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	    	'declient_id' 		=> 'required',
+	    ]);
+		if ($validate->fails()) {    
+			return response()->json("Fields Required", 400);
+		}
+		$dedealdetails = DB::connection('mysql3')->table('dedealdetails')
+		->select('*')
+		->where('declient_id','=',$request->declient_id)
+		->where('status_id','=',1)
+		->groupBy('declient_id')
+		->orderBy('declient_id','DESC')
+		->first();	
+		$depaymentdetails = DB::connection('mysql3')->table('depaymentdetails')
+		->select('*')
+		->where('declient_id','=',$request->declient_id)
+		->where('status_id','=',1)
+		->get();	
+		if($dedealdetails){
+			return response()->json(['dealdetails' => $dedealdetails,'paymentdetails' => $depaymentdetails, 'message' => 'De Deal Details'],200);
+		}else{
+			return response()->json(['message' => 'Oops! Something Went Wrong.'],400);
 		}
 	}
 }

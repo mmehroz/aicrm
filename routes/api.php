@@ -237,6 +237,7 @@ Route::any('/dmeorderdetails', [searchleadController::class, 'dmeorderdetails'])
 Route::any('/savesearchleadfollowup', [searchleadController::class, 'savesearchleadfollowup']);
 Route::any('/getsearchleadfollowup', [searchleadController::class, 'getsearchleadfollowup']);
 
+Route::any('/patchquerycategories', [patchqueryController::class, 'patchquerycategories']);
 Route::any('/createpatchquery', [patchqueryController::class, 'createpatchquery']);
 Route::any('/patchquerylist', [patchqueryController::class, 'patchquerylist']);
 Route::any('/statuswisepatchquerylist', [patchqueryController::class, 'statuswisepatchquerylist']);
@@ -249,6 +250,7 @@ Route::any('/patchqueryfollowuplist', [patchqueryController::class, 'patchqueryf
 Route::any('/patchqueryandleaddetails', [patchqueryController::class, 'patchqueryandleaddetails']);
 Route::any('/pickpatchquery', [patchqueryController::class, 'pickpatchquery']);
 Route::any('/unpickpatchquery', [patchqueryController::class, 'unpickpatchquery']);
+Route::any('/deletepatchqueryitem', [patchqueryController::class, 'deletepatchqueryitem']);
 
 Route::any('/rawdatasheetlist', [rawdataController::class, 'rawdatasheetlist']);
 Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);
@@ -256,6 +258,7 @@ Route::any('/rawdatadetails', [rawdataController::class, 'rawdatadetails']);
 Route::any('/saverawdatafollowup', [rawdataController::class, 'saverawdatafollowup']);
 Route::any('/rawdatafollowuplist', [rawdataController::class, 'rawdatafollowuplist']);
 Route::any('/uploadrawdata', [rawdataController::class, 'uploadrawdata']);
+Route::any('/dedealdetails', [rawdataController::class, 'dedealdetails']);
 
 Route::any('/sendsms', [twilioController::class, 'sendsms']);
 
