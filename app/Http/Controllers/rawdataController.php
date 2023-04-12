@@ -234,14 +234,14 @@ class rawdataController extends Controller
 		$dedealdetails = DB::connection('mysql3')->table('dedealdetails')
 		->select('*')
 		->where('declient_id','=',$request->declient_id)
-		->where('status_id','=',1)
+		// ->where('status_id','=',1)
 		->groupBy('declient_id')
 		->orderBy('declient_id','DESC')
 		->first();	
 		$depaymentdetails = DB::connection('mysql3')->table('depaymentdetails')
 		->select('*')
 		->where('declient_id','=',$request->declient_id)
-		->where('status_id','=',1)
+		// ->where('status_id','=',1)
 		->get();	
 		if($dedealdetails){
 			return response()->json(['dealdetails' => $dedealdetails,'paymentdetails' => $depaymentdetails, 'message' => 'De Deal Details'],200);

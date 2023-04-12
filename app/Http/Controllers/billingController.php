@@ -156,6 +156,18 @@ class billingController extends Controller
 			->get()->toArray();	
 			$paymentlist = array_merge($paymentlisttopaid,$paymentlisttorecovery);
 			rsort($paymentlist);
+		}elseif($request->orderpaymentstatus_id == 7){
+			$paymentlist = DB::table('orderpaymentdetails')
+				->select('*')
+				->whereNotIn('order_token', $getmergedealtoken)
+				->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+				->where('brand_id','=',$request->brand_id)
+				// ->where('orderpayment_pickby','=',$request->user_id)
+				->whereBetween('orderpayment_recoverydate',[$request->from, $request->to])
+				->where('status_id','=',1)
+				->groupBy('order_token')
+				->orderBy('orderpayment_id','DESC')
+				->paginate(30);
 		}else{
 			if($request->orderpaymentstatus_id == 3){
 				$validate = Validator::make($request->all(), [ 
@@ -255,6 +267,18 @@ class billingController extends Controller
 			->get()->toArray();
 			$paymentlist = array_merge($paymentlisttopaid,$paymentlisttorecovery);
 			rsort($paymentlist);
+		}elseif($request->orderpaymentstatus_id == 7){
+			$paymentlist = DB::table('mergepaymentdetails')
+			->select('*')
+			->whereIn('order_token', $getmergedealtoken)
+			->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+			->where('brand_id','=',$request->brand_id)
+			// ->where('orderpayment_pickby','=',$request->user_id)
+			->whereBetween('orderpayment_recoverydate',[$request->from, $request->to])
+			->where('status_id','=',1)
+			->groupBy('mergedeal_token')
+			->orderBy('orderpayment_id','DESC')
+			->paginate(30);
 		}else{
 			if($request->orderpaymentstatus_id == 3){
 				$validate = Validator::make($request->all(), [ 
@@ -368,6 +392,52 @@ class billingController extends Controller
 				->where('brand_id','=',$request->brand_id)
 				// ->where('orderpayment_pickby','=',$request->user_id)
 				->whereBetween('orderpayment_date',[$request->from, $request->to])
+				// ->where('orderpayment_lastpaiddate','<',date('Y-m-d'))
+				->where('status_id','=',1)
+				->where('orderstatus','=',1)
+				->sum('orderpayment_amount');
+			}
+		}elseif($request->orderpaymentstatus_id == 7){
+			if($request->topaid == 1){
+				$paymentamount = DB::table('orderpaymentdetails')
+				->select('*')
+				->whereNotIn('order_token', $getmergedealtoken)
+				->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+				->where('brand_id','=',$request->brand_id)
+				// ->where('orderpayment_pickby','=',$request->user_id)
+				->whereBetween('orderpayment_recoverydate',[$request->from, $request->to])
+				// ->where('orderpayment_lastpaiddate','>=',date('Y-m-d'))
+				->where('status_id','=',1)
+				->sum('orderpayment_amount');
+				$mergepaymentamount = DB::table('mergepaymentdetails')
+				->select('*')
+				->whereIn('order_token', $getmergedealtoken)
+				->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+				->where('brand_id','=',$request->brand_id)
+				// ->where('orderpayment_pickby','=',$request->user_id)
+				->whereBetween('orderpayment_recoverydate',[$request->from, $request->to])
+				// ->where('orderpayment_lastpaiddate','>=',date('Y-m-d'))
+				->where('status_id','=',1)
+				->where('orderstatus','=',1)
+				->sum('orderpayment_amount');
+			}else{
+				$paymentamount = DB::table('orderpaymentdetails')
+				->select('*')
+				->whereNotIn('order_token', $getmergedealtoken)
+				->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+				->where('brand_id','=',$request->brand_id)
+				// ->where('orderpayment_pickby','=',$request->user_id)
+				->whereBetween('orderpayment_recoverydate',[$request->from, $request->to])
+				// ->where('orderpayment_lastpaiddate','<',date('Y-m-d'))
+				->where('status_id','=',1)
+				->sum('orderpayment_amount');
+				$mergepaymentamount = DB::table('mergepaymentdetails')
+				->select('*')
+				->whereIn('order_token', $getmergedealtoken)
+				->where('orderpaymentstatus_id','=',$request->orderpaymentstatus_id)
+				->where('brand_id','=',$request->brand_id)
+				// ->where('orderpayment_pickby','=',$request->user_id)
+				->whereBetween('orderpayment_recoverydate',[$request->from, $request->to])
 				// ->where('orderpayment_lastpaiddate','<',date('Y-m-d'))
 				->where('status_id','=',1)
 				->where('orderstatus','=',1)

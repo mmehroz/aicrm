@@ -128,9 +128,9 @@ class reportController extends Controller
 		->where('status_id','=',1)
 		->whereIn('created_by',$sortuserids)
 		->where('orderpaymentstatus_id','=',7)
-		->whereBetween('orderpayment_date', [$setfrom, $setto])
+		->whereBetween('orderpayment_recoverydate', [$setfrom, $setto])
 		->sum('orderpayment_amount');
-		$sumunpaid = $sumachieved-$sumpaid;
+		$sumunpaid = $sumachieved-$sumpaid-$sumcancel-$sumrefund-$sumchargeback;
 		$sumcountachieved = DB::table('orderpayment')
 		->select('orderpayment_id')
 		->where('status_id','=',1)
@@ -170,7 +170,7 @@ class reportController extends Controller
 		->where('status_id','=',1)
 		->whereIn('created_by',$sortuserids)
 		->where('orderpaymentstatus_id','=',7)
-		->whereBetween('orderpayment_date', [$setfrom, $setto])
+		->whereBetween('orderpayment_recoverydate', [$setfrom, $setto])
 		->count();
 		$summreport = array(
             'sumtarget' 			=> $sumtarget,
@@ -452,6 +452,7 @@ class reportController extends Controller
 				$unitsumachieved = DB::table('orderpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
+				->where('orderpaymentstatus_id','=',3)
 				->whereIn('created_by',$unitsortuserids)
 				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
@@ -545,7 +546,7 @@ class reportController extends Controller
 			->where('status_id','=',1)
 			->where('created_by','=',$request->id)
 			->where('orderpaymentstatus_id','=',7)
-			->whereBetween('orderpayment_date', [$setfrom, $lists])
+			->whereBetween('orderpayment_recoverydate', [$setfrom, $lists])
 			->sum('orderpayment_amount');
 			$gettargetachieved = $getpaidamount + $getrecoveryamount;
 			$getcommission = DB::table('commission')
@@ -565,6 +566,7 @@ class reportController extends Controller
 			if ($gettargetachieved >= $commissions['from'] && $gettargetachieved <= $commissions['to']) {
 					$getpaidorders = DB::table('orderpayment')
 					->select('orderpayment_id')
+					->where('orderpayment_amount','>=',10)
 					->where('status_id','=',1)
 					->where('created_by','=',$request->id)
 					->where('orderpaymentstatus_id','=',3)
@@ -582,22 +584,43 @@ class reportController extends Controller
 					$indexforallpaidorders++;
 					}
 					if($setfrom >= "2023-01-31"){
-						$targetachieved = DB::table('orderpayment')
+						$targetachp = DB::table('orderpayment')
 						->select('orderpayment_amount')
 						->where('status_id','=',1)
 						->where('created_by','=',$request->id)
-						->where('orderpaymentstatus_id','!=',1)
+						->where('orderpaymentstatus_id','=',3)
 						->whereIn('orderpayment_date', $list)
 						->sum('orderpayment_amount');
-						if($targetachieved >= 4000){
-							$finalcommisionamount = $getpaidorders*200;
-							$finalrecoveryamount = $getrecoveryorders*100;
-							$finalrate = 200;
+						$targetachr = DB::table('orderpayment')
+						->select('orderpayment_amount')
+						->where('status_id','=',1)
+						->where('created_by','=',$request->id)
+						->where('orderpaymentstatus_id','=',7)
+						->whereIn('orderpayment_recoverydate', $list)
+						->sum('orderpayment_amount');
+						$targetachieved = $targetachp+$targetachr;
+						if($setfrom = "2023-03-1"){
+							if($targetachieved >= 4000){
+								$finalcommisionamount = $getpaidorders*200;
+								$finalrecoveryamount = $getrecoveryorders*200;
+								$finalrate = 200;
+							}else{
+								$finalcommisionamount = $getpaidorders*100;
+								$finalrecoveryamount = $getrecoveryorders*100;
+								$finalrate = 100;
+							}
 						}else{
-							$finalcommisionamount = $getpaidorders*100;
-							$finalrecoveryamount = $getrecoveryorders*100;
-							$finalrate = 100;
+							if($targetachieved >= 4500){
+								$finalcommisionamount = $getpaidorders*200;
+								$finalrecoveryamount = $getrecoveryorders*200;
+								$finalrate = 200;
+							}else{
+								$finalcommisionamount = $getpaidorders*100;
+								$finalrecoveryamount = $getrecoveryorders*100;
+								$finalrate = 100;
+							}
 						}
+						
 					}else{
 						$finalcommisionamount = $commissions['rate']*$getpaidorders;
 						$finalrecoveryamount = $commissions['rate']*$getrecoveryorders;

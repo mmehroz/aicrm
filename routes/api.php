@@ -251,6 +251,9 @@ Route::any('/patchqueryandleaddetails', [patchqueryController::class, 'patchquer
 Route::any('/pickpatchquery', [patchqueryController::class, 'pickpatchquery']);
 Route::any('/unpickpatchquery', [patchqueryController::class, 'unpickpatchquery']);
 Route::any('/deletepatchqueryitem', [patchqueryController::class, 'deletepatchqueryitem']);
+Route::any('/generatepatchqueryproposal', [patchqueryController::class, 'generatepatchqueryproposal']);
+Route::any('/deliveredpatchquerylist', [patchqueryController::class, 'deliveredpatchquerylist']);
+Route::any('/patchqueryinvoicedetails', [patchqueryController::class, 'patchqueryinvoicedetails']);
 
 Route::any('/rawdatasheetlist', [rawdataController::class, 'rawdatasheetlist']);
 Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);

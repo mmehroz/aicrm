@@ -140,10 +140,10 @@ class dashboardController extends Controller
 		$recovery = DB::table('orderpayment')
 		->select('orderpayment_amount')
 		->where('orderpaymentstatus_id','=',7)
-		->whereIn('orderpayment_date', $list)
+		->whereIn('orderpayment_recoverydate', $list)
 		->where('status_id','=',1)
 		->sum('orderpayment_amount');
-		$totalunpaid = $grosssale-$invoicesale-$paidsale-$cancel-$refund-$chargeback-$recovery;
+		$totalunpaid = $grosssale-$paidsale-$cancel-$refund-$chargeback;
 		$ppcassigned = DB::table('assignppc')
 		->select('assignppc_amount')
 		->where('assignppc_month','=',$setyearmonth)
@@ -350,12 +350,12 @@ class dashboardController extends Controller
 			$recovery = DB::table('orderpayment')
 			->select('orderpayment_amount')
 			->where('orderpaymentstatus_id','=',7)
-			->whereIn('orderpayment_date', $list)
+			->whereIn('orderpayment_recoverydate', $list)
 			->whereIn('created_by',$sortuserbrand)
 			->where('brand_id','=',$request->brand_id)
 			->where('status_id','=',1)
 			->sum('orderpayment_amount');
-			$totalunpaid = $gross-$forwarded-$paid-$cancel-$refund-$chargeback-$recovery;
+			$totalunpaid = $gross-$paid-$cancel-$refund-$chargeback;
 			$stats = array(
 				'ppcassignindollar' 	=> $ppcassignindollar,
 				'ppcspendindollar' 		=> $ppcspendindollar,
