@@ -449,13 +449,60 @@ class reportController extends Controller
 				->where('status_id','=',1)
 				->sum('usertarget_target');
 				$unitsumtarget = $unitsumbasictarget+$unitsumtargetincrement;
-				$unitsumachieved = DB::table('orderpayment')
+				$unitsummaxpaid = DB::table('orderpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
 				->where('orderpaymentstatus_id','=',3)
 				->whereIn('created_by',$unitsortuserids)
 				->whereBetween('orderpayment_date', [$setfrom, $setto])
 				->sum('orderpayment_amount');
+				$paidpatchquery = DB::table('patchquery')
+				->select('patchquery_id')
+				->where('status_id','=',1)
+				->where('patchquerystatus_id','>=',10)
+				->whereBetween('patchquery_date', [$setfrom, $setto])
+				->get();
+				$sortpaidpatchquery = array();
+				if(isset($paidpatchquery)){
+					foreach($paidpatchquery as $paidpatchquerys){
+						$sortpaidpatchquery[] = $paidpatchquerys->patchquery_id;
+					}
+					$unitsumpatchpaid = DB::table('patchqueryitem')
+					->select('patchqueryitem_proposalquote')
+					->where('status_id','=',1)
+					->whereIn('patchquery_id',$sortpaidpatchquery)
+					->sum('patchqueryitem_proposalquote');
+					$unitsumpatchdeliverycost = DB::table('patchquery')
+					->select('patchquery_deliverycost')
+					->where('status_id','=',1)
+					->whereIn('patchquery_id',$sortpaidpatchquery)
+					->sum('patchquery_deliverycost');
+					$patchvendorids = DB::table('patchqueryitem')
+					->select('patchqueryitem_finalvendor')
+					->where('status_id','=',1)
+					->whereIn('patchquery_id',$sortpaidpatchquery)
+					->get();
+					if(isset($patchvendorids)){
+						$sortpatchvendorids = array();
+						foreach($patchvendorids as $patchvendoridss){
+							$sortpatchvendorids[] = $patchvendoridss->patchqueryitem_finalvendor;
+						}
+						$unitsumpatchvendorcost = DB::table('patchqueryvendor')
+						->select('patchqueryvendor_cost')
+						->where('status_id','=',1)
+						->whereIn('patchquery_id',$sortpaidpatchquery)
+						->whereIn('vendorproduction_id',$sortpatchvendorids)
+						->sum('patchqueryvendor_cost');
+					}else{
+						$unitsumpatchvendorcost = 0;
+					}
+				}else{
+					$unitsumpatchdeliverycost = 0;
+					$unitsumpatchvendorcost = 0;
+					$unitsumpatchpaid = 0;
+				}
+				$unitsumpatchachieved =$unitsumpatchpaid-$unitsumpatchdeliverycost-$unitsumpatchvendorcost;
+				$unitsumachieved = $unitsummaxpaid+$unitsumpatchachieved;
 				$unitgetcommission = DB::table('commission')
 				->select('*')
 				->where('status_id','=',1)

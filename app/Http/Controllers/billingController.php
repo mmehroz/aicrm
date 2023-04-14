@@ -909,4 +909,68 @@ class billingController extends Controller
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
+	public function oldcrmbillingpaymentlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+			'payment_type'	=> 'required',
+		]);
+		if ($validate->fails()) {    
+			  return response()->json($validate->errors(), 400);
+		}
+		if($request->payment_type == "Paid"){
+			$ordertoken = DB::table('oldcrmpaidpayment')
+			->select('order_token')
+			->where('status_id','=',1)
+			->get();
+			$sortordertoken = array();
+			foreach($ordertoken as $ordertokens){
+				$sortordertoken[] = $ordertokens->order_token;
+			}
+			$getmergeorderlist = DB::connection('mysql3')->table('completedeallist')
+			->select('*')
+			->whereIn('order_token',$sortordertoken)
+			->where('status_id','=',1)
+			->get();
+		}else{
+			$ordertoken = DB::table('oldcrmpaidpayment')
+			->select('order_token')
+			->where('status_id','=',1)
+			->get();
+			$sortordertoken = array();
+			foreach($ordertoken as $ordertokens){
+				$sortordertoken[] = $ordertokens->order_token;
+			}
+			$getmergeorderlist = DB::connection('mysql3')->table('completedeallist')
+			->select('*')
+			->whereNotIn('order_token',$sortordertoken)
+			->whereIn('orderstatus_id',[8,9,10])
+			->where('status_id','=',1)
+			->get();
+		}
+		
+		if($getmergeorderlist){
+			return response()->json(['data' => $getmergeorderlist,'message' => 'Old CRM Billing Payment List'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function markpaidonoldcrmpayment(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'order_token'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$adds = array(
+		'order_token' 	=> $request->order_token,
+		'status_id'		=> 1,
+		'created_by'	=> $request->user_id,
+		'created_at'	=> date('Y-m-d h:i:s'),
+		);
+		$save = DB::table('oldcrmpaidpayment')->insert($adds);
+		if($save){
+			return response()->json(['message' => 'Paid Successfully'],200);
+		}else{
+			return response()->json("Oops! Something went wrong", 400);
+		}
+	}
 }

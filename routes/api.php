@@ -86,6 +86,7 @@ Route::any('/searchlead', [leadController::class, 'searchlead']);
 Route::any('/clientrevenuereport', [leadController::class, 'clientrevenuereport']);
 Route::any('/transferclient', [leadController::class, 'transferclient']);
 Route::any('/allclientlist', [leadController::class, 'allclientlist']);
+Route::any('/lockorunlocklead', [leadController::class, 'lockorunlocklead']);
 
 Route::any('/createorder', [orderController::class, 'createorder']);
 Route::any('/updateorder', [orderController::class, 'updateorder']);
@@ -166,6 +167,8 @@ Route::any('/sumpaymentamount', [billingController::class, 'sumpaymentamount']);
 Route::any('/multiupdatepaymentstatus', [billingController::class, 'multiupdatepaymentstatus']);
 Route::any('/savebillingorderfollowup', [billingController::class, 'savebillingorderfollowup']);
 Route::any('/billingorderfollowuplist', [billingController::class, 'billingorderfollowuplist']);
+Route::any('/oldcrmbillingpaymentlist', [billingController::class, 'oldcrmbillingpaymentlist']);
+Route::any('/markpaidonoldcrmpayment', [billingController::class, 'markpaidonoldcrmpayment']);
 
 Route::any('/savefreshlead', [freshleadController::class, 'savefreshlead']);
 Route::any('/freshleadlist', [freshleadController::class, 'freshleadlist']);
@@ -254,6 +257,8 @@ Route::any('/deletepatchqueryitem', [patchqueryController::class, 'deletepatchqu
 Route::any('/generatepatchqueryproposal', [patchqueryController::class, 'generatepatchqueryproposal']);
 Route::any('/deliveredpatchquerylist', [patchqueryController::class, 'deliveredpatchquerylist']);
 Route::any('/patchqueryinvoicedetails', [patchqueryController::class, 'patchqueryinvoicedetails']);
+Route::any('/patchqueryshippingweight', [patchqueryController::class, 'patchqueryshippingweight']);
+Route::any('/patchqueryshippingcost', [patchqueryController::class, 'patchqueryshippingcost']);
 
 Route::any('/rawdatasheetlist', [rawdataController::class, 'rawdatasheetlist']);
 Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);

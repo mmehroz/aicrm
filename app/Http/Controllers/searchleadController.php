@@ -41,9 +41,29 @@ class searchleadController extends Controller
 				->orderByDesc('lead_id')
 				->first();
 				$datebeforethreemonths = date('Y-m-d', strtotime($leaddate->lead_date . "-3 months") );
+				$leadafterthreemonth = DB::table('orderpayment')
+				->select('lead_id')
+				->where('orderpayment_date','>',$datebeforethreemonths)
+				->where('status_id','=',1)
+				->get();
+				$sortleadafter = array();
+				foreach($leadafterthreemonth as $leadafterthreemonths){
+					$sortleadafter[] = $leadafterthreemonths->lead_id;
+				}
+				$leadbeforethreemonth = DB::table('orderpayment')
+				->select('lead_id')
+				->where('orderpayment_date','<',$datebeforethreemonths)
+				->whereNotIn('lead_id',$sortleadafter)
+				->where('status_id','=',1)
+				->get();
+				$sortleadbefore = array();
+				foreach($leadbeforethreemonth as $leadbeforethreemonths){
+					$sortleadbefore[] = $leadbeforethreemonths->lead_id;
+				}
 				$search = DB::table('lead')
 				->select('lead_id as searchlead_id','lead_bussinessname as searchlead_bussinessname','lead_phone as searchlead_phone','lead_name as searchlead_name','lead_email as searchlead_email','lead_altemail as searchlead_altemail','lead_bussinessphone as searchlead_altphone')
 				->where('lead_date','<',$datebeforethreemonths)
+				->whereIn('lead_id',$sortleadbefore)
 				->where('leadstatus_id','=',3)
 				->where('status_id','=',1)
 				->inRandomOrder()

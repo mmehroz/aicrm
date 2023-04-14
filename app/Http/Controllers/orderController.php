@@ -56,7 +56,7 @@ class orderController extends Controller
 			$recoverydate = date('Y-m-d');
 			$recoverydate = date('Y-m-d', strtotime($recoverydate . "+1 months") );
 			$lastpaiddate = explode('-', $recoverydate);
-			$sortlastpaiddate = $lastpaiddate[0].'-'.$lastpaiddate[1].'-07';
+			$sortlastpaiddate = $lastpaiddate[0].'-'.$lastpaiddate[1].'-05';
 			if (isset($multiples['payment'])) {
 				foreach ($multiples['payment'] as $payments) {
 					$payment = array(

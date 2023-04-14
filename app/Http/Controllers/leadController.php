@@ -23,7 +23,7 @@ class leadController extends Controller
 		->select('lead_email')
 		->where('lead_email','=',$request->lead_email)
 		->where('status_id','=',1)
-		->where('brand_id','=',$request->brand_id)
+		// ->where('brand_id','=',$request->brand_id)
 		->first();
 		if (isset($checkemail)) {
 			return response()->json("Lead Email Already Exist", 400);
@@ -583,6 +583,27 @@ class leadController extends Controller
 			return response()->json(['data' => $clients,'message' => 'All Client List List'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'All Client List List'],200);
+		}
+	}
+	public function lockorunlocklead(Request $request){
+		$validate = Validator::make($request->all(), [ 
+			'lead_id'		=> 'required',
+			'lead_islock'	=> 'required',
+		]);
+		if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$transfer  = DB::table('lead')
+		->where('lead_id','=',$request->lead_id)
+		->update([
+			'lead_islock' 	=> $request->lead_islock,
+			'updated_by' 	=> $request->user_id,
+			'updated_at' 	=> date('Y-m-d h:i:s'),
+		]);
+		if(isset($transfer)){
+			return response()->json(['message' => 'Updated Successfully'],200);
+		}else{
+			return response()->json(['message' => 'Oops! something went wrong.'],200);
 		}
 	}
 }
