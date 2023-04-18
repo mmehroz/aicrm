@@ -550,6 +550,36 @@ class patchqueryController extends Controller
         ->where( 'status_id', '=', 1 )
         ->where( 'patchquery_id', '=', $request->patchquery_id )
         ->get();
+        $onactive = 0;
+        if($data->patchquerystatus_id == 9){
+            $onactive = 1;
+        }elseif($data->patchquerystatus_id == 13){
+            $onactive = 2;
+        }elseif($data->patchquerystatus_id == 14){
+            $onactive = 3;
+        }elseif($data->patchquerystatus_id == 2){
+            $onactive = 4;
+        }elseif($data->patchquerystatus_id == 3){
+            $onactive = 5;
+        }elseif($data->patchquerystatus_id == 5){
+            $onactive = 6;
+        }elseif($data->patchquerystatus_id == 6 || $data->patchquerystatus_id == 7){
+            $onactive = 7;
+        }elseif($data->patchquerystatus_id == 10){
+            $onactive = 8;
+        }else{
+            $onactive = 0;
+        }
+        $data->ispicked = $data->patchquerystatus_id >= 2 ? 1 : 0;
+        $data->iscallback = $data->patchquerystatus_id == 1 ? 0 : 1;
+        $data->iscalldone = $data->patchquerystatus_id == 1 || $data->patchquerystatus_id == 13 ? 0 : 1;
+        $data->isfwdvendor = $data->patchquerystatus_id >= 2 ? 1 : 0;
+        $data->isretmanager = $data->patchquerystatus_id >= 3 ? 1 : 0;
+        $data->issenttoclient = $data->patchquerystatus_id >= 5 ? 1 : 0;
+        $data->isapprove = $data->patchquerystatus_id >= 6 ? 1 : 0;
+        $data->isreject = $data->patchquerystatus_id >= 7 ? 1 : 0;
+        $data->ispaid = $data->patchquerystatus_id == 10 || $data->patchquerystatus_id == 11 || $data->patchquerystatus_id == 12 ? 1 : 0;
+        $data->onactive = $onactive;
         $patchquerypath = URL::to( '/' ).'/public/patchquery/'.$request->patchquery_id.'/';
         $patchqueryitempath = URL::to( '/' ).'/public/patchqueryitem/'.$request->patchquery_id.'/';
         $patchquerycostpath = URL::to( '/' ).'/public/patchquerycostattachment/'.$request->patchquery_id.'/';
@@ -559,6 +589,7 @@ class patchqueryController extends Controller
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }
     }
+
     public function generatepatchqueryproposal( Request $request ) {
         $validate = Validator::make( $request->all(), [
             'patchqueryitem_id'	            => 'required',
@@ -574,10 +605,15 @@ class patchqueryController extends Controller
         ->where( 'patchqueryitem_id', '=', $request->patchqueryitem_id )
         ->where( 'vendorproduction_id', '=', $request->patchqueryitem_finalvendor )
         ->first();
+        $item = DB::table( 'patchqueryitemdetails' )
+        ->select( '*' )
+        ->where( 'status_id', '=', 1 )
+        ->where( 'patchqueryitem_id', '=', $request->patchqueryitem_id )
+        ->first();
         $patchlogopath = URL::to( '/' ).'/public/patchlogo/logo.png';
         if(isset($proposaltachment)){
             $patchqueryproposalpath = URL::to( '/' ).'/public/patchqueryproposal/'.$proposaltachment->patchquery_id.'/';
-            return response()->json( [ 'proposaltachment' => $proposaltachment, 'patchqueryproposalpath' => $patchqueryproposalpath , 'patchlogopath' => $patchlogopath, 'message' => 'Patch Query Proposal Details' ], 200 );
+            return response()->json( [ 'item' => $item, 'proposaltachment' => $proposaltachment, 'patchqueryproposalpath' => $patchqueryproposalpath , 'patchlogopath' => $patchlogopath, 'message' => 'Patch Query Proposal Details' ], 200 );
         }else {
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }
@@ -621,7 +657,6 @@ class patchqueryController extends Controller
             ] );
         }
         
-
         if ( $update ) {
             return response()->json( [ 'message' => 'Moved Successfully' ], 200 );
         } else {
@@ -704,9 +739,9 @@ class patchqueryController extends Controller
                         $numb = $number / 7 ;
                         $foldername = $request->patchquery_id;
                         $extension = $costattachment->getClientOriginalExtension();
-                        $costattachment = $numb.$costattachment->getClientOriginalName();
-                        $costattachment = $costattachment->move( public_path( 'patchquerycostattachment/'.$foldername ), $costattachment );
-                        $costattachment = $numb.$costattachment->getClientOriginalName();
+                        $costattachmentname = $numb.$costattachment->getClientOriginalName();
+                        $costattachmentname = $costattachment->move( public_path( 'patchquerycostattachment/'.$foldername ), $costattachment );
+                        $costattachmentname = $numb.$costattachment->getClientOriginalName();
                         DB::table( 'patchqueryitem' )
                         ->where( 'patchqueryitem_id', '=', $patchqueryitems[ 'patchqueryitem_id' ] )
                         ->update( [
@@ -898,7 +933,7 @@ class patchqueryController extends Controller
     public function savepatchqueryfollowup( Request $request ) {
         $validate = Validator::make( $request->all(), [
             'patchqueryfollowup_comment'	=> 'required',
-            'patchquery_id'				=> 'required',
+            'patchquery_id'				    => 'required',
         ] );
         if ( $validate->fails() ) {
 

@@ -930,6 +930,11 @@ class billingController extends Controller
 			->whereIn('order_token',$sortordertoken)
 			->where('status_id','=',1)
 			->get();
+			$sumorderlist = DB::connection('mysql3')->table('completedeallist')
+			->select('*')
+			->whereIn('order_token',$sortordertoken)
+			->where('status_id','=',1)
+			->sum('order_amountquoted');
 		}else{
 			$ordertoken = DB::table('oldcrmpaidpayment')
 			->select('order_token')
@@ -945,10 +950,16 @@ class billingController extends Controller
 			->whereIn('orderstatus_id',[8,9,10])
 			->where('status_id','=',1)
 			->get();
+			$sumorderlist = DB::connection('mysql3')->table('completedeallist')
+			->select('*')
+			->whereNotIn('order_token',$sortordertoken)
+			->whereIn('orderstatus_id',[8,9,10])
+			->where('status_id','=',1)
+			->sum('order_amountquoted');
 		}
 		
 		if($getmergeorderlist){
-			return response()->json(['data' => $getmergeorderlist,'message' => 'Old CRM Billing Payment List'],200);
+			return response()->json(['data' => $getmergeorderlist, 'sumorderlist' => $sumorderlist,'message' => 'Old CRM Billing Payment List'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}
