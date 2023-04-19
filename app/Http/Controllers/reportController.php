@@ -459,7 +459,7 @@ class reportController extends Controller
 				$paidpatchquery = DB::table('patchquery')
 				->select('patchquery_id')
 				->where('status_id','=',1)
-				->where('patchquerystatus_id','>=',10)
+				->whereIn('patchquerystatus_id',[10,11,12])
 				->whereBetween('patchquery_date', [$setfrom, $setto])
 				->get();
 				$sortpaidpatchquery = array();
@@ -472,11 +472,24 @@ class reportController extends Controller
 					->where('status_id','=',1)
 					->whereIn('patchquery_id',$sortpaidpatchquery)
 					->sum('patchqueryitem_proposalquote');
-					$unitsumpatchdeliverycost = DB::table('patchquery')
-					->select('patchquery_deliverycost')
+					$shippingids = DB::table('patchquery')
+					->select('patchqueryshipping_id')
 					->where('status_id','=',1)
 					->whereIn('patchquery_id',$sortpaidpatchquery)
-					->sum('patchquery_deliverycost');
+					->get();
+					if(isset($shippingids)){
+						$sortpatchshippingids = array();
+						foreach($shippingids as $shippingids){
+							$sortpatchshippingids[] = $shippingids->patchqueryshipping_id;
+						}
+						$sumshippingcost = DB::table('patchqueryshipping')
+						->select('patchqueryshipping_cost')
+						->where('status_id','=',1)
+						->whereIn('patchqueryshipping_id',$sortpatchshippingids)
+						->sum('patchqueryshipping_cost');
+					}else{
+						$sumshippingcost = 0;
+					}
 					$patchvendorids = DB::table('patchqueryitem')
 					->select('patchqueryitem_finalvendor')
 					->where('status_id','=',1)
@@ -497,11 +510,11 @@ class reportController extends Controller
 						$unitsumpatchvendorcost = 0;
 					}
 				}else{
-					$unitsumpatchdeliverycost = 0;
+					$sumshippingcost = 0;
 					$unitsumpatchvendorcost = 0;
 					$unitsumpatchpaid = 0;
 				}
-				$unitsumpatchachieved =$unitsumpatchpaid-$unitsumpatchdeliverycost-$unitsumpatchvendorcost;
+				$unitsumpatchachieved =$unitsumpatchpaid-$sumshippingcost-$unitsumpatchvendorcost;
 				$unitsumachieved = $unitsummaxpaid+$unitsumpatchachieved;
 				$unitgetcommission = DB::table('commission')
 				->select('*')

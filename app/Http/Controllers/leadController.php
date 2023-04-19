@@ -606,4 +606,23 @@ class leadController extends Controller
 			return response()->json(['message' => 'Oops! something went wrong.'],200);
 		}
 	}
+	public function clientwisepaymentlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+			'lead_id'	=> 'required',
+		]);
+		if ($validate->fails()) {    
+			return response()->json($validate->errors(), 400);
+		}
+		$paymentlist = DB::table('orderpaymentdetails')
+		->select('*')
+		->where('lead_id','=',$request->lead_id)
+		->where('status_id','=',1)
+		->orderBy('orderpayment_id','DESC')
+		->paginate(30);	
+		if(isset($paymentlist)){
+			return response()->json(['data' => $paymentlist,'message' => 'Client Payment List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Client Payment List'],200);
+		}
+	}
 }

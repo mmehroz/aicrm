@@ -740,12 +740,12 @@ class patchqueryController extends Controller
                         $foldername = $request->patchquery_id;
                         $extension = $costattachment->getClientOriginalExtension();
                         $costattachmentname = $numb.$costattachment->getClientOriginalName();
-                        $costattachmentname = $costattachment->move( public_path( 'patchquerycostattachment/'.$foldername ), $costattachment );
+                        $costattachmentname = $costattachment->move( public_path( 'patchquerycostattachment/'.$foldername ), $costattachmentname );
                         $costattachmentname = $numb.$costattachment->getClientOriginalName();
                         DB::table( 'patchqueryitem' )
                         ->where( 'patchqueryitem_id', '=', $patchqueryitems[ 'patchqueryitem_id' ] )
                         ->update( [
-                            'patchqueryitem_costattachment'	=> $costattachment,
+                            'patchqueryitem_costattachment'	=> $costattachmentname,
                             'updated_by'					=> $request->user_id,
                             'updated_at'					=> date( 'Y-m-d h:i:s' ),
                         ]);
@@ -1079,6 +1079,12 @@ class patchqueryController extends Controller
         ->where( 'status_id', '=', 1 )
         ->where( 'patchquery_id', '=', $request->patchquery_id )
         ->get();
+        $patchcallpath = URL::to( '/' ).'/public/patchlogo/call.png';
+        $patchwebpath = URL::to( '/' ).'/public/patchlogo/web.png';
+        $patchlocationpath = URL::to( '/' ).'/public/patchlogo/location.png';
+        $data->call = $patchcallpath;
+        $data->web = $patchwebpath;
+        $data->location = $patchlocationpath;
         if ( $data ) {
             return response()->json( [ 'data' => $data, 'itemdetails' => $itemdetails, 'invoiceinfo' => $invoiceinfo , 'message' => 'Patch Query Invoice Details' ], 200 );
         } else {
