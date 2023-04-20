@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\File;
 use Image;
 use DB;
+use URL;
 use Input;
 use App\Item;
 use Session;
@@ -37,11 +38,27 @@ class leadController extends Controller
      	if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
+		if ( $request->lead_picture != null ) {
+			$leadattachment = $request->lead_picture;
+			if ( $leadattachment->isValid() ) {
+				$number = rand( 1, 999 );
+				$numb = $number / 7 ;
+				$extension = $leadattachment->getClientOriginalExtension();
+				$leadattachmentname = $numb.$leadattachment->getClientOriginalName();
+				$leadattachmentname = $leadattachment->move( public_path( 'lead_picture/' ), $leadattachmentname );
+				$leadattachmentname = $numb.$leadattachment->getClientOriginalName();
+			} else {
+				return response()->json( 'Invalid File', 400 );
+			}
+		}else{
+			$leadattachmentname = "no_image.jpg";
+		}
 		$adds = array(
 		'lead_name' 			=> $request->lead_name,
 		'lead_email'			=> $request->lead_email,
 		'lead_altemail' 		=> $request->lead_altemail,
 		'lead_phone' 			=> $request->lead_phone,
+		'lead_picture' 			=> $leadattachmentname,
 		'city_id' 				=> 1,
 		'state_id'				=> $request->state_id,
 		'country_id' 			=> $request->country_id,
@@ -178,6 +195,7 @@ class leadController extends Controller
 		->where('lead_id','=',$request->lead_id)
 		->where('status_id','!=',2)
 		->first();
+		$getdetails->lead_picture = URL::to('/')."/public/lead_picture/".$getdetails->lead_picture;
 		$revenue = array();
 		$totalrevenue = DB::table('orderpayment')
 		->select('orderpayment_amount')
@@ -454,91 +472,82 @@ class leadController extends Controller
 	}
 	public function clientrevenuereport(Request $request){
 		$validate = Validator::make($request->all(), [ 
-			'role_id' 			=> 'required',
-			'brand_id'			=> 'required',
+			'lead_id' 			=> 'required',
 		]);
 		if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
-		if($request->role_id <= 3){
-			$lead = DB::table('leaddetail')
-			->select('lead_id','lead_name','lead_email','lead_phone','lead_bussinessname')
-			->where('brand_id','=',$request->brand_id)
-			->where('leadstatus_id','=',3)
-			->where('status_id','=',1)
-			->orderBy('lead_id','DESC')
-			->get();
-			$clients = array();
-			$index=0;
-			foreach($lead as $leads){
-				$totalrevenue = DB::table('orderpayment')
-				->select('orderpayment_amount')
-				->where('status_id','=',1)
-				->where('lead_id','=',$leads->lead_id)
-				->sum('orderpayment_amount');
-				$forwardedrevenue = DB::table('orderpayment')
-				->select('orderpayment_amount')
-				->where('status_id','=',1)
-				->where('lead_id','=',$leads->lead_id)
-				->where('orderpaymentstatus_id','=',8)
-				->sum('orderpayment_amount');
-				$pickedrevenue = DB::table('orderpayment')
-				->select('orderpayment_amount')
-				->where('status_id','=',1)
-				->where('lead_id','=',$leads->lead_id)
-				->where('orderpaymentstatus_id','=',9)
-				->sum('orderpayment_amount');
-				$invoicesentrevenue = DB::table('orderpayment')
-				->select('orderpayment_amount')
-				->where('status_id','=',1)
-				->where('lead_id','=',$leads->lead_id)
-				->where('orderpaymentstatus_id','=',2)
-				->sum('orderpayment_amount');
-				$paidrevenue = DB::table('orderpayment')
-				->select('orderpayment_amount')
-				->where('status_id','=',1)
-				->where('lead_id','=',$leads->lead_id)
-				->where('orderpaymentstatus_id','=',3)
-				->sum('orderpayment_amount');
-				$cancelrevenue = DB::table('orderpayment')
-				->select('orderpayment_amount')
-				->where('status_id','=',1)
-				->where('lead_id','=',$leads->lead_id)
-				->where('orderpaymentstatus_id','=',4)
-				->sum('orderpayment_amount');
-				$refundrevenue = DB::table('orderpayment')
-				->select('orderpayment_amount')
-				->where('status_id','=',1)
-				->where('lead_id','=',$leads->lead_id)
-				->where('orderpaymentstatus_id','=',5)
-				->sum('orderpayment_amount');
-				$chargebackrevenue = DB::table('orderpayment')
-				->select('orderpayment_amount')
-				->where('status_id','=',1)
-				->where('lead_id','=',$leads->lead_id)
-				->where('orderpaymentstatus_id','=',6)
-				->sum('orderpayment_amount');
-				$recoveryrevenue = DB::table('orderpayment')
-				->select('orderpayment_amount')
-				->where('status_id','=',1)
-				->where('lead_id','=',$leads->lead_id)
-				->where('orderpaymentstatus_id','=',7)
-				->sum('orderpayment_amount');
-				$leads->totalrevenue = $totalrevenue;
-				$leads->forwardedrevenue = $forwardedrevenue;
-				$leads->pickedrevenue = $pickedrevenue;
-				$leads->invoicesentrevenue = $invoicesentrevenue;
-				$leads->paidrevenue = $paidrevenue;
-				$leads->cancelrevenue = $cancelrevenue;
-				$leads->refundrevenue = $refundrevenue;
-				$leads->chargebackrevenue = $chargebackrevenue;
-				$leads->recoveryrevenue = $recoveryrevenue;
-				$clients[$index] = $leads;
-				$index++;
-			}
-		}
-		if(isset($clients)){
-			return response()->json(['data' => $clients,'message' => 'Client Wise Revenue Report'],200);
+		$client = DB::table('leaddetail')
+		->select('lead_id','lead_name','lead_email','lead_phone','lead_bussinessname')
+		->where('lead_id','=',$request->lead_id)
+		->where('leadstatus_id','=',3)
+		->where('status_id','=',1)
+		->orderBy('lead_id','DESC')
+		->first();
+		$totalrevenue = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('lead_id','=',$request->lead_id)
+		->sum('orderpayment_amount');
+		$forwardedrevenue = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('lead_id','=',$request->lead_id)
+		->where('orderpaymentstatus_id','=',8)
+		->sum('orderpayment_amount');
+		$pickedrevenue = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('lead_id','=',$request->lead_id)
+		->where('orderpaymentstatus_id','=',9)
+		->sum('orderpayment_amount');
+		$invoicesentrevenue = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('lead_id','=',$request->lead_id)
+		->where('orderpaymentstatus_id','=',2)
+		->sum('orderpayment_amount');
+		$paidrevenue = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('lead_id','=',$request->lead_id)
+		->where('orderpaymentstatus_id','=',3)
+		->sum('orderpayment_amount');
+		$cancelrevenue = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('lead_id','=',$request->lead_id)
+		->where('orderpaymentstatus_id','=',4)
+		->sum('orderpayment_amount');
+		$refundrevenue = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('lead_id','=',$request->lead_id)
+		->where('orderpaymentstatus_id','=',5)
+		->sum('orderpayment_amount');
+		$chargebackrevenue = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('lead_id','=',$request->lead_id)
+		->where('orderpaymentstatus_id','=',6)
+		->sum('orderpayment_amount');
+		$recoveryrevenue = DB::table('orderpayment')
+		->select('orderpayment_amount')
+		->where('status_id','=',1)
+		->where('lead_id','=',$request->lead_id)
+		->where('orderpaymentstatus_id','=',7)
+		->sum('orderpayment_amount');
+		$client->totalrevenue = $totalrevenue;
+		$client->forwardedrevenue = $forwardedrevenue;
+		$client->pickedrevenue = $pickedrevenue;
+		$client->invoicesentrevenue = $invoicesentrevenue;
+		$client->paidrevenue = $paidrevenue;
+		$client->cancelrevenue = $cancelrevenue;
+		$client->refundrevenue = $refundrevenue;
+		$client->chargebackrevenue = $chargebackrevenue;
+		$client->recoveryrevenue = $recoveryrevenue;
+		if(isset($client)){
+			return response()->json(['data' => $client,'message' => 'Client Wise Revenue Report'],200);
 		}else{
 			return response()->json(['data' => $emptyarray, 'message' => 'Client Wise Revenue Report'],200);
 		}

@@ -280,23 +280,13 @@ class patchqueryController extends Controller
             foreach ( $brand as $brands ) {
                 $sortbrand[] = $brands->brand_id;
             }
-            if ( $request->patchquerystatus_id == 1 ) {
-                $data = DB::table( 'patchquerylist' )
-                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
-                ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
-                ->whereIn( 'brand_id', $sortbrand )
-                ->where( 'status_id', '=', 1 )
-                ->orderBy( 'patchquery_id', 'DESC' )
-                ->paginate( 30 );
-            } else {
-                $data = DB::table( 'patchquerylist' )
-                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
-                ->whereIn( 'brand_id', $sortbrand )
-                ->whereNotIn( 'patchquerystatus_id', [ 6, 7,10,11,12 ] )
-                ->where( 'status_id', '=', 1 )
-                ->orderBy( 'patchquery_id', 'DESC' )
-                ->paginate( 30 );
-            }
+            $data = DB::table( 'patchquerylist' )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+            ->whereIn( 'brand_id', $sortbrand )
+            ->where( 'patchquerystatus_id', '=', 2 )
+            ->where( 'status_id', '=', 1 )
+            ->orderBy( 'patchquery_id', 'DESC' )
+            ->paginate( 30 );
         } elseif ( $request->role_id == 6 ) {
             if ( $request->patchquerystatus_id == 1 ) {
                 $data = DB::table( 'patchquerylist' )
@@ -571,13 +561,13 @@ class patchqueryController extends Controller
             $onactive = 0;
         }
         $data->ispicked = $data->patchquerystatus_id >= 2 ? 1 : 0;
-        $data->iscallback = $data->patchquerystatus_id == 1 ? 0 : 1;
-        $data->iscalldone = $data->patchquerystatus_id == 1 || $data->patchquerystatus_id == 13 ? 0 : 1;
-        $data->isfwdvendor = $data->patchquerystatus_id >= 2 ? 1 : 0;
-        $data->isretmanager = $data->patchquerystatus_id >= 3 ? 1 : 0;
-        $data->issenttoclient = $data->patchquerystatus_id >= 5 ? 1 : 0;
-        $data->isapprove = $data->patchquerystatus_id >= 6 ? 1 : 0;
-        $data->isreject = $data->patchquerystatus_id >= 7 ? 1 : 0;
+        $data->iscallback = $data->patchquerystatus_id == 1 || $data->patchquerystatus_id == 9 ? 0 : 1;
+        $data->iscalldone = $data->patchquerystatus_id == 1 || $data->patchquerystatus_id == 9 || $data->patchquerystatus_id == 13 ? 0 : 1;
+        $data->isfwdvendor = $data->patchquerystatus_id >= 2 && $data->patchquerystatus_id != 9 ? 1 : 0;
+        $data->isretmanager = $data->patchquerystatus_id >= 3 && $data->patchquerystatus_id != 9 ? 1 : 0;
+        $data->issenttoclient = $data->patchquerystatus_id >= 5 && $data->patchquerystatus_id != 9 ? 1 : 0;
+        $data->isapprove = $data->patchquerystatus_id >= 6 && $data->patchquerystatus_id != 9 ? 1 : 0;
+        $data->isreject = $data->patchquerystatus_id >= 7 && $data->patchquerystatus_id != 9 ? 1 : 0;
         $data->ispaid = $data->patchquerystatus_id == 10 || $data->patchquerystatus_id == 11 || $data->patchquerystatus_id == 12 ? 1 : 0;
         $data->onactive = $onactive;
         $patchquerypath = URL::to( '/' ).'/public/patchquery/'.$request->patchquery_id.'/';
