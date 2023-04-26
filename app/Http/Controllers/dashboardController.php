@@ -22,9 +22,9 @@ class dashboardController extends Controller
 {
 	public function admindashboard(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'yearmonth'	=> 'required',
-	    ]);
-     	if ($validate->fails()) {    
+		  'yearmonth'	=> 'required',
+		]);
+		 if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
 		$yearmonth = explode('-',$request->yearmonth);
@@ -45,9 +45,9 @@ class dashboardController extends Controller
 		$list=array();
 		for($d=1; $d<=$noofdays; $d++)
 		{
-		    $time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
-		    if (date('m', $time)==$getyearandmonth[1])       
-		        $list[]=date('Y-m-d', $time);
+			$time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
+			if (date('m', $time)==$getyearandmonth[1])       
+				$list[]=date('Y-m-d', $time);
 		}
 		$totalbrand = DB::table('brand')
 		->select('brand_id')
@@ -57,50 +57,54 @@ class dashboardController extends Controller
 		foreach($totalbrand as $totalbrands){
 			$brands[] =  $totalbrands->brand_id;
 		}
-		$graphdatatotal = array();
-		$index = 0;
-		foreach ($list as $lists) {
-			$totalincomeindollar = DB::table('orderpayment')
+		$digitalbrand = DB::table('brand')
+		->select('brand_id','brand_name')
+		->where('brandtype_id','=',1)
+		->where('status_id','=',1)
+		->get();
+		$dindex=0;
+		$digitalbrandachieved = array();
+		foreach($digitalbrand as $digitalbrands){
+			$brandachieved = DB::table('orderpayment')
 			->select('orderpayment_amount')
-			->where('orderpayment_date','=', $lists)
-			->whereIn('brand_id',$brands)
+			->where('brand_id','=', $digitalbrands->brand_id)
+			->whereIn('orderpayment_date', $list)
 			->where('status_id','=',1)
 			->sum('orderpayment_amount');
-			$graphdatatotal[$index] = $totalincomeindollar;
-			$index++;
+			$digitalbrands->brandachieved = $brandachieved;
+			$digitalbrandachieved[$dindex] = $digitalbrands;
+			$dindex++;
 		}
-		$graphdatapaid = array();
-		$paidindex = 0;
-		foreach ($list as $lists) {
-			$paidincomeindollar = DB::table('orderpayment')
-			->select('orderpayment_amount')
-			->where('orderpaymentstatus_id','=',3)
-			->where('orderpayment_date','=', $lists)
-			->whereIn('brand_id',$brands)
+		$patchbrand = DB::table('brand')
+		->select('brand_id','brand_name')
+		->where('brandtype_id','=',2)
+		->where('status_id','=',1)
+		->get();
+		$pindex=0;
+		$patchbrandachieved = array();
+		foreach($patchbrand as $patchbrands){
+			$patchquery = DB::table('patchquery')
+			->select('patchquery_id')
+			->where('brand_id','=', $patchbrands->brand_id)
+			->whereIn('patchquery_date',$list)
 			->where('status_id','=',1)
-			->sum('orderpayment_amount');
-			$graphdatapaid[$paidindex] = $paidincomeindollar;
-			$paidindex++;
-		}
-		$graphdataremaining = array();
-		$remainingindex = 0;
-		foreach ($list as $lists) {
-			$totalincomeindollar = DB::table('orderpayment')
-			->select('orderpayment_amount')
-			->where('orderpayment_date','=', $lists)
-			->whereIn('brand_id',$brands)
-			->where('status_id','=',1)
-			->sum('orderpayment_amount');
-			$paidincomeindollar = DB::table('orderpayment')
-			->select('orderpayment_amount')
-			->where('orderpaymentstatus_id','=',3)
-			->where('orderpayment_date','=', $lists)
-			->whereIn('brand_id',$brands)
-			->where('status_id','=',1)
-			->sum('orderpayment_amount');
-			$remainingincomeindollar = $totalincomeindollar-$paidincomeindollar;
-			$graphdataremaining[$remainingindex] = $remainingincomeindollar;
-			$remainingindex++;
+			->get();
+			$sortpatchqueryids = array();
+			if(isset($patchquery)){
+				foreach($patchquery as $patchquerys){
+					$sortpatchqueryids[] = $patchquerys->patchquery_id;
+				}
+				$brandachieved = DB::table('patchqueryitem')
+				->select('patchqueryitem_proposalquote')
+				->whereIn('patchquery_id', $sortpatchqueryids)
+				->where('status_id','=',1)
+				->sum('patchqueryitem_proposalquote');
+			}else{
+				$brandachieved = 0;
+			}
+			$patchbrands->brandachieved = $brandachieved;
+			$patchbrandachieved[$pindex] = $patchbrands;
+			$pindex++;
 		}
 		$grosssale = DB::table('orderpayment')
 		->select('orderpayment_amount')
@@ -144,17 +148,6 @@ class dashboardController extends Controller
 		->where('status_id','=',1)
 		->sum('orderpayment_amount');
 		$totalunpaid = $grosssale-$paidsale-$cancel-$refund-$chargeback;
-		$ppcassigned = DB::table('assignppc')
-		->select('assignppc_amount')
-		->where('assignppc_month','=',$setyearmonth)
-		->where('status_id','=',1)
-		->sum('assignppc_amount');
-		$ppcspend = DB::table('ppc')
-		->select('ppc_amount')
-		->whereIn('ppc_date', $list)
-		->where('status_id','=',1)
-		->sum('ppc_amount');
-		$remainingppc = $ppcassigned-$ppcspend;
 		$gettotaltarget = DB::table('user')
 		->select('user_target')
 		->where('status_id','=',1)
@@ -201,34 +194,24 @@ class dashboardController extends Controller
 			'totaltarget' 		=> $gettotaltarget,
 			'totalachieve'	 	=> $gettotalachieve,
 			'remainingtarget' 	=> $remainingtarget,
-			'ppcassigned' 		=> $ppcassigned,
-			'ppcspend' 			=> $ppcspend,
-			'remainingppc' 		=> $remainingppc,
 			'previousrecover' 	=> $previousrecover,
 			'previouscancel' 	=> $previouscancel,
 			'previouspaid' 		=> $previouspaid,
-			'previousunpaid' 	=> $remainingppc,
 		);
 		$getupcommingpayments = DB::table('orderpaymentdetails')
 		->select('order_title','orderpayment_title','orderpayment_amount','user_name','user_picture')
-		->where('orderpaymentstatus_id','!=',3)
-		->whereIn('orderpayment_duedate',$list)
-		->where('status_id','=',1)
-		->get();
-		$getuser = DB::table('user')
-		->select('user_id','user_name','user_picture','user_target')
-		->where('role_id','=',7)
+		->whereNotIn('orderpaymentstatus_id',[3,4])
+		->whereIn('orderpayment_date', $list)
 		->where('status_id','=',1)
 		->get();
 		$pendingtask = DB::table('tasklist')
 		->select('task_id','task_title','task_deadlinedate','taskstatus_name','creator')
-		// ->where('taskstatus_id','>',2)
 		->where('status_id','=',1)
 		->where('task_date','=',date('Y-m-d'))
 		->get();
 		$userpicturepath = URL::to('/')."/public/user_picture/";
 		$brandlogopath = URL::to('/')."/public/brand_logo/";
-		return response()->json(['topdata' => $topdata,'test' => $list, 'upcommingpayments' => $getupcommingpayments, 'pendingtask' => $pendingtask, 'graphdatatotal' => $graphdatatotal, 'graphdatapaid' => $graphdatapaid, 'graphdataremaining' => $graphdataremaining, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
+		return response()->json(['topdata' => $topdata, 'digitalbrandachieved' => $digitalbrandachieved, 'patchbrandachieved' => $patchbrandachieved, 'upcommingpayments' => $getupcommingpayments, 'pendingtask' => $pendingtask, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
 	}
 	public function adminbranddetails(Request $request){
 		$validate = Validator::make($request->all(), [ 
@@ -647,56 +630,6 @@ class dashboardController extends Controller
 		$userpicturepath = URL::to('/')."/public/user_picture/";
 		$brandlogopath = URL::to('/')."/public/brand_logo/";
 		return response()->json(['salaryexpense' => $salaryexpense, 'carexpense' => $carexpense, 'vanexpense' => $vanexpense, 'fixexpense' => $fixexpense, 'otherexpense' => $otherexpense, 'sumallexpense' => $sumallexpense, 'message' => 'Admin Dashboard'],200);
-	}
-	public function upcomingpaymentdashboard(Request $request){
-		$validate = Validator::make($request->all(), [ 
-	      'yearmonth'	=> 'required',
-	    ]);
-     	if ($validate->fails()) {    
-			return response()->json($validate->errors(), 400);
-		}
-		$yearmonth = explode('-',$request->yearmonth);
-		if($yearmonth[1] <= 9){
-			$setyearmonth = $yearmonth[0].'-0'.$yearmonth[1];
-		}else{
-			$setyearmonth = $yearmonth[0].'-'.$yearmonth[1];
-		}
-		$graphdata = array();
-		$yearindex = 0;
-		for ($i=1; $i < 32 ; $i++) { 
-			if ($i <= 9) {
-				$getupcommingpayments = DB::table('orderpaymentdetails')
-				->select('order_title','orderpayment_title','orderpayment_amount','user_name','user_picture')
-				->where('orderpaymentstatus_id','=',2)
-				->where('orderpayment_date','=',$setyearmonth.'-0'.$i)
-				->where('status_id','=',1)
-				->get();
-				$sumpayments = DB::table('orderpaymentdetails')
-				->select('orderpayment_amount')
-				->where('orderpaymentstatus_id','=',2)
-				->where('orderpayment_date','=',$setyearmonth.'-0'.$i)
-				->where('status_id','=',1)
-				->sum('orderpayment_amount');
-			}else{
-				$getupcommingpayments = DB::table('orderpaymentdetails')
-				->select('order_title','orderpayment_title','orderpayment_amount','user_name','user_picture')
-				->where('orderpaymentstatus_id','=',2)
-				->where('orderpayment_date','=',$setyearmonth.'-'.$i)
-				->where('status_id','=',1)
-				->get();
-				$sumpayments = DB::table('orderpaymentdetails')
-				->select('orderpayment_amount')
-				->where('orderpaymentstatus_id','=',2)
-				->where('orderpayment_date','=',$setyearmonth.'-'.$i)
-				->where('status_id','=',1)
-				->sum('orderpayment_amount');
-			}
-			$graphdata[$yearindex]['date'] = $i;
-			$graphdata[$yearindex]['payments'] = $getupcommingpayments;
-			$graphdata[$yearindex]['sumpayments'] = $sumpayments;
-			$yearindex++;
-		}
-		return response()->json($graphdata,200);
 	}
 	public function billingmerchantdashboard(Request $request){
 		$validate = Validator::make($request->all(), [ 
@@ -1258,9 +1191,9 @@ class dashboardController extends Controller
 	}
 	public function adminpatchdashboard(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'yearmonth'	=> 'required',
-	    ]);
-     	if ($validate->fails()) {    
+		  'yearmonth'	=> 'required',
+		]);
+		 if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
 		$yearmonth = explode('-',$request->yearmonth);
@@ -1281,271 +1214,439 @@ class dashboardController extends Controller
 		$list=array();
 		for($d=1; $d<=$noofdays; $d++)
 		{
-		    $time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
-		    if (date('m', $time)==$getyearandmonth[1])       
-		        $list[]=date('Y-m-d', $time);
+			$time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
+			if (date('m', $time)==$getyearandmonth[1])       
+				$list[]=date('Y-m-d', $time);
 		}
-		$totalbrand = DB::table('brand')
+		$patchbrand = DB::table('brand')
 		->select('brand_id')
-		->where('brandtype_id','=',2)
+		->where('brandtype_id','',2)
 		->where('status_id','=',1)
 		->get();
-		$brands = array();
-		foreach($totalbrand as $totalbrands){
-			$brands[] =  $totalbrands->brand_id;
+		$sortpatchbrand = array();
+		foreach($patchbrand as $patchbrands){
+			$sortpatchbrand[] = $patchbrands->brand_id;
 		}
-		$sumforwardedtoproduction = DB::table('patch')
-		->select('patch_amount')
-		->whereIn('patch_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchstatus_id','=',1)
+		$patchuserid = DB::table('userbarnd')
+		->select('user_id')
+		->whereIn('brand_id',$sortpatchbrand)
 		->where('status_id','=',1)
-		->sum('patch_amount');
-		$sumreturnfromproduction = DB::table('patch')
-		->select('patch_amount')
-		->whereIn('patch_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchstatus_id','=',2)
+		->get();
+		$sortpatchuser = array();
+		foreach($patchuserid as $patchuserids){
+			$sortpatchuser[] = $patchuserids->user_id;
+		}
+		$patchusertarget = DB::table('user')
+		->select('user_target')
+		->whereIn('user_id',$sortpatchuser)
 		->where('status_id','=',1)
-		->sum('patch_amount');
-		$sumondelivery = DB::table('patch')
-		->select('patch_amount')
-		->whereIn('patch_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchstatus_id','=',3)
+		->sum('user_target');
+		$targetincrement = DB::table('usertarget')
+		->select('usertarget_target')
+		->whereIn('user_id',$sortpatchuser)
+		->where('usertarget_month','<=',$setyearmonth)
 		->where('status_id','=',1)
-		->sum('patch_amount');
-		$sumdelivered = DB::table('patch')
-		->select('patch_amount')
-		->whereIn('patch_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchstatus_id','=',4)
-		->where('status_id','=',1)
-		->sum('patch_amount');
-		$forwardedtoproduction = DB::table('patch')
-		->select('patch_is')
-		->whereIn('patch_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchstatus_id','=',1)
-		->where('status_id','=',1)
-		->count();
-		$returnfromproduction = DB::table('patch')
-		->select('patch_is')
-		->whereIn('patch_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchstatus_id','=',2)
-		->where('status_id','=',1)
-		->count();
-		$ondelivery = DB::table('patch')
-		->select('patch_is')
-		->whereIn('patch_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchstatus_id','=',3)
-		->where('status_id','=',1)
-		->count();
-		$delivered = DB::table('patch')
-		->select('patch_is')
-		->whereIn('patch_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchstatus_id','=',4)
-		->where('status_id','=',1)
-		->count();
-		$orderdata = array(
-			'forwardedtoproduction' 	=> $forwardedtoproduction,
-			'returnfromproduction' 		=> $returnfromproduction,
-			'ondelivery' 				=> $ondelivery,
-			'delivered' 				=> $delivered,
-			'sumforwardedtoproduction' 	=> $sumforwardedtoproduction,
-			'sumreturnfromproduction' 	=> $sumreturnfromproduction,
-			'sumondelivery' 			=> $sumondelivery,
-			'sumdelivered' 				=> $sumdelivered,
-		);
-		$forwardedtomanager = DB::table('patchquery')
+		->sum('usertarget_target');
+		$patchtarget = $patchusertarget+$targetincrement;
+		$patchgrossquery = DB::table('patchquery')
 		->select('patchquery_id')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',1)
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
-		->count();
-		$pickbymanager = DB::table('patchquery')
+		->get();
+		$sortpatchgrossqueryids = array();
+		if(isset($patchgrossquery)){
+			foreach($patchgrossquery as $patchgrossquerys){
+				$sortpatchgrossqueryids[] = $patchgrossquerys->patchquery_id;
+			}
+			$patchgross = DB::table('patchqueryitem')
+			->select('patchqueryitem_proposalquote')
+			->whereIn('patchquery_id', $sortpatchgrossqueryids)
+			->where('status_id','=',1)
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchgross = 0;
+		}
+		$patchpaidquery = DB::table('patchquery')
 		->select('patchquery_id')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',9)
+		->whereIn('patchquerystatus_id',[10,11,12])
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
-		->count();
-		$forwardedtovendor = DB::table('patchquery')
+		->get();
+		$sortpatchpaidqueryids = array();
+		if(isset($patchpaidquery)){
+			foreach($patchpaidquery as $patchpaidquerys){
+				$sortpatchpaidqueryids[] = $patchpaidquerys->patchquery_id;
+			}
+			$patchpaid = DB::table('patchqueryitem')
+			->select('patchqueryitem_proposalquote')
+			->whereIn('patchquery_id', $sortpatchpaidqueryids)
+			->where('status_id','=',1)
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchpaid = 0;
+		}
+		
+		$patchcancelquery = DB::table('patchquery')
 		->select('patchquery_id')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',2)
-		->where('status_id','=',1)
-		->count();
-		$returntomanager = DB::table('patchquery')
-		->select('patchquery_id')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',3)
-		->where('status_id','=',1)
-		->count();
-		$returntoagent = DB::table('patchquery')
-		->select('patchquery_id')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',4)
-		->where('status_id','=',1)
-		->count();
-		$senttoclient = DB::table('patchquery')
-		->select('patchquery_id')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',5)
-		->where('status_id','=',1)
-		->count();
-		$approve = DB::table('patchquery')
-		->select('patchquery_id')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',6)
-		->where('status_id','=',1)
-		->count();
-		$reject = DB::table('patchquery')
-		->select('patchquery_id')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
 		->where('patchquerystatus_id','=',7)
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
-		->count();
-		$editbyclient = DB::table('patchquery')
+		->get();
+		$sortpatchcancelqueryids = array();
+		if(isset($patchcancelquery)){
+			foreach($patchcancelquery as $patchcancelquerys){
+				$sortpatchcancelqueryids[] = $patchcancelquerys->patchquery_id;
+			}
+			$patchcancel = DB::table('patchqueryitem')
+			->select('patchqueryitem_proposalquote')
+			->whereIn('patchquery_id', $sortpatchcancelqueryids)
+			->where('status_id','=',1)
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchcancel = 0;
+		}
+		$patchunpaid = $patchgross-$patchpaid-$patchcancel;
+		$patchbillingoverview = array(
+			'patchtarget' 	=> $patchtarget,
+			'patchgross' 	=> $patchgross,
+			'patchpaid' 	=> $patchpaid,
+			'patchcancel' 	=> $patchcancel,
+			'patchunpaid' 	=> $patchunpaid,
+		);
+		$patchgrossquerycount = DB::table('patchquery')
 		->select('patchquery_id')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',8)
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
 		->count();
-		$sumforwardedtomanager = DB::table('patchquery')
-		->select('patchquery_amount')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
+		$patchforwardedquery = DB::table('patchquery')
+		->select('patchquery_id')
 		->where('patchquerystatus_id','=',1)
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
-		->sum('patchquery_amount');
-		$sumpickbymanager = DB::table('patchquery')
-		->select('patchquery_amount')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',9)
+		->get();
+		$patchforwardedcount = DB::table('patchquery')
+		->select('patchquery_id')
+		->where('patchquerystatus_id','=',1)
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
-		->sum('patchquery_amount');
-		$sumforwardedtovendor = DB::table('patchquery')
-		->select('patchquery_amount')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',2)
+		->count();
+		$sortpatchforwardedqueryids = array();
+		if(isset($patchforwardedquery)){
+			foreach($patchforwardedquery as $patchforwardedquerys){
+				$sortpatchforwardedqueryids[] = $patchforwardedquerys->patchquery_id;
+			}
+			$patchforwardedamount = DB::table('patchqueryitem')
+			->select('patchqueryitem_proposalquote')
+			->whereIn('patchquery_id', $sortpatchforwardedqueryids)
+			->where('status_id','=',1)
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchforwardedamount = 0;
+		}
+		$patchonboardquery = DB::table('patchquery')
+		->select('patchquery_id')
+		->where('patchquerystatus_id','=',11)
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
-		->sum('patchquery_amount');
-		$sumreturntomanager = DB::table('patchquery')
-		->select('patchquery_amount')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',3)
+		->get();
+		$patchonboardcount = DB::table('patchquery')
+		->select('patchquery_id')
+		->where('patchquerystatus_id','=',11)
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
-		->sum('patchquery_amount');
-		$sumreturntoagent = DB::table('patchquery')
-		->select('patchquery_amount')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',4)
+		->count();
+		$sortpatchonboardqueryids = array();
+		if(isset($patchonboardquery)){
+			foreach($patchonboardquery as $patchonboardquerys){
+				$sortpatchonboardqueryids[] = $patchonboardquerys->patchquery_id;
+			}
+			$patchonboardamount = DB::table('patchqueryitem')
+			->select('patchqueryitem_proposalquote')
+			->whereIn('patchquery_id', $sortpatchonboardqueryids)
+			->where('status_id','=',1)
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchonboardamount = 0;
+		}
+		$patchdeliveredquery = DB::table('patchquery')
+		->select('patchquery_id')
+		->where('patchquerystatus_id','=',12)
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
-		->sum('patchquery_amount');
-		$sumsenttoclient = DB::table('patchquery')
-		->select('patchquery_amount')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',5)
+		->get();
+		$patchdeliveredcount = DB::table('patchquery')
+		->select('patchquery_id')
+		->where('patchquerystatus_id','=',12)
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
-		->sum('patchquery_amount');
-		$sumapprove = DB::table('patchquery')
-		->select('patchquery_amount')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',6)
+		->count();
+		$sortpatchdeliveredqueryids = array();
+		if(isset($patchdeliveredquery)){
+			foreach($patchdeliveredquery as $patchdeliveredquerys){
+				$sortpatchdeliveredqueryids[] = $patchdeliveredquerys->patchquery_id;
+			}
+			$patchdeliveredamount = DB::table('patchqueryitem')
+			->select('patchqueryitem_proposalquote')
+			->whereIn('patchquery_id', $sortpatchdeliveredqueryids)
+			->where('status_id','=',1)
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchdeliveredamount = 0;
+		}
+		$patchreturenedquery = DB::table('patchquery')
+		->select('patchquery_id')
+		->where('patchquerystatus_id','=',15)
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
-		->sum('patchquery_amount');
-		$sumreject = DB::table('patchquery')
-		->select('patchquery_amount')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',7)
+		->get();
+		$patchreturenedcount = DB::table('patchquery')
+		->select('patchquery_id')
+		->where('patchquerystatus_id','=',15)
+		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
-		->sum('patchquery_amount');
-		$sumeditbyclient = DB::table('patchquery')
-		->select('patchquery_amount')
-		->whereIn('patchquery_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patchquerystatus_id','=',8)
-		->where('status_id','=',1)
-		->sum('patchquery_amount');
-		$querydata = array(
-			'forwardedtomanager' 		=> $forwardedtomanager,
-			'pickbymanager' 			=> $pickbymanager,
-			'forwardedtovendor' 		=> $forwardedtovendor,
-			'returntomanager' 			=> $returntomanager,
-			'returntoagent' 			=> $returntoagent,
-			'senttoclient' 				=> $senttoclient,
-			'approve' 					=> $approve,
-			'reject' 					=> $reject,
-			'editbyclient' 				=> $editbyclient,
-			'sumforwardedtomanager' 	=> $sumforwardedtomanager,
-			'sumpickbymanager' 			=> $sumpickbymanager,
-			'sumforwardedtovendor' 		=> $sumforwardedtovendor,
-			'sumreturntomanager' 		=> $sumreturntomanager,
-			'sumreturntoagent' 			=> $sumreturntoagent,
-			'sumsenttoclient' 			=> $sumsenttoclient,
-			'sumapprove' 				=> $sumapprove,
-			'sumreject' 				=> $sumreject,
-			'sumeditbyclient' 			=> $sumeditbyclient,
+		->count();
+		$sortpatchreturenedqueryids = array();
+		if(isset($patchreturenedquery)){
+			foreach($patchreturenedquery as $patchreturenedquerys){
+				$sortpatchreturenedqueryids[] = $patchreturenedquerys->patchquery_id;
+			}
+			$patchreturenedamount = DB::table('patchqueryitem')
+			->select('patchqueryitem_proposalquote')
+			->whereIn('patchquery_id', $sortpatchreturenedqueryids)
+			->where('status_id','=',1)
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchreturenedamount = 0;
+		}
+		$patchorderoverview = array(
+			'patchgrossquerycount' 	=> $patchgrossquerycount,
+			'patchgrossqueryamount'	=> $patchgross,
+			'patchforwardedcount' 	=> $patchforwardedcount,
+			'patchforwardedamount' 	=> $patchforwardedamount,
+			'patchonboardcount' 	=> $patchonboardcount,
+			'patchonboardamount' 	=> $patchonboardamount,
+			'patchdeliveredcount' 	=> $patchdeliveredcount,
+			'patchdeliveredamount' 	=> $patchdeliveredamount,
+			'patchreturenedcount' 	=> $patchreturenedcount,
+			'patchreturenedamount' 	=> $patchreturenedamount,
 		);
-		$total = DB::table('patch')
-		->select('patch_amount')
-		->whereIn('patch_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('status_id','=',1)
-		->sum('patch_amount');
-		$pending = DB::table('patch')
-		->select('patch_amount')
-		->whereIn('patch_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patch_biillingstatus','=',"Pending")
-		->where('status_id','=',1)
-		->sum('patch_amount');
-		$paid = DB::table('patch')
-		->select('patch_amount')
-		->whereIn('patch_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patch_biillingstatus','=',"Paid")
-		->where('status_id','=',1)
-		->sum('patch_amount');
-		$cancel = DB::table('patch')
-		->select('patch_amount')
-		->whereIn('patch_date', $list)
-		->whereIn('brand_id', $brands)
-		->where('patch_biillingstatus','=',"Cancel")
-		->where('status_id','=',1)
-		->sum('patch_amount');
-		$billingdata = array(
-			'total' 	=> $total,
-			'pending' 	=> $pending,
-			'paid' 		=> $paid,
-			'cancel' 	=> $cancel,
-		);
-		return response()->json(['orderdata' => $orderdata,'querydata' => $querydata,'billingdata' => $billingdata, 'message' => 'Admin Dashboard'],200);
+		$patchpickedquantity = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->where( 'patchquerystatus_id', '=', 9 )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->count();
+		$patchquery = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->where( 'patchquerystatus_id', '=', 9 )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->get();
+		if(isset($patchquery)){
+			$sortpatchquery = array();
+			foreach($patchquery as $patchquerys){
+				$sortpatchquery[] = $patchquerys->patchquery_id;
+			}
+			$patchpickedamount = DB::table( 'patchqueryitem' )
+			->select( 'patchqueryitem_proposalquote' )
+			->whereIn( 'patchquery_id', $sortpatchquery )
+			->where( 'status_id', '=', 1 )
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchpickedamount = 0;
+		}
+		
+		$patchvendorquantity = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->where( 'patchquerystatus_id', '=', 2 )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->count();
+		$patchquery = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->where( 'patchquerystatus_id', '=', 2 )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->get();
+		if(isset($patchquery)){
+			$sortpatchquery = array();
+			foreach($patchquery as $patchquerys){
+				$sortpatchquery[] = $patchquerys->patchquery_id;
+			}
+			$patchvendoramount = DB::table( 'patchqueryitem' )
+			->select( 'patchqueryitem_proposalquote' )
+			->whereIn( 'patchquery_id', $sortpatchquery )
+			->where( 'status_id', '=', 1 )
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchvendoramount = 0;
+		}
+
+		$patchreturnquantity = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->where( 'patchquerystatus_id', '=', 3 )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->count();
+		$patchquery = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->where( 'patchquerystatus_id', '=', 3 )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->get();
+		if(isset($patchquery)){
+			$sortpatchquery = array();
+			foreach($patchquery as $patchquerys){
+				$sortpatchquery[] = $patchquerys->patchquery_id;
+			}
+			$patchreturnamount = DB::table( 'patchqueryitem' )
+			->select( 'patchqueryitem_proposalquote' )
+			->whereIn( 'patchquery_id', $sortpatchquery )
+			->where( 'status_id', '=', 1 )
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchreturnamount = 0;
+		}
+
+		$patchclientquantity = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->where( 'patchquerystatus_id', '=', 5 )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->count();
+		$patchquery = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->where( 'patchquerystatus_id', '=', 5 )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->get();
+		if(isset($patchquery)){
+			$sortpatchquery = array();
+			foreach($patchquery as $patchquerys){
+				$sortpatchquery[] = $patchquerys->patchquery_id;
+			}
+			$patchclientamount = DB::table( 'patchqueryitem' )
+			->select( 'patchqueryitem_proposalquote' )
+			->whereIn( 'patchquery_id', $sortpatchquery )
+			->where( 'status_id', '=', 1 )
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchclientamount = 0;
+		}
+
+		$patchapprovequantity = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->where( 'patchquerystatus_id', '=', 6 )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->count();
+		$patchquery = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->where( 'patchquerystatus_id', '=', 6 )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->get();
+		if(isset($patchquery)){
+			$sortpatchquery = array();
+			foreach($patchquery as $patchquerys){
+				$sortpatchquery[] = $patchquerys->patchquery_id;
+			}
+			$patchapproveamount = DB::table( 'patchqueryitem' )
+			->select( 'patchqueryitem_proposalquote' )
+			->whereIn( 'patchquery_id', $sortpatchquery )
+			->where( 'status_id', '=', 1 )
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchapproveamount = 0;
+		}
+
+		$patchrejectquantity = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->where( 'patchquerystatus_id', '=', 7 )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->count();
+		$patchquery = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->where( 'patchquerystatus_id', '=', 7 )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->get();
+		if(isset($patchquery)){
+			$sortpatchquery = array();
+			foreach($patchquery as $patchquerys){
+				$sortpatchquery[] = $patchquerys->patchquery_id;
+			}
+			$patchrejectamount = DB::table( 'patchqueryitem' )
+			->select( 'patchqueryitem_proposalquote' )
+			->whereIn( 'patchquery_id', $sortpatchquery )
+			->where( 'status_id', '=', 1 )
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchrejectamount = 0;
+		}
+
+		$patchpaidquantity = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->whereIn('patchquerystatus_id',[10,11,12])
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->count();
+		$patchquery = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->whereIn('patchquerystatus_id',[10,11,12])
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->get();
+		if(isset($patchquery)){
+			$sortpatchquery = array();
+			foreach($patchquery as $patchquerys){
+				$sortpatchquery[] = $patchquerys->patchquery_id;
+			}
+			$patchpaidamount = DB::table( 'patchqueryitem' )
+			->select( 'patchqueryitem_proposalquote' )
+			->whereIn( 'patchquery_id', $sortpatchquery )
+			->where( 'status_id', '=', 1 )
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchpaidamount = 0;
+		}
+
+		$patchdeliverquantity = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->whereIn('patchquerystatus_id',[11,12])
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->count();
+		$patchquery = DB::table( 'patchquery' )
+		->select( 'patchquery_id' )
+		->whereIn('patchquerystatus_id',[11,12])
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->get();
+		if(isset($patchquery)){
+			$sortpatchquery = array();
+			foreach($patchquery as $patchquerys){
+				$sortpatchquery[] = $patchquerys->patchquery_id;
+			}
+			$patchdeliveramount = DB::table( 'patchqueryitem' )
+			->select( 'patchqueryitem_proposalquote' )
+			->whereIn( 'patchquery_id', $sortpatchquery )
+			->where( 'status_id', '=', 1 )
+			->sum('patchqueryitem_proposalquote');
+		}else{
+			$patchdeliveramount = 0;
+		}
+
+		$patchstatuswisequantity = array($patchpickedquantity,$patchvendorquantity,$patchreturnquantity,$patchclientquantity,$patchapprovequantity,$patchrejectquantity,$patchpaidquantity,$patchdeliverquantity);
+		$patchstatuswiseamount = array($patchpickedamount,$patchvendoramount,$patchreturnamount,$patchclientamount,$patchapproveamount,$patchrejectamount,$patchpaidamount,$patchdeliveramount);
+		return response()->json(['patchbillingoverview' => $patchbillingoverview, 'patchorderoverview' => $patchorderoverview, 'patchstatuswisequantity' => $patchstatuswisequantity, 'patchstatuswiseamount' => $patchstatuswiseamount, 'message' => 'Admin Patch Dashboard'],200);
 	}
 	public function adminpatchandquerylist(Request $request){
 		$validate = Validator::make($request->all(), [ 
-	      'yearmonth'	=> 'required',
-	    ]);
-     	if ($validate->fails()) {    
+		  'yearmonth'	=> 'required',
+		]);
+		 if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
 		}
 		$yearmonth = explode('-',$request->yearmonth);
@@ -1566,66 +1667,17 @@ class dashboardController extends Controller
 		$list=array();
 		for($d=1; $d<=$noofdays; $d++)
 		{
-		    $time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
-		    if (date('m', $time)==$getyearandmonth[1])       
-		        $list[]=date('Y-m-d', $time);
+			$time=mktime(12, 0, 0, $getyearandmonth[1], $d, $getyearandmonth[0]);          
+			if (date('m', $time)==$getyearandmonth[1])       
+				$list[]=date('Y-m-d', $time);
 		}
-		$patchquery = DB::table('patchquerylist')
-		->select('patchquery_id','patchquery_title','user_name','patchquerystatus_id')
-		->whereIn('patchquery_date', $list)
-		->where('status_id','=',1)
-		->get();
-		$patchquerydata = array();
-		$pindex=0;
-		foreach($patchquery as $patchquerys){
-			$patchquerys->forwardtomanager = $patchquerys->patchquerystatus_id >= 1 ? 1 : 0;
-			$patchquerys->forwardtovendor = $patchquerys->patchquerystatus_id >= 2 ? 1 : 0;
-			$patchquerys->returntomanager = $patchquerys->patchquerystatus_id >= 3 ? 1 : 0;
-			$patchquerys->returntoagent = $patchquerys->patchquerystatus_id >= 4 ? 1 : 0;
-			$patchquerys->senttoclient = $patchquerys->patchquerystatus_id >= 5 ? 1 : 0;
-			$patchquerys->approvebyclient = $patchquerys->patchquerystatus_id == 6 ? 1 : 0;
-			$patchquerys->rejectbyclient = $patchquerys->patchquerystatus_id == 7 ? 1 : 0;
-			$patchquerys->editbyclient = $patchquerys->patchquerystatus_id >= 8 ? 1 : 0;
-			$patchquerys->pickbymanager = $patchquerys->patchquerystatus_id == 9 ? 1 : 0;
-			$patchquerydata[$pindex] = $patchquerys;
-			$pindex++;
-		}
-		$patchorder = DB::table('patch')
-		->select('patch_title','patch_amount','patch_deliverycost','patch_vendorcost','patch_deliverycost')
-		->whereIn('patch_date', $list)
-		->where('status_id','=',1)
-		->get();
-		$title = array();
-		$tiindex=0;
-		foreach($patchorder as $patchorders){
-			$title[$tiindex] = $patchorders->patch_title;
-			$tiindex++;
-		}
-		$amount = array();
-		$aindex=0;
-		foreach($patchorder as $patchorders){
-			$amount[$aindex] = $patchorders->patch_amount;
-			$aindex++;
-		}
-		$deliverycost = array();
-		$dindex=0;
-		foreach($patchorder as $patchorders){
-			$deliverycost[$dindex] = $patchorders->patch_deliverycost;
-			$dindex++;
-		}
-		$vendorcost = array();
-		$vindex=0;
-		foreach($patchorder as $patchorders){
-			$vendorcost[$vindex] = $patchorders->patch_vendorcost;
-			$vindex++;
-		}
-		$totalcost = array();
-		$tindex=0;
-		foreach($patchorder as $patchorders){
-			$totalcost[$tindex] = $patchorders->patch_vendorcost+$patchorders->patch_deliverycost;
-			$tindex++;
-		}
-		return response()->json(['title' => $title,'amount' => $amount,'deliverycost' => $deliverycost,'vendorcost' => $vendorcost,'totalcost' => $totalcost,'patchquerydata' => $patchquerydata, 'message' => 'Admin Dashboard'],200);
+		$patchquerylist = DB::table( 'patchquerylist' )
+		->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+		->whereIn('patchquery_date',$list)
+		->where( 'status_id', '=', 1 )
+		->orderBy( 'patchquery_id', 'DESC' )
+		->paginate( 30 );
+		return response()->json(['patchquerylist' => $patchquerylist, 'message' => 'Admin Patch Query List'],200);
 	}
 	public function patchbranddetails($yearmonth, $brand_id){
 		$yearmonth = explode('-',$yearmonth);

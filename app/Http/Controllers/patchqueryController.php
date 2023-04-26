@@ -425,7 +425,7 @@ class patchqueryController extends Controller
             $data = DB::table( 'patchquerylist' )
             ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
-            ->where( 'patchquery_isorderorsample', '=', $request->patchquery_isorderorsample )
+            ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->where( 'status_id', '=', 1 )
             ->orderBy( 'patchquery_id', 'DESC' )
             ->paginate( 30 );
@@ -442,7 +442,7 @@ class patchqueryController extends Controller
             $data = DB::table( 'patchquerylist' )
             ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
-            ->where( 'patchquery_isorderorsample', '=', $request->patchquery_isorderorsample )
+            ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->whereIn( 'brand_id', $sortbrand )
             ->where( 'status_id', '=', 1 )
             ->orderBy( 'patchquery_id', 'DESC' )
@@ -460,7 +460,7 @@ class patchqueryController extends Controller
             $data = DB::table( 'patchquerylist' )
             ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
-            ->where( 'patchquery_isorderorsample', '=', $request->patchquery_isorderorsample )
+            ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->whereIn( 'brand_id', $sortbrand )
             ->where( 'status_id', '=', 1 )
             ->orderBy( 'patchquery_id', 'DESC' )
@@ -469,7 +469,7 @@ class patchqueryController extends Controller
             $data = DB::table( 'patchquerylist' )
             ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
-            ->where( 'patchquery_isorderorsample', '=', $request->patchquery_isorderorsample )
+            ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->where( 'patchquery_manager', '=', $request->user_id )
             ->where( 'status_id', '=', 1 )
             ->orderBy( 'patchquery_id', 'DESC' )
@@ -480,7 +480,7 @@ class patchqueryController extends Controller
             ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->where( 'created_by', '=', $request->user_id )
             ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
-            ->where( 'patchquery_isorderorsample', '=', $request->patchquery_isorderorsample )
+            ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->where( 'status_id', '=', 1 )
             ->orderBy( 'patchquery_id', 'DESC' )
             ->paginate( 30 );
@@ -566,8 +566,8 @@ class patchqueryController extends Controller
         $data->isfwdvendor = $data->patchquerystatus_id >= 2 && $data->patchquerystatus_id != 9 ? 1 : 0;
         $data->isretmanager = $data->patchquerystatus_id >= 3 && $data->patchquerystatus_id != 9 ? 1 : 0;
         $data->issenttoclient = $data->patchquerystatus_id >= 5 && $data->patchquerystatus_id != 9 ? 1 : 0;
-        $data->isapprove = $data->patchquerystatus_id >= 6 && $data->patchquerystatus_id != 9 ? 1 : 0;
-        $data->isreject = $data->patchquerystatus_id >= 7 && $data->patchquerystatus_id != 9 ? 1 : 0;
+        $data->isapprove = $data->patchquerystatus_id == 6 || $data->patchquerystatus_id == 10 || $data->patchquerystatus_id == 11 || $data->patchquerystatus_id == 12 ? 1 : 0;
+        $data->isreject = $data->patchquerystatus_id == 7 ? 1 : 0;
         $data->ispaid = $data->patchquerystatus_id == 10 || $data->patchquerystatus_id == 11 || $data->patchquerystatus_id == 12 ? 1 : 0;
         $data->onactive = $onactive;
         $patchquerypath = URL::to( '/' ).'/public/patchquery/'.$request->patchquery_id.'/';
@@ -1050,11 +1050,18 @@ class patchqueryController extends Controller
 		->where('brand_id','=',$brand->brand_id)
 		->select('brand_cover','brand_email','brand_website','brand_invoicename','brand_currency')
 		->first();
+        $sumquoteamount = DB::table( 'patchqueryitem' )
+        ->select( 'patchqueryitem_proposalquote' )
+        ->where( 'status_id', '=', 1 )
+        ->where( 'patchquery_id', '=', $request->patchquery_id )
+        ->sum('patchqueryitem_proposalquote');
+        
 		$coverpath = URL::to('/')."/public/brand_cover/";
 		$invoiceinfo = array(
 			'brand_email' 			=> $getbranddetail->brand_email,
 			'brand_website' 		=> $getbranddetail->brand_website,
 			'brand_invoicename' 	=> $getbranddetail->brand_invoicename,
+            'sumquoteamount' 	=> $sumquoteamount,
 			'brand_currency' 		=> $getbranddetail->brand_currency == 1 ? "$" : " £",
 			'brand_cover' 			=> $getbranddetail->brand_cover,
 			'brand_coverpath' 		=> $coverpath,

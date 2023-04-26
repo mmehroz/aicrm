@@ -472,49 +472,12 @@ class reportController extends Controller
 					->where('status_id','=',1)
 					->whereIn('patchquery_id',$sortpaidpatchquery)
 					->sum('patchqueryitem_proposalquote');
-					$shippingids = DB::table('patchquery')
-					->select('patchqueryshipping_id')
-					->where('status_id','=',1)
-					->whereIn('patchquery_id',$sortpaidpatchquery)
-					->get();
-					if(isset($shippingids)){
-						$sortpatchshippingids = array();
-						foreach($shippingids as $shippingids){
-							$sortpatchshippingids[] = $shippingids->patchqueryshipping_id;
-						}
-						$sumshippingcost = DB::table('patchqueryshipping')
-						->select('patchqueryshipping_cost')
-						->where('status_id','=',1)
-						->whereIn('patchqueryshipping_id',$sortpatchshippingids)
-						->sum('patchqueryshipping_cost');
-					}else{
-						$sumshippingcost = 0;
-					}
-					$patchvendorids = DB::table('patchqueryitem')
-					->select('patchqueryitem_finalvendor')
-					->where('status_id','=',1)
-					->whereIn('patchquery_id',$sortpaidpatchquery)
-					->get();
-					if(isset($patchvendorids)){
-						$sortpatchvendorids = array();
-						foreach($patchvendorids as $patchvendoridss){
-							$sortpatchvendorids[] = $patchvendoridss->patchqueryitem_finalvendor;
-						}
-						$unitsumpatchvendorcost = DB::table('patchqueryvendor')
-						->select('patchqueryvendor_cost')
-						->where('status_id','=',1)
-						->whereIn('patchquery_id',$sortpaidpatchquery)
-						->whereIn('vendorproduction_id',$sortpatchvendorids)
-						->sum('patchqueryvendor_cost');
-					}else{
-						$unitsumpatchvendorcost = 0;
-					}
+					$productioncost = 30/100*$unitsumpatchpaid;
 				}else{
-					$sumshippingcost = 0;
-					$unitsumpatchvendorcost = 0;
 					$unitsumpatchpaid = 0;
+					$productioncost = 0;
 				}
-				$unitsumpatchachieved =$unitsumpatchpaid-$sumshippingcost-$unitsumpatchvendorcost;
+				$unitsumpatchachieved =$unitsumpatchpaid-$productioncost;
 				$unitsumachieved = $unitsummaxpaid+$unitsumpatchachieved;
 				$unitgetcommission = DB::table('commission')
 				->select('*')
@@ -533,7 +496,11 @@ class reportController extends Controller
 					}
 				}
 				$unitheadlist->target = $unitsumtarget;
-				$unitheadlist->achieved = $unitsumachieved;
+				$unitheadlist->maxpaid = $unitsummaxpaid;
+				$unitheadlist->patchpaid = $unitsumpatchpaid;
+				$unitheadlist->patchproductioncost = $productioncost;
+
+				$unitheadlist->sumpaidachieved = $unitsumachieved;
 				$unitheadlist->commission = $unitheadcommission;
 				$unitheaddetails[$unitheadindex] = $unitheadlist;
 				$unitheadindex++;
