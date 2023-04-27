@@ -338,6 +338,7 @@ class reportController extends Controller
 				->count('task_id');
 				$getcommission = DB::table('commission')
 				->select('*')
+				->where('brandtype_id','=',1)
 				->where('status_id','=',1)
 				->where('role_id','=',15)
 				->orderBy('commission_id','DESC')
@@ -383,6 +384,7 @@ class reportController extends Controller
 				->count('task_id');
 				$getcommission = DB::table('commission')
 				->select('*')
+				->where('brandtype_id','=',1)
 				->where('status_id','=',1)
 				->where('user_id','=',$digitizerlist->user_id)
 				->orderBy('commission_id','DESC')
@@ -481,6 +483,7 @@ class reportController extends Controller
 				$unitsumachieved = $unitsummaxpaid+$unitsumpatchachieved;
 				$unitgetcommission = DB::table('commission')
 				->select('*')
+				->where('brandtype_id','=',1)
 				->where('status_id','=',1)
 				->where('user_id','=',$unitheadlist->user_id)
 				->orderBy('commission_id','DESC')
@@ -578,6 +581,7 @@ class reportController extends Controller
 			$gettargetachieved = $getpaidamount + $getrecoveryamount;
 			$getcommission = DB::table('commission')
 			->select('commission_rate', 'commission_from' , 'commission_to')
+			->where('brandtype_id','=',1)
 			->where('status_id','=',1)
 			->where('user_id','=',$request->id)
 			->get();
@@ -673,5 +677,172 @@ class reportController extends Controller
 			$commissionindex++;
 		}
 		return response()->json(['commissiondata' => $commissiondata, 'targetachieveddate' => $achieveddate, 'message' => 'Monthly Employee Commission Report'],200);
+	}
+	public function patchcommissionreport(Request $request){
+        $validate = Validator::make($request->all(), [ 
+            'from'		=> 'required',
+            'to'		=> 'required',
+        ]);
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 400);
+        }
+		$patchbrand = DB::table('brand')
+		->select('brand_id')
+		->where('brandtype_id','=',2)
+		->where('status_id','=',1)
+		->get();
+		$sortpatchbrand = array();
+		foreach($patchbrand as $patchbrands){
+			$sortpatchbrand[] = $patchbrands->brand_id;
+		}
+		$userbrand = DB::table('userbarnd')
+		->select('brand_id')
+		->whereIn('brand_id',$sortpatchbrand)
+		->where('user_id','=',$request->user_id)
+		->where('status_id','=',1)
+		->get();
+		$sortbrand = array();
+		foreach($userbrand as $brands){
+			$sortbrand[] = $brands->brand_id;
+		}
+		$userids = DB::table('userbarnd')
+		->select('user_id')
+		->whereIn('brand_id',$sortbrand)
+		->where('status_id','=',1)
+		->get();
+		$sortuserids = array();
+		foreach($userids as $useridss){
+			$sortuserids[] = $useridss->user_id;
+		}
+		$from = $request->from;
+		$from = explode('-',$request->from);
+		if($from[1] <= 9){
+			$setfrom = $from[0].'-0'.$from[1].'-'.$from[2];
+		}else{
+			$setfrom = $from[0].'-'.$from[1].'-'.$from[2];
+		}
+		$to = $request->to;
+		$to = explode('-',$request->to);
+		if($to[1] <= 9){
+			$setto = $to[0].'-0'.$to[1].'-'.$to[2];
+		}else{
+			$setto = $to[0].'-'.$to[1].'-'.$to[2];
+		}
+		$gettoyearandmonth = explode('-', $setto);
+		$toyearandmonth = $gettoyearandmonth[0].'-'.$gettoyearandmonth[1];
+		$fromyearandmonth = explode('-', $setfrom);
+		$year = $fromyearandmonth[0];
+		$month = $fromyearandmonth[1];
+		$targetdate = $year.'-'.$month;
+		$getmonth = $toyearandmonth;
+		$userlist = DB::table('user')
+		->select('user_id','role_id','user_name','user_target','user_picture')
+		->whereIn('role_id',[5,7])
+		->whereIn('user_id',$sortuserids)
+		->where('status_id','=',1)
+		->get();
+		$userindex=0;
+		$usercommission;
+		$userdetails = array();
+		$agentuserids = array();
+		foreach ($userlist as $userlist) {
+			if(isset($userlist->user_id)){
+				$agentuserids[] = $userlist->user_id;
+				$paidamount = DB::table('patchqueryanditem')
+				->select('patchqueryitem_proposalquote')
+				->where('status_id','=',1)
+				->whereIn('patchquerystatus_id',[10,11,12])
+				->where('created_by','=',$userlist->user_id)
+				->whereBetween('patchquery_date', [$setfrom, $setto])
+				->sum('patchqueryitem_proposalquote');
+				$productioncost = 30/100*$paidamount;
+				$amountforcommission = $paidamount-$productioncost;
+				$getcommission = DB::table('commission')
+				->select('*')
+				->where('brandtype_id','=',2)
+				->where('status_id','=',1)
+				->where('user_id','=',$userlist->user_id)
+				->orderBy('commission_id','DESC')
+				->get();
+				$commissionindex = 0;
+				$usercommission = 0;
+				foreach ($getcommission as $getcommissions) {
+					if ($amountforcommission >= $getcommissions->commission_from && $amountforcommission >= $getcommissions->commission_to && $commissionindex == 0) {
+						$usercommission = $getcommissions->commission_rate;
+						$commissionindex++;
+						break;
+					}else{
+						$usercommission = 0;
+					}
+				}
+				$userlist->paidamount = $paidamount;
+				$userlist->productioncost = $productioncost;
+				$userlist->amountforcommission = $amountforcommission;
+				$userlist->commission = $usercommission;
+				$userdetails[$userindex] = $userlist;
+			}else{
+				$userlist->paidamount = 0;
+				$userlist->productioncost = 0;
+				$userlist->amountforcommission = 0;
+				$userlist->commission = 0;
+				$userdetails[$userindex] = $userlist;
+			}
+			$userindex++;
+		}
+		$managerlist = DB::table('user')
+		->select('user_id','role_id','user_name','user_target','user_picture')
+		->where('role_id','=',6)
+		->whereIn('user_id',$sortuserids)
+		->where('status_id','=',1)
+		->get();
+		$agents = DB::table('user')
+		->select('user_id')
+		->whereIn('role_id',[5,7])
+		->whereIn('user_id',$sortuserids)
+		->where('status_id','=',1)
+		->count();
+		$managertarget = $agents*1000;
+		$managerindex=0;
+		$managercommission;
+		$managerdetails = array();
+		foreach ($managerlist as $managerlist) {
+			if(isset($managerlist->user_id)){
+				$paidamount = DB::table('patchqueryanditem')
+				->select('patchqueryitem_proposalquote')
+				->where('status_id','=',1)
+				->whereIn('patchquerystatus_id',[10,11,12])
+				->whereIn('created_by',$agentuserids)
+				->whereBetween('patchquery_date', [$setfrom, $setto])
+				->sum('patchqueryitem_proposalquote');
+				$productioncost = 30/100*$paidamount;
+				$amountforcommission = $paidamount-$productioncost;
+				if($amountforcommission >= $managertarget){
+					$managercommission = $agents*10000;
+				}else{
+					$managercommission = 0;
+				}
+				$managerlist->user_target = $managertarget;
+				$managerlist->paidamount = $paidamount;
+				$managerlist->productioncost = $productioncost;
+				$managerlist->amountforcommission = $amountforcommission;
+				$managerlist->commission = $managercommission;
+				$managerdetails[$managerindex] = $managerlist;
+				$managerindex++;
+			}else{
+				$managerlist->managertarget = $managertarget;
+				$userlist->paidamount = 0;
+				$userlist->productioncost = 0;
+				$userlist->amountforcommission = 0;
+				$userlist->commission = 0;
+				$managerdetails[$managerindex] = $userlist;
+			}
+			$managerindex++;
+		}
+		$profilepath = URL::to('/')."/public/user_picture/";
+      	if(isset($userdetails)){
+		    return response()->json(['userdetails' => $userdetails, 'managerdetails' => $managerdetails, 'profilepath' => $profilepath, 'message' => 'Monthly Patch Target Report'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
 	}
 }

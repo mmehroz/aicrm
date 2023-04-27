@@ -194,6 +194,7 @@ Route::any('/usertargetdetails', [targetController::class, 'usertargetdetails'])
 
 Route::any('/salestargetreport', [reportController::class, 'salestargetreport']);
 Route::any('/commissionreport', [reportController::class, 'commissionreport']);
+Route::any('/patchcommissionreport', [reportController::class, 'patchcommissionreport']);
 
 Route::any('/addcommission', [commissionController::class, 'addcommission']);
 Route::any('/commissionlist', [commissionController::class, 'commissionlist']);
