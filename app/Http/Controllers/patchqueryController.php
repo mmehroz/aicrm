@@ -32,6 +32,66 @@ class patchqueryController extends Controller
         }
     }
 
+    public function patchtype(Request $request){
+        $validate = Validator::make( $request->all(), [
+            'patchquerycategory_id'	    => 'required',
+        ] );
+        if ( $validate->fails() ) {
+
+            return response()->json( $validate->errors(), 400 );
+        }
+		$data = DB::table('patchtype')
+		->select('*')
+		->where('patchquerycategory_id','=',$request->patchquerycategory_id)
+		->where('status_id','=',1)
+		->get();
+		if(isset($data)){
+			return response()->json(['data' => $data, 'message' => 'Patches Type'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Patches Type'],200);
+		}
+	}
+
+    public function patchback(Request $request){
+        $validate = Validator::make( $request->all(), [
+            'patchquerycategory_id'	    => 'required',
+        ] );
+        if ( $validate->fails() ) {
+
+            return response()->json( $validate->errors(), 400 );
+        }
+		$data = DB::table('patchback')
+		->select('*')
+        ->where('patchquerycategory_id','=',$request->patchquerycategory_id)
+		->where('status_id','=',1)
+		->get();
+		if(isset($data)){
+			return response()->json(['data' => $data, 'message' => 'Patches Back'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Patches Back'],200);
+		}
+	}
+    
+    public function patchquerysub(Request $request){
+        $validate = Validator::make( $request->all(), [
+            'patchquerycategory_id'	    => 'required',
+        ] );
+        if ( $validate->fails() ) {
+
+            return response()->json( $validate->errors(), 400 );
+        }
+		$data = DB::table('patchquerysub')
+		->select('*')
+        ->where('patchquerycategory_id','=',$request->patchquerycategory_id)
+		->where('status_id','=',1)
+		->get();
+		if(isset($data)){
+			return response()->json(['data' => $data, 'message' => 'Patches Sub'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'Patches Sub'],200);
+		}
+	}
+
     public function patchqueryshippingweight( Request $request ) {
         $validate = Validator::make( $request->all(), [
             'vendordelivery_id'	    => 'required',
@@ -132,20 +192,95 @@ class patchqueryController extends Controller
         $patchquery_id = DB::getPdo()->lastInsertId();
         $patchqueryitem = $request->patchqueryitem;
         foreach ( $patchqueryitem as $patchqueryitems ) {
-            $basic = array(
-                'patchquerycategory_id' 		=> $patchqueryitems[ 'patchquerycategory_id' ],
-                'patchqueryitem_quantity' 		=> $patchqueryitems[ 'patchqueryitem_quantity' ],
-                'patchqueryitem_height' 		=> $patchqueryitems[ 'patchqueryitem_height' ],
-                'patchqueryitem_width'			=> $patchqueryitems[ 'patchqueryitem_width' ],
-                'patchtype_id'					=> $patchqueryitems[ 'patchtype_id' ],
-                'patchback_id'					=> $patchqueryitems[ 'patchback_id' ],
-                'patchqueryitem_otherdetails'	=> $patchqueryitems[ 'patchqueryitem_otherdetails' ],
-                'patchquery_id' 				=> $patchquery_id,
-                'patchqueryitem_date' 			=> date( 'Y-m-d' ),
-                'status_id'						=> 1,
-                'created_by'					=> $request->user_id,
-                'created_at'					=> date( 'Y-m-d h:i:s' ),
-            );
+            if($patchqueryitems[ 'patchquerycategory_id' ] == 1){
+                $basic = array(
+                    'patchquerycategory_id' 		=> $patchqueryitems[ 'patchquerycategory_id' ],
+                    'patchqueryitem_quantity' 		=> $patchqueryitems[ 'patchqueryitem_quantity' ],
+                    'patchqueryitem_height' 		=> $patchqueryitems[ 'patchqueryitem_height' ],
+                    'patchqueryitem_width'			=> $patchqueryitems[ 'patchqueryitem_width' ],
+                    'patchqueryitem_noofcolor'		=> $patchqueryitems[ 'patchqueryitem_noofcolor' ],
+                    'patchtype_id'					=> $patchqueryitems[ 'patchtype_id' ],
+                    'patchback_id'					=> $patchqueryitems[ 'patchback_id' ],
+                    'patchqueryitem_otherdetails'	=> $patchqueryitems[ 'patchqueryitem_otherdetails' ],
+                    'patchquery_id' 				=> $patchquery_id,
+                    'patchqueryitem_date' 			=> date( 'Y-m-d' ),
+                    'status_id'						=> 1,
+                    'created_by'					=> $request->user_id,
+                    'created_at'					=> date( 'Y-m-d h:i:s' ),
+                );
+            }elseif($patchqueryitems[ 'patchquerycategory_id' ] == 2){
+                $basic = array(
+                    'patchquerycategory_id' 		=> $patchqueryitems[ 'patchquerycategory_id' ],
+                    'patchqueryitem_quantity' 		=> $patchqueryitems[ 'patchqueryitem_quantity' ],
+                    'patchqueryitem_color'		    => $patchqueryitems[ 'patchqueryitem_color' ],
+                    'patchqueryitem_logoposition'	=> $patchqueryitems[ 'patchqueryitem_logoposition' ],
+                    'patchtype_id'					=> $patchqueryitems[ 'patchtype_id' ],
+                    'patchback_id'					=> $patchqueryitems[ 'patchback_id' ],
+                    'patchquerysub_id'				=> $patchqueryitems[ 'patchquerysub_id' ],
+                    'patchqueryitem_otherdetails'	=> $patchqueryitems[ 'patchqueryitem_otherdetails' ],
+                    'patchquery_id' 				=> $patchquery_id,
+                    'patchqueryitem_date' 			=> date( 'Y-m-d' ),
+                    'status_id'						=> 1,
+                    'created_by'					=> $request->user_id,
+                    'created_at'					=> date( 'Y-m-d h:i:s' ),
+                );
+            }elseif($patchqueryitems[ 'patchquerycategory_id' ] == 8){
+                $basic = array(
+                    'patchquerycategory_id' 		=> $patchqueryitems[ 'patchquerycategory_id' ],
+                    'patchqueryitem_quantity' 		=> $patchqueryitems[ 'patchqueryitem_quantity' ],
+                    'patchqueryitem_color'		    => $patchqueryitems[ 'patchqueryitem_color' ],
+                    'patchqueryitem_logoposition'	=> $patchqueryitems[ 'patchqueryitem_logoposition' ],
+                    'patchtype_id'					=> $patchqueryitems[ 'patchtype_id' ],
+                    'patchback_id'					=> $patchqueryitems[ 'patchback_id' ],
+                    'patchquerysub_id'				=> $patchqueryitems[ 'patchquerysub_id' ],
+                    'patchqueryitem_size'	        => $patchqueryitems[ 'patchqueryitem_size' ],
+                    'patchqueryitem_gsm'	        => $patchqueryitems[ 'patchqueryitem_gsm' ],
+                    'patchqueryitem_otherdetails'	=> $patchqueryitems[ 'patchqueryitem_otherdetails' ],
+                    'patchquery_id' 				=> $patchquery_id,
+                    'patchqueryitem_date' 			=> date( 'Y-m-d' ),
+                    'status_id'						=> 1,
+                    'created_by'					=> $request->user_id,
+                    'created_at'					=> date( 'Y-m-d h:i:s' ),
+                );
+            }elseif($patchqueryitems[ 'patchquerycategory_id' ] == 13){
+                $basic = array(
+                    'patchquerycategory_id' 		=> $patchqueryitems[ 'patchquerycategory_id' ],
+                    'patchqueryitem_quantity' 		=> $patchqueryitems[ 'patchqueryitem_quantity' ],
+                    'patchqueryitem_color'		    => $patchqueryitems[ 'patchqueryitem_color' ],
+                    'patchqueryitem_logoposition'	=> $patchqueryitems[ 'patchqueryitem_logoposition' ],
+                    'patchtype_id'					=> $patchqueryitems[ 'patchtype_id' ],
+                    'patchback_id'					=> $patchqueryitems[ 'patchback_id' ],
+                    'patchquerysub_id'				=> $patchqueryitems[ 'patchquerysub_id' ],
+                    'patchqueryitem_size'	        => $patchqueryitems[ 'patchqueryitem_size' ],
+                    'patchqueryitem_gsm'	        => $patchqueryitems[ 'patchqueryitem_gsm' ],
+                    'patchqueryitem_otherdetails'	=> $patchqueryitems[ 'patchqueryitem_otherdetails' ],
+                    'patchquery_id' 				=> $patchquery_id,
+                    'patchqueryitem_date' 			=> date( 'Y-m-d' ),
+                    'status_id'						=> 1,
+                    'created_by'					=> $request->user_id,
+                    'created_at'					=> date( 'Y-m-d h:i:s' ),
+                );
+            }elseif($patchqueryitems[ 'patchquerycategory_id' ] == 27){
+                $basic = array(
+                    'patchquerycategory_id' 		=> $patchqueryitems[ 'patchquerycategory_id' ],
+                    'patchqueryitem_quantity' 		=> $patchqueryitems[ 'patchqueryitem_quantity' ],
+                    'patchqueryitem_color'		    => $patchqueryitems[ 'patchqueryitem_color' ],
+                    'patchqueryitem_logoposition'	=> $patchqueryitems[ 'patchqueryitem_logoposition' ],
+                    'patchtype_id'					=> $patchqueryitems[ 'patchtype_id' ],
+                    'patchback_id'					=> $patchqueryitems[ 'patchback_id' ],
+                    'patchquerysub_id'				=> $patchqueryitems[ 'patchquerysub_id' ],
+                    'patchqueryitem_size'	        => $patchqueryitems[ 'patchqueryitem_size' ],
+                    'patchqueryitem_gsm'	        => $patchqueryitems[ 'patchqueryitem_gsm' ],
+                    'patchqueryitem_otherdetails'	=> $patchqueryitems[ 'patchqueryitem_otherdetails' ],
+                    'patchquery_id' 				=> $patchquery_id,
+                    'patchqueryitem_date' 			=> date( 'Y-m-d' ),
+                    'status_id'						=> 1,
+                    'created_by'					=> $request->user_id,
+                    'created_at'					=> date( 'Y-m-d h:i:s' ),
+                );
+            }elseif($patchqueryitems[ 'patchquerycategory_id' ] == 28){
+              
+            }
             DB::table( 'patchqueryitem' )->insert( $basic );
             $patchqueryitem_id = DB::getPdo()->lastInsertId();
             if ( isset( $patchqueryitems[ 'attachment' ] ) ) {
@@ -1061,7 +1196,7 @@ class patchqueryController extends Controller
 			'brand_email' 			=> $getbranddetail->brand_email,
 			'brand_website' 		=> $getbranddetail->brand_website,
 			'brand_invoicename' 	=> $getbranddetail->brand_invoicename,
-            'sumquoteamount' 	=> $sumquoteamount,
+            'sumquoteamount' 	    => $sumquoteamount,
 			'brand_currency' 		=> $getbranddetail->brand_currency == 1 ? "$" : " £",
 			'brand_cover' 			=> $getbranddetail->brand_cover,
 			'brand_coverpath' 		=> $coverpath,
@@ -1087,5 +1222,48 @@ class patchqueryController extends Controller
         } else {
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }
+    }
+
+    public function validatepatchquery( Request $request ) {
+        $validate = Validator::make( $request->all(), [
+            'patchquery_clientname' 		    	=> 'required',
+            'patchquery_clientemail'	   			=> 'required',
+            'patchquery_clientphone'		    	=> 'required',
+            'patchquery_clientzip'		    		=> 'required',
+            'country_id'		    				=> 'required',
+            'state_id'								=> 'required',
+            'patchquery_clientaddress'		    	=> 'required',
+            'patchquery_clientbussinessname'		=> 'required',
+            'patchquery_clientbussinessemail'		=> 'required',
+            'patchquery_clientbussinesswebsite'		=> 'required',
+            'patchquery_clientbussinessphone'		=> 'required',
+            'patchquery_title'						=> 'required',
+            'patchquery_medium'						=> 'required',
+            'patchquery_clientbudget'				=> 'required',
+            'patchquery_shippingaddress'			=> 'required',
+            'patchquery_otherdetails'				=> 'required',
+            'brand_id'								=> 'required',
+            'patchqueryitem'	    				=> 'required',
+        ] );
+        if ( $validate->fails() ) {
+            return response()->json( $validate->errors(), 400 );
+        }
+        try {
+            $patchqueryitem = $request->patchqueryitem;
+            foreach ( $patchqueryitem as $patchqueryitems ) {
+                $basic = array(
+                    'patchquerycategory_id' 		=> $patchqueryitems[ 'patchquerycategory_id' ],
+                    'patchqueryitem_quantity' 		=> $patchqueryitems[ 'patchqueryitem_quantity' ],
+                    'patchqueryitem_height' 		=> $patchqueryitems[ 'patchqueryitem_height' ],
+                    'patchqueryitem_width'			=> $patchqueryitems[ 'patchqueryitem_width' ],
+                    'patchtype_id'					=> $patchqueryitems[ 'patchtype_id' ],
+                    'patchback_id'					=> $patchqueryitems[ 'patchback_id' ],
+                    'patchqueryitem_otherdetails'	=> $patchqueryitems[ 'patchqueryitem_otherdetails' ],
+                );
+            }
+            return response()->json( [ 'message' => 'Validate Successfully' ], 200 );
+        }catch (\Exception $e) {
+            return response()->json( 'Fill All Fields To Submit ', 400 );
+		}
     }
 }

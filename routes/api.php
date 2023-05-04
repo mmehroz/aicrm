@@ -221,8 +221,6 @@ Route::any('/vendorlist', [vendorController::class, 'vendorlist']);
 Route::any('/vendordetails', [vendorController::class, 'vendordetails']);
 Route::any('/deletevendor', [vendorController::class, 'deletevendor']);
 
-Route::any('/patchtype', [patchController::class, 'patchtype']);
-Route::any('/patchback', [patchController::class, 'patchback']);
 Route::any('/createpatchorder', [patchController::class, 'createpatchorder']);
 Route::any('/patchorderlist', [patchController::class, 'patchorderlist']);
 Route::any('/updatepatchorder', [patchController::class, 'updatepatchorder']);
@@ -261,6 +259,10 @@ Route::any('/deliveredpatchquerylist', [patchqueryController::class, 'deliveredp
 Route::any('/patchqueryinvoicedetails', [patchqueryController::class, 'patchqueryinvoicedetails']);
 Route::any('/patchqueryshippingweight', [patchqueryController::class, 'patchqueryshippingweight']);
 Route::any('/patchqueryshippingcost', [patchqueryController::class, 'patchqueryshippingcost']);
+Route::any('/patchtype', [patchqueryController::class, 'patchtype']);
+Route::any('/patchback', [patchqueryController::class, 'patchback']);
+Route::any('/patchquerysub', [patchqueryController::class, 'patchquerysub']);
+Route::any('/validatepatchquery', [patchqueryController::class, 'validatepatchquery']);
 
 Route::any('/rawdatasheetlist', [rawdataController::class, 'rawdatasheetlist']);
 Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);

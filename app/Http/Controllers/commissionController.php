@@ -33,6 +33,7 @@ class commissionController extends Controller
 		'commission_from'	=> $multiples['commission_from'],
 		'commission_to'		=> $multiples['commission_to'],
 		'commission_rate' 	=> $multiples['commission_rate'],
+		'brandtype_id' 		=> $multiples['brandtype_id'],
 		'user_id' 			=> $request->id,
 		'role_id' 			=> $request->role_id,
 		'status_id'		 	=> 1,

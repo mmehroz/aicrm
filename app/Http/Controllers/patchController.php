@@ -19,29 +19,7 @@ use URL;
 class patchController extends Controller
 {
 	public $emptyarray = array();
-    public function patchtype(Request $request){
-		$data = DB::table('patchtype')
-		->select('*')
-		->where('status_id','=',1)
-		->get();
-		if(isset($data)){
-			return response()->json(['data' => $data, 'message' => 'Patches Type'],200);
-		}else{
-			return response()->json(['data' => $emptyarray, 'message' => 'Patches Type'],200);
-		}
-	}
-    public function patchback(Request $request){
-		$data = DB::table('patchback')
-		->select('*')
-		->where('status_id','=',1)
-		->get();
-		if(isset($data)){
-			return response()->json(['data' => $data, 'message' => 'Patches Back'],200);
-		}else{
-			return response()->json(['data' => $emptyarray, 'message' => 'Patches Back'],200);
-		}
-	}
-	public function createpatchorder(Request $request){
+    public function createpatchorder(Request $request){
 		$validate = Validator::make($request->all(), [ 
 	      'patchtype_id' 		    => 'required',
 	      'patchback_id'		    => 'required',

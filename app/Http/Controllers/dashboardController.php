@@ -255,6 +255,18 @@ class dashboardController extends Controller
 			foreach ($getbranduserid as $getbranduserids) {
 				$sortuserbrand[] = $getbranduserids->user_id;
 			}
+			$basictarget = DB::table('user')
+			->select('user_target')
+			->whereIn('user_id',$sortuserbrand)
+			->where('status_id','=',1)
+			->sum('user_target');
+			$targetincrement = DB::table('usertarget')
+			->select('usertarget_target')
+			->whereIn('user_id',$sortuserbrand)
+			->where('usertarget_month','<=',$setyearmonth)
+			->where('status_id','=',1)
+			->sum('usertarget_target');
+			$brandtarget = $basictarget+$targetincrement;
 			$ppcassignindollar = DB::table('assignppc')
 			->select('assignppc_amount')
 			->where('assignppc_month','=',$setyearmonth)
@@ -333,6 +345,7 @@ class dashboardController extends Controller
 			->sum('orderpayment_amount');
 			$totalunpaid = $gross-$paid-$cancel-$refund-$chargeback;
 			$stats = array(
+				'brandtarget' 			=> $brandtarget,
 				'ppcassignindollar' 	=> $ppcassignindollar,
 				'ppcspendindollar' 		=> $ppcspendindollar,
 				'remainingppcindollar' 	=> $remainingppcindollar,
@@ -435,6 +448,14 @@ class dashboardController extends Controller
 				->where('orderpayment_date','like',$setyearmonth.'%')
 				->where('created_by','=',$getusers->user_id)
 				->sum('orderpayment_amount');
+				$getrecovery = DB::table('orderpayment')
+				->select('orderpayment_amount')
+				->where('status_id','=',1)
+				->where('brand_id','=',$request->brand_id)
+				->where('orderpayment_recoverydate','like',$setyearmonth.'%')
+				->where('created_by','=',$getusers->user_id)
+				->sum('orderpayment_amount');
+				$netachieve = $getpaid+$getrecovery;
 				$getcancel = DB::table('orderpayment')
 				->select('orderpayment_amount')
 				->where('status_id','=',1)
@@ -445,6 +466,8 @@ class dashboardController extends Controller
 				->sum('orderpayment_amount');
 				$getusers->achieve = $getachieve;
 				$getusers->paid = $getpaid;
+				$getusers->recovery = $getrecovery;
+				$getusers->netachieve = $netachieve;
 				$getusers->cancel = $getcancel;
 				$agenttarget[$target] = $getusers;	
 				$target++;
@@ -458,7 +481,7 @@ class dashboardController extends Controller
 			->get();
 			$userpicturepath = URL::to('/')."/public/user_picture/";
 			$brandlogopath = URL::to('/')."/public/brand_logo/";
-			return response()->json(['branddetails' => $branddetails,'stats' => $stats, 'topagent' => $sorttopagent, 'agenttarget' => $agenttarget, 'payments' => $payments, 'graphdatatotal' => $graphdatatotal, 'graphdatapaid' => $graphdatapaid, 'graphdataremaining' => $graphdataremaining, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
+			return response()->json(['branddetails' => $branddetails,'stats' => $stats, 'topagent' => $sorttopagent, 'agenttarget' => $agenttarget, 'upcommingpayments' => $payments, 'graphdatatotal' => $graphdatatotal, 'graphdatapaid' => $graphdatapaid, 'graphdataremaining' => $graphdataremaining, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath,'message' => 'Admin Dashboard'],200);
 		}
 	}
 	public function portaladmindashboard(Request $request){
@@ -1283,6 +1306,18 @@ class dashboardController extends Controller
 		->whereIn('patchquery_date',$list)
 		->where('status_id','=',1)
 		->sum('patchqueryitem_proposalquote');
+		$patchpaidcount = DB::table('patchquery')
+		->select('patchquery_id')
+		->whereIn('patchquerystatus_id',[10,11,12])
+		->whereIn('patchquery_date',$list)
+		->where('status_id','=',1)
+		->count();
+		$patchpaidamount = DB::table('patchqueryanditem')
+		->select('patchqueryitem_proposalquote')
+		->whereIn('patchquerystatus_id',[10,11,12])
+		->whereIn('patchquery_date',$list)
+		->where('status_id','=',1)
+		->sum('patchqueryitem_proposalquote');
 		$patchonboardcount = DB::table('patchquery')
 		->select('patchquery_id')
 		->where('patchquerystatus_id','=',11)
@@ -1324,6 +1359,8 @@ class dashboardController extends Controller
 			'patchgrossqueryamount'	=> $patchgross,
 			'patchforwardedcount' 	=> $patchforwardedcount,
 			'patchforwardedamount' 	=> $patchforwardedamount,
+			'patchpaidcount' 		=> $patchpaidcount,
+			'patchpaidamount' 		=> $patchpaidamount,
 			'patchonboardcount' 	=> $patchonboardcount,
 			'patchonboardamount' 	=> $patchonboardamount,
 			'patchdeliveredcount' 	=> $patchdeliveredcount,
