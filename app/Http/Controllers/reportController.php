@@ -523,36 +523,78 @@ class reportController extends Controller
 	}
 	public function commissionreport(Request $request){
 		$validate = Validator::make($request->all(), [ 
-            'from'		=> 'required',
-            'to'		=> 'required',
-			'id'		=> 'required',
-        ]);
-        if ($validate->fails()) {
-            return response()->json($validate->errors(), 400);
-        }
-		$from = $request->from;
-		$from = explode('-',$request->from);
-		if($from[1] <= 9){
-			$setfrom = $from[0].'-0'.$from[1].'-'.$from[2];
-		}else{
-			$setfrom = $from[0].'-'.$from[1].'-'.$from[2];
+			'ismonth'		=> 'required',
+		]);
+		if ($validate->fails()) {
+			return response()->json($validate->errors(), 400);
 		}
-		$date = $request->to;
-		$to = explode('-',$request->to);
-		if($to[1] <= 9){
-			$setto = $to[0].'-0'.$to[1].'-'.$to[2];
+		if($request->ismonth == 1){
+			$validate = Validator::make($request->all(), [ 
+				'yearmonth'		=> 'required',
+				'id'			=> 'required',
+			]);
+			if ($validate->fails()) {
+				return response()->json($validate->errors(), 400);
+			}
+			$yearmonth = explode('-',$request->yearmonth);
+			if($yearmonth[1] == "1" || $yearmonth[1] == "3" || $yearmonth[1] == "5" || $yearmonth[1] == "7" || $yearmonth[1] == "8" || $yearmonth[1] == "10" || $yearmonth[1] == "12"){
+				$noofdays = 31;
+			}elseif($yearmonth[1] == "2"){
+				$noofdays = 28;
+			}else{
+				$noofdays = 30;
+			}
+			if($yearmonth[1] <= 9){
+				$setfrom = $yearmonth[0].'-0'.$yearmonth[1].'-01';
+				$setto = $yearmonth[0].'-0'.$yearmonth[1].'-'.$noofdays;
+				$sortmonth = '-0'.$yearmonth[1];
+			}else{
+				$setfrom = $yearmonth[0].'-'.$yearmonth[1].'-01';
+				$setto = $yearmonth[0].'-0'.$yearmonth[1].'-'.$noofdays;
+				$sortmonth = $yearmonth[1];
+			}
+			$list=array();
+			$year = $yearmonth[0];
+			$month = $sortmonth;
+			for($d=1; $d<=31; $d++)
+			{
+				$time=mktime(12, 0, 0, $month, $d, $year);          
+				if (date('m', $time)==$month)       
+				$list[]=date('Y-m-d', $time);
+			}
 		}else{
-			$setto = $to[0].'-'.$to[1].'-'.$to[2];
-		}
-		$getyearandmonth = explode('-', $setfrom);
-		$list=array();
-		$year = $getyearandmonth[0];
-		$month = $getyearandmonth[1];
-		for($d=1; $d<=31; $d++)
-		{
-		    $time=mktime(12, 0, 0, $month, $d, $year);          
-		    if (date('m', $time)==$month)       
-		    $list[]=date('Y-m-d', $time);
+			$validate = Validator::make($request->all(), [ 
+				'from'		=> 'required',
+				'to'		=> 'required',
+				'id'		=> 'required',
+			]);
+			if ($validate->fails()) {
+				return response()->json($validate->errors(), 400);
+			}
+			$from = $request->from;
+			$from = explode('-',$request->from);
+			if($from[1] <= 9){
+				$setfrom = $from[0].'-0'.$from[1].'-'.$from[2];
+			}else{
+				$setfrom = $from[0].'-'.$from[1].'-'.$from[2];
+			}
+			$date = $request->to;
+			$to = explode('-',$request->to);
+			if($to[1] <= 9){
+				$setto = $to[0].'-0'.$to[1].'-'.$to[2];
+			}else{
+				$setto = $to[0].'-'.$to[1].'-'.$to[2];
+			}
+			$getyearandmonth = explode('-', $setfrom);
+			$list=array();
+			$year = $getyearandmonth[0];
+			$month = $getyearandmonth[1];
+			for($d=1; $d<=31; $d++)
+			{
+				$time=mktime(12, 0, 0, $month, $d, $year);          
+				if (date('m', $time)==$month)       
+				$list[]=date('Y-m-d', $time);
+			}
 		}
 		$commissiondata =  array();
 		$achieveddate = '-';
