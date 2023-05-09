@@ -340,7 +340,7 @@ class reportController extends Controller
 				->select('*')
 				->where('brandtype_id','=',1)
 				->where('status_id','=',1)
-				->where('role_id','=',15)
+				->where('user_id','=',$designerlist->user_id)
 				->orderBy('commission_id','DESC')
 				->get();
 				$commissionindex = 0;
