@@ -48,11 +48,24 @@ class loginController extends Controller
 			->where('status_id','=',1)
 			->where('user_id','=',$getprofileinfo->user_id)
 			->get();
+			$brandid = array();
 			$index='brand1';
 			foreach ($getbrandid as $getbrandids) {
+				$brandid[] = $getbrandids->brand_id;
 				$getinfo->$index = $getbrandids->brand_id;
 				$index++;
 			}
+			$brandtype = DB::table('brand')
+			->select('brandtype_id')
+			->where('status_id','=',1)
+			->whereIn('brand_id',$brandid)
+			->groupBy('brandtype_id')
+			->get();
+			$brandtype_id = array();
+			foreach($brandtype as $brandtypes){
+				$brandtype_id[] = $brandtypes->brandtype_id;
+			}
+			$getinfo->brandtype = $brandtype_id;
 			$path = URL::to('/')."/public/user_picture/";
 			$coverpath = URL::to('/')."/public/user_coverpicture/";
 			return response()->json(['data' => $getinfo, 'path' => $path, 'coverpath' => $coverpath, 'message' => 'Login Successfully'],200);

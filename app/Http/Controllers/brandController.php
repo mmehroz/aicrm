@@ -282,10 +282,18 @@ class brandController extends Controller
 			$sortbrandid[] = $brandids->brand_id;
 		}
 		if ($request->role_id < 2) {
-			$brandlist = DB::table('brand')
-			->select('brand_id','brand_name','brand_email','created_at')
-			->where('status_id','=',1)
-			->get();
+			if($request->isdashboard == 1){
+				$brandlist = DB::table('brand')
+				->select('brand_id','brand_name','brand_email','created_at')
+				->where('brandtype_id','=',1)
+				->where('status_id','=',1)
+				->get();
+			}else{
+				$brandlist = DB::table('brand')
+				->select('brand_id','brand_name','brand_email','created_at')
+				->where('status_id','=',1)
+				->get();
+			}
 		}else{
 			$brandlist = DB::table('brand')
 			->select('brand_id','brand_name','brand_email','created_at')

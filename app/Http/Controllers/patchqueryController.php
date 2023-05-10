@@ -1266,4 +1266,101 @@ class patchqueryController extends Controller
             return response()->json( 'Fill All Fields To Submit ', 400 );
 		}
     }
+
+    public function patchqueryprofitlossstatement( Request $request ) {
+        $validate = Validator::make( $request->all(), [
+            'patchquery_id'	=> 'required',
+        ] );
+        if ( $validate->fails() ) {
+
+            return response()->json( 'Patch Query Id Required', 400 );
+        }
+        $data = DB::table( 'patchquerydetails' )
+        ->select( '*' )
+        ->where( 'status_id', '=', 1 )
+        ->where( 'patchquery_id', '=', $request->patchquery_id )
+        ->first();
+        $dollarquoteamount = DB::table('patchqueryanditem')
+		->select('patchqueryitem_proposalquote')
+		->where( 'patchquery_id', '=', $request->patchquery_id )
+		->where('status_id','=',1)
+		->sum('patchqueryitem_proposalquote');
+        $dollarshipmentquoteamount = DB::table('patchquery')
+		->select('patchquery_shipmentamount')
+		->where( 'patchquery_id', '=', $request->patchquery_id )
+		->where('status_id','=',1)
+		->sum('patchquery_shipmentamount');
+        $dollarnetamount = $dollarquoteamount+$dollarshipmentquoteamount;
+        $pkrnetamount = $dollarnetamount*270;
+        $pkrproductioncost = DB::table('patchpayment')
+		->select('patchpayment_amount')
+		->where( 'patch_id', '=', $request->patchquery_id )
+		->where( 'patchpaymenttype_id', '=', 1 )
+		->where('status_id','=',1)
+		->sum('patchpayment_amount');
+        $pkrshipmentcost = $dollarshipmentquoteamount*270;
+        $pkrnetcost = $pkrshipmentcost+$pkrproductioncost;
+        $netprofitloss = $pkrnetamount-$pkrnetcost;
+        $finalvendor = DB::table('patchqueryitem')
+		->select('patchqueryitem_finalvendor')
+		->where( 'patchquery_id', '=', $request->patchquery_id )
+		->where('status_id','=',1)
+		->get();
+        $finalvendors = array();
+        foreach($finalvendor as $finalvendors){
+            $finalvendors[] = $finalvendors->patchqueryitem_finalvendor;
+        }
+        $vendorcosttotal = DB::table('patchqueryitemvendordetails')
+		->select('patchqueryvendor_cost')
+		->where( 'patchquery_id', '=', $request->patchquery_id )
+		->whereIn( 'vendorproduction_id', $finalvendors )
+		->where('status_id','=',1)
+		->sum('patchqueryvendor_cost');
+        $vendorremainingamount = $vendorcosttotal-$pkrproductioncost;
+        $pkrshipmentquoteamount = $dollarshipmentquoteamount/270;
+        $shippingid = DB::table('patchquery')
+		->select('patchqueryshipping_id')
+		->where( 'patchquery_id', '=', $request->patchquery_id )
+		->where('status_id','=',1)
+		->first();
+        if(isset($shippingid->patchqueryshipping_id)){
+            $shippingcost = DB::table('patchqueryshipping')
+            ->select('patchqueryshipping_cost')
+            ->where( 'patchqueryshipping_id ', '=', $request->patchqueryshipping_id )
+            ->where('status_id','=',1)
+            ->sum('patchqueryshipping_cost');
+        }else{
+            $shippingcost = 0;
+        }
+        $pkrshipmentpaidamount = DB::table('patchpayment')
+		->select('patchpayment_amount')
+		->where( 'patch_id', '=', $request->patchquery_id )
+		->where( 'patchpaymenttype_id', '=', 2 )
+		->where('status_id','=',1)
+		->sum('patchpayment_amount');
+        $pkrshipmentremainingamount = $shippingcost-$pkrshipmentpaidamount;
+        $pkrshipmentprofitloss = $pkrnetamount-$shippingcost;
+        
+        $stats = array();
+        $stats->dollarquoteamount = $dollarquoteamount;
+        $stats->dollarshipmentquoteamount = $dollarshipmentquoteamount;
+        $stats->dollarnetamount = $dollarnetamount;
+        $stats->pkrnetamount = $pkrnetamount;
+        $stats->pkrnetcost = $pkrnetcost;
+        $stats->netprofitloss = $netprofitloss;
+        $stats->isprofitorloss = $netprofitloss < 0 ? '-' : '+';
+        $stats->vendorcosttotal = $vendorcosttotal;
+        $stats->amountpaidtovendor = $pkrproductioncost;
+        $stats->vendorremainingamount = $vendorremainingamount;
+        $stats->pkrshipmentquoteamount = $pkrshipmentquoteamount;
+        $stats->pkrshipmenttotalamount = $shippingcost;
+        $stats->pkrshipmentpaidamount = $pkrshipmentpaidamount;
+        $stats->pkrshipmentremainingamount = $pkrshipmentremainingamount;
+        $stats->pkrshipmentprofitloss = $onactive;
+        if ( $data ) {
+            return response()->json( [ 'data' => $data, 'stats' => $stats, 'message' => 'Patch Query Profit Loss Statement' ], 200 );
+        } else {
+            return response()->json( 'Oops! Something Went Wrong', 400 );
+        }
+    }
 }
