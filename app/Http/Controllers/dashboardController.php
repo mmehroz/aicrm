@@ -522,48 +522,40 @@ class dashboardController extends Controller
 		}
 		$getyearandmonth = explode('-', $setyearmonth);
 		$getfirstdate = $setyearmonth."-01";
-		$getsalary = DB::connection('mysql2')->table('payrollexpense')
-		->where('elsemployees_dofjoining','<',$getfirstdate)
-		->where('elsemployees_status','=',2)
-		->select('Salary')
-		->sum('Salary');
-		$getincrement = DB::connection('mysql2')->table('increment')
-        ->where('increment_year','<=',$getyearandmonth[0])
-        ->where('increment_month','<=',$getyearandmonth[1])
-        ->where('status_id','=',2)
-        ->select('increment_amount')
-        ->sum('increment_amount');
-        $raferal = DB::connection('mysql2')->table('adjustments')
-		->where('AdjMonth','=',$setyearmonth)
-		->select('adjustment')
-		->sum('adjustment');
-		$incentive = DB::connection('mysql2')->table('adjustments')
-		->where('AdjMonth','=',$setyearmonth)
-		->select('incentiveamount')
-		->sum('incentiveamount');
-		$spiff = DB::connection('mysql2')->table('adjustments')
-		->where('AdjMonth','=',$setyearmonth)
-		->select('spiffamount')
-		->sum('spiffamount');
-		$other = DB::connection('mysql2')->table('adjustments')
-		->where('AdjMonth','=',$setyearmonth)
-		->select('otheramount')
-		->sum('otheramount');
-		$last = DB::connection('mysql2')->table('adjustments')
-		->where('AdjMonth','=',$setyearmonth)
-		->select('lastamount')
-		->sum('lastamount');
-		$caramount = DB::connection('mysql2')->table('car')
+		$depart = DB::connection('mysql2')->table('hrm_department')
+		->select('*')
 		->where('status_id','=',2)
-		->select('car_rent')
-		->sum('car_rent');
-		$additioncaramount = DB::connection('mysql2')->table('caraddition')
-		->where('caraddition_date','>=',$setyearmonth)
-		->where('status_id','=',2)
-		->select('caraddition_rent')
-		->sum('caraddition_rent');
-		$sumcarrent = $caramount+$additioncaramount;
-        $grosssalary = $getsalary+$getincrement+$raferal+$incentive+$spiff+$other+$last+$sumcarrent;
+		->get();
+		$departsalary = array();
+		$dindex=0;
+		foreach($depart as $departs){
+			$departemployees = DB::connection('mysql2')->table('elsemployees')
+			->select('elsemployees_batchid')
+			->where('status_id','=',2)
+			->get();
+			$employeesid = array();
+			foreach($departemployees as $departemployeess){
+				$employeesid[] = $departemployeess->elsemployees_batchid;
+			}
+			$getsalary = DB::connection('mysql2')->table('payrollexpense')
+			->where('elsemployees_departid','=',$departs->dept_id)
+			->where('elsemployees_dofjoining','<',$getfirstdate)
+			->where('elsemployees_status','=',2)
+			->select('Salary')
+			->sum('Salary');
+			$getincrement = DB::connection('mysql2')->table('increment')
+			->where('increment_year','<=',$getyearandmonth[0])
+			->where('increment_month','<=',$getyearandmonth[1])
+			->whereIn('elsemployees_batchid',$employeesid)
+			->where('status_id','=',2)
+			->select('increment_amount')
+			->sum('increment_amount');
+			$grosssalary=$getsalary+$getincrement;
+			$departsalary[$dindex]['name'] = $departs->dept_name;
+			$departsalary[$dindex]['grosssalary'] = $grosssalary;
+		}
+       
+		$grosssalary = $getsalary+$getincrement;
 		$salaryexpense = array(
 			'grosssalary' 				=> $grosssalary,
 			'netsalary' 				=> $grosssalary,
@@ -2243,4 +2235,129 @@ class dashboardController extends Controller
 		$logopath = URL::to('/')."/public/brand_logo/";
 		return array('branddetail' => $branddetail,'userdata' => $getuser,'patchorderoverview' => $convertionoverview,'commissionoverview' => $commissionoverview,'patchquerylist' => $patchquerylist, 'patchstatuswisequantity' => $patchstatuswisequantity, 'patchstatuswiseamount' => $patchstatuswiseamount,'userpicturepath' => $userpicturepath, 'logopath' => $logopath);
 	}
+	public function patchqueryprofitlossstatement( Request $request ) {
+        $validate = Validator::make( $request->all(), [
+            'patchquery_id'	=> 'required',
+        ] );
+        if ( $validate->fails() ) {
+
+            return response()->json( 'Patch Query Id Required', 400 );
+        }
+        $data = DB::table( 'patchquerydetails' )
+        ->select( '*' )
+        ->where( 'status_id', '=', 1 )
+        ->where( 'patchquery_id', '=', $request->patchquery_id )
+        ->first();
+        $dollarquoteamount = DB::table('patchqueryanditem')
+		->select('patchqueryitem_proposalquote')
+		->where( 'patchquery_id', '=', $request->patchquery_id )
+		->where('status_id','=',1)
+		->sum('patchqueryitem_proposalquote');
+        $dollarshipmentquoteamount = DB::table('patchquery')
+		->select('patchquery_shipmentamount')
+		->where( 'patchquery_id', '=', $request->patchquery_id )
+		->where('status_id','=',1)
+		->sum('patchquery_shipmentamount');
+        $dollarnetamount = $dollarquoteamount+$dollarshipmentquoteamount;
+        $pkrnetamount = $dollarnetamount*270;
+        $pkrproductioncost = DB::table('patchpayment')
+		->select('patchpayment_amount')
+		->where( 'patch_id', '=', $request->patchquery_id )
+		->where( 'patchpaymenttype_id', '=', 1 )
+		->where('status_id','=',1)
+		->sum('patchpayment_amount');
+        $pkrshipmentcost = $dollarshipmentquoteamount*270;
+        $pkrnetcost = $pkrshipmentcost+$pkrproductioncost;
+        $netprofitloss = $pkrnetamount-$pkrnetcost;
+        $finalvendor = DB::table('patchqueryitem')
+		->select('patchqueryitem_finalvendor','patchqueryitem_quantity','patchqueryitem_id')
+		->where( 'patchquery_id', '=', $request->patchquery_id )
+		->where('status_id','=',1)
+		->get();
+        $vendorpaymetdetail = array();
+		$fvindex=0;
+		foreach($finalvendor as $finalvendors){
+			if(isset($finalvendors->patchqueryitem_finalvendor)){
+				$patchcategory = DB::table('patchqueryitemdetails')
+				->select('patchquerycategory_name')
+				->where( 'patchqueryitem_id', '=', $finalvendors->patchqueryitem_id )
+				->where('status_id','=',1)
+				->first();
+				$vendornameandcost = DB::table('patchqueryitemvendordetails')
+				->select('patchqueryvendor_cost','vendor_name')
+				->where( 'patchqueryitem_id', '=', $finalvendors->patchqueryitem_id )
+				->where( 'vendorproduction_id','=',$finalvendors->patchqueryitem_finalvendor )
+				->where('status_id','=',1)
+				->first();
+				$paidcost = DB::table('patchpayment')
+				->select('patchpayment_amount')
+				->where( 'patch_id', '=', $finalvendors->patchqueryitem_id )
+				->where( 'patchpaymenttype_id', '=', 1 )
+				->where('status_id','=',1)
+				->sum('patchpayment_amount');
+				$costperpiece = $vendornameandcost->patchqueryvendor_cost/$finalvendors->patchqueryitem_quantity;
+				$vendorremainingamount = $vendornameandcost->patchqueryvendor_cost-$paidcost;
+
+				$vendorpaymetdetail[$fvindex]['customername'] = $data->patchquery_clientname;
+				$vendorpaymetdetail[$fvindex]['categoryname'] = $patchcategory->patchquerycategory_name;
+				$vendorpaymetdetail[$fvindex]['name'] = $vendornameandcost->vendor_name;
+				$vendorpaymetdetail[$fvindex]['quantity'] = $finalvendors->patchqueryitem_quantity;
+				$vendorpaymetdetail[$fvindex]['vendorcosttotal'] = $vendornameandcost->patchqueryvendor_cost;
+				$vendorpaymetdetail[$fvindex]['paidcost'] = $paidcost;
+				$vendorpaymetdetail[$fvindex]['costperpiece'] = $costperpiece;
+				$vendorpaymetdetail[$fvindex]['remainingamount'] = $vendorremainingamount;
+			}else{
+				$vendorpaymetdetail[$fvindex]['customername'] = "-";
+				$vendorpaymetdetail[$fvindex]['categoryname'] = "-";
+				$vendorpaymetdetail[$fvindex]['name'] = "-";
+				$vendorpaymetdetail[$fvindex]['quantity'] = "-";
+				$vendorpaymetdetail[$fvindex]['vendorcosttotal'] = 0;
+				$vendorpaymetdetail[$fvindex]['paidcost'] = 0;
+				$vendorpaymetdetail[$fvindex]['costperpiece'] = 0;
+				$vendorpaymetdetail[$fvindex]['remainingamount'] = 0;
+			}
+			$fvindex++;
+		}
+        $pkrshipmentquoteamount = $dollarshipmentquoteamount/270;
+        $shippingid = DB::table('patchquery')
+		->select('patchqueryshipping_id')
+		->where( 'patchquery_id', '=', $request->patchquery_id )
+		->where('status_id','=',1)
+		->first();
+        if(isset($shippingid->patchqueryshipping_id)){
+            $shippingcost = DB::table('patchqueryshipping')
+            ->select('patchqueryshipping_cost')
+            ->where( 'patchqueryshipping_id', '=', $request->patchqueryshipping_id )
+            ->where('status_id','=',1)
+            ->sum('patchqueryshipping_cost');
+        }else{
+            $shippingcost = 0;
+        }
+        $pkrshipmentpaidamount = DB::table('patchpayment')
+		->select('patchpayment_amount')
+		->where( 'patch_id', '=', $request->patchquery_id )
+		->where( 'patchpaymenttype_id', '=', 2 )
+		->where('status_id','=',1)
+		->sum('patchpayment_amount');
+        $pkrshipmentremainingamount = $shippingcost-$pkrshipmentpaidamount;
+        $pkrshipmentprofitloss = $pkrnetamount-$shippingcost;
+        $stats = array();
+        $stats['dollarquoteamount'] = $dollarquoteamount;
+        $stats['dollarshipmentquoteamount'] = $dollarshipmentquoteamount;
+        $stats['dollarnetamount'] = $dollarnetamount;
+        $stats['pkrnetamount'] = $pkrnetamount;
+        $stats['pkrnetcost'] = $pkrnetcost;
+        $stats['netprofitloss'] = $netprofitloss;
+        $stats['isprofitorloss'] = $netprofitloss < 0 ? '-' : '+';
+		$stats['pkrshipmentquoteamount'] = $pkrshipmentquoteamount;
+        $stats['pkrshipmenttotalamount'] = $shippingcost;
+        $stats['pkrshipmentpaidamount'] = $pkrshipmentpaidamount;
+        $stats['pkrshipmentremainingamount'] = $pkrshipmentremainingamount;
+        $stats['pkrshipmentprofitloss'] = $pkrshipmentprofitloss;
+        if ( $data ) {
+            return response()->json( [ 'data' => $data, 'stats' => $stats, 'vendorpaymetdetail' => $vendorpaymetdetail, 'message' => 'Patch Query Profit Loss Statement' ], 200 );
+        } else {
+            return response()->json( 'Oops! Something Went Wrong', 400 );
+        }
+    }
 }

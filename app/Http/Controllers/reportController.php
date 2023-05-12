@@ -522,12 +522,6 @@ class reportController extends Controller
 		}
 	}
 	public function commissionreport(Request $request){
-		$validate = Validator::make($request->all(), [ 
-			'ismonth'		=> 'required',
-		]);
-		if ($validate->fails()) {
-			return response()->json($validate->errors(), 400);
-		}
 		if($request->ismonth == 1){
 			$validate = Validator::make($request->all(), [ 
 				'yearmonth'		=> 'required',
@@ -547,7 +541,7 @@ class reportController extends Controller
 			if($yearmonth[1] <= 9){
 				$setfrom = $yearmonth[0].'-0'.$yearmonth[1].'-01';
 				$setto = $yearmonth[0].'-0'.$yearmonth[1].'-'.$noofdays;
-				$sortmonth = '-0'.$yearmonth[1];
+				$sortmonth = '0'.$yearmonth[1];
 			}else{
 				$setfrom = $yearmonth[0].'-'.$yearmonth[1].'-01';
 				$setto = $yearmonth[0].'-0'.$yearmonth[1].'-'.$noofdays;
