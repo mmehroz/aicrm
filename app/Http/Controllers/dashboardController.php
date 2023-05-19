@@ -237,8 +237,6 @@ class dashboardController extends Controller {
         ->where( 'status_id', '=', 1 )
         ->orderByDesc( 'task_id' )
         ->limit( 30 )
-
-        // ->where( 'task_date', '=', date( 'Y-m-d' ) )
         ->get();
         $ppcassign = DB::table( 'assignppc' )
         ->select( 'assignppc_amount' )
@@ -257,9 +255,60 @@ class dashboardController extends Controller {
             'ppcspend' 			=> $ppcspend,
             'remainingppc' 		=> $remainingppc,
         );
+
+        $patchproductionitem = DB::table( 'patchqueryitem' )
+        ->select( 'patchqueryitem_id', 'patchqueryitem_finalvendor' )
+        ->whereIn( 'patchqueryitem_date', $list )
+        ->where( 'status_id', '=', 1 )
+        ->get();
+        $patchproductionitemid = array();
+        $patchproductionitemvendor = array();
+        $patchindex = 0;
+        foreach ( $patchproductionitem as $patchproductionitem ) {
+            $patchproductionitemid[] = $patchproductionitem->patchqueryitem_id;
+            $patchproductionitemvendor[] = $patchproductionitem->patchqueryitem_finalvendor;
+            $patchindex++;
+        }
+        $patchproductioncost = DB::table( 'patchqueryvendor' )
+        ->select( 'patchqueryvendor_cost' )
+        ->whereIn( 'vendorproduction_id', $patchproductionitemvendor )
+        ->whereIn( 'patchqueryitem_id', $patchproductionitemid )
+        ->where( 'status_id', '=', 1 )
+        ->sum( 'patchqueryvendor_cost' );
+        $patchpaidcost = DB::table( 'patchpayment' )
+        ->select( 'patchpayment_amount' )
+        ->whereIn( 'patch_createdate', $list )
+        ->where( 'status_id', '=', 1 )
+        ->sum( 'patchpayment_amount' );
+        $patchpayablecost = $patchproductioncost-$patchpaidcost;
+        $patchshipmentcost = DB::table( 'patchquery' )
+        ->select( 'patchquery_shipmentamount' )
+        ->whereIn( 'patchquery_date', $list )
+        ->where( 'status_id', '=', 1 )
+        ->sum( 'patchquery_shipmentamount' );
+        $officeexpense = 0;
+        $totalpayable = $patchpayablecost+$patchshipmentcost+$officeexpense;
+        $payable = array(
+            'patchpayablecost' 		=> $patchpayablecost,
+            'patchshipmentcost' 	=> $patchshipmentcost,
+            'officeexpense' 		=> $officeexpense,
+            'totalpayable' 		    => $totalpayable,
+        );
+        $ppcspend = DB::table( 'ppc' )
+        ->select( 'ppc_amount' )
+        ->whereIn( 'ppc_date', $list )
+        ->whereIn( 'brand_id', $brands )
+        ->where( 'status_id', '=', 1 )
+        ->sum( 'ppc_amount' );
+        $remainingppc = $ppcassign-$ppcspend;
+        $ppcverview = array(
+            'ppcassign' 		=> $ppcassign,
+            'ppcspend' 			=> $ppcspend,
+            'remainingppc' 		=> $remainingppc,
+        );
         $userpicturepath = URL::to( '/' ).'/public/user_picture/';
         $brandlogopath = URL::to( '/' ).'/public/brand_logo/';
-        return response()->json( [ 'topdata' => $topdata, 'ppcverview' => $ppcverview, 'digitalbrandachieved' => $digitalbrandachieved, 'patchbrandachieved' => $patchbrandachieved, 'upcommingpayments' => $getupcommingpayments, 'sumpayments' => $sumupcommingpayments, 'pendingtask' => $pendingtask, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath, 'message' => 'Admin Dashboard' ], 200 );
+        return response()->json( [ 'topdata' => $topdata, 'payable' => $payable, 'ppcverview' => $ppcverview, 'digitalbrandachieved' => $digitalbrandachieved, 'patchbrandachieved' => $patchbrandachieved, 'upcommingpayments' => $getupcommingpayments, 'sumpayments' => $sumupcommingpayments, 'pendingtask' => $pendingtask, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath, 'message' => 'Admin Dashboard' ], 200 );
     }
 
     public function adminbranddetails( Request $request ) {
@@ -536,22 +585,22 @@ class dashboardController extends Controller {
         $dindex = 0;
         foreach ( $depart as $departs ) {
             $departemployees = DB::connection( 'mysql2' )->table( 'elsemployees' )
+            ->where( 'elsemployees_departid', '=', $departs->dept_id )
+            ->where( 'elsemployees_dofjoining', '<', $getfirstdate )
+            ->where( 'elsemployees_status', '=', 2 )
             ->select( 'elsemployees_batchid' )
-            ->where( 'status_id', '=', 2 )
             ->get();
             $employeesid = array();
             foreach ( $departemployees as $departemployeess ) {
                 $employeesid[] = $departemployeess->elsemployees_batchid;
             }
-            $getsalary = DB::connection( 'mysql2' )->table( 'payrollexpense' )
-            ->where( 'elsemployees_departid', '=', $departs->dept_id )
-            ->where( 'elsemployees_dofjoining', '<', $getfirstdate )
-            ->where( 'elsemployees_status', '=', 2 )
+            $getsalary = DB::connection( 'mysql2' )->table( 'payrollsalaries' )
+            ->whereIn( 'EMP_BADGE_ID', $employeesid )
             ->select( 'Salary' )
             ->sum( 'Salary' );
             $getincrement = DB::connection( 'mysql2' )->table( 'increment' )
             ->where( 'increment_year', '<=', $getyearandmonth[ 0 ] )
-            ->where( 'increment_month', '<=', $getyearandmonth[ 1 ] )
+            // ->where( 'increment_month', '<=', $getyearandmonth[ 1 ] )
             ->whereIn( 'elsemployees_batchid', $employeesid )
             ->where( 'status_id', '=', 2 )
             ->select( 'increment_amount' )
@@ -559,6 +608,7 @@ class dashboardController extends Controller {
             $grosssalary = $getsalary+$getincrement;
             $departsalary[ $dindex ][ 'name' ] = $departs->dept_name;
             $departsalary[ $dindex ][ 'grosssalary' ] = $grosssalary;
+            $dindex++;
         }
 
         $grosssalary = $getsalary+$getincrement;
@@ -569,7 +619,7 @@ class dashboardController extends Controller {
         $getcar = DB::connection( 'mysql2' )->table( 'car' )
         ->select( 'car_id', 'car_name', 'car_rent' )
         // ->where( 'created_at', 'like', $setyearmonth.'%' )
-        ->where( 'status_id', '=', 2 )
+        // ->where( 'status_id', '=', 2 )
         ->get();
         $carexpense = array();
         $carindex = 0;
@@ -660,7 +710,7 @@ class dashboardController extends Controller {
         );
         $userpicturepath = URL::to( '/' ).'/public/user_picture/';
         $brandlogopath = URL::to( '/' ).'/public/brand_logo/';
-        return response()->json( [ 'salaryexpense' => $salaryexpense, 'carexpense' => $carexpense, 'vanexpense' => $vanexpense, 'fixexpense' => $fixexpense, 'otherexpense' => $otherexpense, 'sumallexpense' => $sumallexpense, 'message' => 'Admin Dashboard' ], 200 );
+        return response()->json( [ 'departsalary' => $departsalary, 'salaryexpense' => $salaryexpense, 'carexpense' => $carexpense, 'vanexpense' => $vanexpense, 'fixexpense' => $fixexpense, 'otherexpense' => $otherexpense, 'sumallexpense' => $sumallexpense, 'message' => 'Admin Dashboard' ], 200 );
     }
 
     public function billingmerchantdashboard( Request $request ) {
