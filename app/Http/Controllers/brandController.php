@@ -104,7 +104,22 @@ class brandController extends Controller
 			'created_at'		=> date('Y-m-d h:i:s'),
 			);
 			$save = DB::table('brand')->insert($adds);
+			$brand_id = DB::getPdo()->lastInsertId();
 		if($save){
+			$superadmin = DB::table('user')
+			->where('role_id','=',1)
+			->select('user_id')
+			->get();
+			foreach($superadmin as $superadmins){
+				$adds = array(
+					'user_id' 		=> $superadmins->user_id,
+					'brand_id' 		=> $brand_id,
+					'status_id'		=> 1,
+					'created_by'	=> $request->user_id,
+					'created_at'	=> date('Y-m-d h:i:s'),
+				);
+				DB::table('userbarnd')->insert($adds);
+			}
 			return response()->json(['data' => $adds,'message' => 'Brand Created Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
