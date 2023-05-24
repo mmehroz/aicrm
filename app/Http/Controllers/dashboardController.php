@@ -79,6 +79,7 @@ class dashboardController extends Controller {
             $brandachieved = DB::table( 'orderpayment' )
             ->select( 'orderpayment_amount' )
             ->where( 'brand_id', '=', $digitalbrands->brand_id )
+            ->where( 'orderpaymentstatus_id', '=', 3 )
             ->whereIn( 'orderpayment_date', $list )
             ->where( 'status_id', '=', 1 )
             ->sum( 'orderpayment_amount' );
@@ -98,6 +99,7 @@ class dashboardController extends Controller {
             $brandachieved = DB::table( 'patchqueryanditem' )
             ->select( 'patchqueryitem_proposalquote' )
             ->where( 'brand_id', '=', $patchbrands->brand_id )
+            ->whereIn( 'patchquerystatus_id', [ 10, 11, 12 ] )
             ->whereIn( 'patchquery_date', $list )
             ->where( 'status_id', '=', 1 )
             ->sum( 'patchqueryitem_proposalquote' );
@@ -216,6 +218,7 @@ class dashboardController extends Controller {
             'previousrecover' 	=> $previousrecover,
             'previouscancel' 	=> $previouscancel,
             'previouspaid' 		=> $previouspaid,
+            'previousunpaid' 	=> $previousunpaid,
         );
         $getupcommingpayments = DB::table( 'orderpaymentdetails' )
         ->select( 'order_title', 'orderpayment_id', 'orderpayment_title', 'orderpayment_amount', 'user_name', 'user_picture' )
@@ -238,6 +241,7 @@ class dashboardController extends Controller {
         ->orderByDesc( 'task_id' )
         ->limit( 30 )
         ->get();
+
         $ppcassign = DB::table( 'assignppc' )
         ->select( 'assignppc_amount' )
         ->where( 'assignppc_month', '=', $setyearmonth )
@@ -255,7 +259,6 @@ class dashboardController extends Controller {
             'ppcspend' 			=> $ppcspend,
             'remainingppc' 		=> $remainingppc,
         );
-
         $patchproductionitem = DB::table( 'patchqueryitem' )
         ->select( 'patchqueryitem_id', 'patchqueryitem_finalvendor' )
         ->whereIn( 'patchqueryitem_date', $list )
@@ -293,18 +296,6 @@ class dashboardController extends Controller {
             'patchshipmentcost' 	=> $patchshipmentcost,
             'officeexpense' 		=> $officeexpense,
             'totalpayable' 		    => $totalpayable,
-        );
-        $ppcspend = DB::table( 'ppc' )
-        ->select( 'ppc_amount' )
-        ->whereIn( 'ppc_date', $list )
-        ->whereIn( 'brand_id', $brands )
-        ->where( 'status_id', '=', 1 )
-        ->sum( 'ppc_amount' );
-        $remainingppc = $ppcassign-$ppcspend;
-        $ppcverview = array(
-            'ppcassign' 		=> $ppcassign,
-            'ppcspend' 			=> $ppcspend,
-            'remainingppc' 		=> $remainingppc,
         );
         $userpicturepath = URL::to( '/' ).'/public/user_picture/';
         $brandlogopath = URL::to( '/' ).'/public/brand_logo/';
