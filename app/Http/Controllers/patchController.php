@@ -359,30 +359,40 @@ class patchController extends Controller
         }
         $patchqueryoritemdate;
         if ( $request->patchpaymenttype_id == 1 ) {
-            $date = DB::table( 'patchquery' )
-            ->select( 'patchquery_date' )
-            ->where( 'patchquery_id', '=', $request->patch_id )
-            ->where( 'status_id', '=', 1 )
-            ->first();
-            $patchqueryoritemdate = $date->patchquery_date;
-        } else {
             $date = DB::table( 'patchqueryitem' )
             ->select( 'patchqueryitem_date' )
             ->where( 'patchqueryitem_id', '=', $request->patchqueryitem_id )
             ->where( 'status_id', '=', 1 )
             ->first();
             $patchqueryoritemdate = $date->patchqueryitem_date;
+            $adds[] = array(
+                'patchpayment_amount' 	=> $request->patchpayment_amount,
+                'patchpayment_comment' 	=> $request->patchpayment_comment,
+                'patch_id' 				=> $request->patchqueryitem_id,
+                'patch_createdate' 		=> $patchqueryoritemdate,
+                'patchpaymenttype_id' 	=> $request->patchpaymenttype_id,
+                'status_id'				=> 1,
+                'created_by'			=> $request->user_id,
+                'created_at'			=> date( 'Y-m-d h:i:s' ),
+            );
+        } else {
+            $date = DB::table( 'patchquery' )
+            ->select( 'patchquery_date' )
+            ->where( 'patchquery_id', '=', $request->patch_id )
+            ->where( 'status_id', '=', 1 )
+            ->first();
+            $patchqueryoritemdate = $date->patchquery_date;
+            $adds[] = array(
+                'patchpayment_amount' 	=> $request->patchpayment_amount,
+                'patchpayment_comment' 	=> $request->patchpayment_comment,
+                'patch_id' 				=> $request->patch_id,
+                'patch_createdate' 		=> $patchqueryoritemdate,
+                'patchpaymenttype_id' 	=> $request->patchpaymenttype_id,
+                'status_id'				=> 1,
+                'created_by'			=> $request->user_id,
+                'created_at'			=> date( 'Y-m-d h:i:s' ),
+            );
         }
-        $adds[] = array(
-            'patchpayment_amount' 	=> $request->patchpayment_amount,
-            'patchpayment_comment' 	=> $request->patchpayment_comment,
-            'patch_id' 				=> $request->patch_id,
-            'patch_createdate' 		=> $patchqueryoritemdate,
-            'patchpaymenttype_id' 	=> $request->patchpaymenttype_id,
-            'status_id'				=> 1,
-            'created_by'			=> $request->user_id,
-            'created_at'			=> date( 'Y-m-d h:i:s' ),
-        );
 
         $save = DB::table( 'patchpayment' )->insert( $adds );
         if ( $save ) {
@@ -394,13 +404,15 @@ class patchController extends Controller
 
     public function patchpaymentlist( Request $request ) {
         $validate = Validator::make( $request->all(), [
-            'patch_id'	=> 'required',
+            'patchpaymenttype_id'	=> 'required',
+            'patch_id'				=> 'required',
         ] );
         if ( $validate->fails() ) {
             return response()->json( $validate->errors(), 400 );
         }
         $data = DB::table( 'patchpaymentdetails' )
         ->select( '*' )
+        ->where( 'patchpaymenttype_id', '=', $request->patchpaymenttype_id )
         ->where( 'patch_id', '=', $request->patch_id )
         ->where( 'status_id', '=', 1 )
         ->get();
@@ -436,7 +448,7 @@ class patchController extends Controller
         }
         $list = array();
         for ( $d = 1; $d <= $noofdays; $d++ )
-        {
+ {
             $time = mktime( 12, 0, 0, $getyearandmonth[ 1 ], $d, $getyearandmonth[ 0 ] );
 
             if ( date( 'm', $time ) == $getyearandmonth[ 1 ] )

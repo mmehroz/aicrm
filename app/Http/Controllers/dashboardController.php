@@ -2414,7 +2414,7 @@ class dashboardController extends Controller {
         ->where( 'status_id', '=', 1 )
         ->sum( 'patchpayment_amount' );
         $pkrshipmentremainingamount = $shippingcost-$pkrshipmentpaidamount;
-        $pkrshipmentprofitloss = $pkrnetamount-$shippingcost;
+        $pkrshipmentprofitloss = $pkrshipmentquoteamount-$shippingcost;
         $stats = array();
         $stats[ 'dollarquoteamount' ] = $dollarquoteamount;
         $stats[ 'dollarshipmentquoteamount' ] = $dollarshipmentquoteamount;
