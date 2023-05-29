@@ -108,6 +108,7 @@ Route::any('/grouporderlist', [orderController::class, 'grouporderlist']);
 Route::any('/clientwiseorderlist', [orderController::class, 'clientwiseorderlist']);
 Route::any('/previousorderhistory', [orderController::class, 'previousorderhistory']);
 Route::any('/updatemultiorderstatus', [orderController::class, 'updatemultiorderstatus']);
+Route::any('/searchorder', [orderController::class, 'searchorder']);
 
 Route::any('/creattask', [taskController::class, 'creattask']);
 Route::any('/updatetask', [taskController::class, 'updatetask']);
