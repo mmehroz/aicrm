@@ -172,6 +172,8 @@ Route::any('/savebillingorderfollowup', [billingController::class, 'savebillingo
 Route::any('/billingorderfollowuplist', [billingController::class, 'billingorderfollowuplist']);
 Route::any('/oldcrmbillingpaymentlist', [billingController::class, 'oldcrmbillingpaymentlist']);
 Route::any('/markpaidonoldcrmpayment', [billingController::class, 'markpaidonoldcrmpayment']);
+Route::any('/searchpayment', [billingController::class, 'searchpayment']);
+Route::any('/searchmergepayment', [billingController::class, 'searchmergepayment']);
 
 Route::any('/savefreshlead', [freshleadController::class, 'savefreshlead']);
 Route::any('/freshleadlist', [freshleadController::class, 'freshleadlist']);
