@@ -608,14 +608,14 @@ class reportController extends Controller
             ->where( 'status_id', '=', 1 )
             ->where( 'created_by', '=', $request->id )
             ->where( 'orderpaymentstatus_id', '=', 3 )
-            ->whereBetween( 'orderpayment_date', [ $setfrom, $lists ] )
+            ->whereIn( 'orderpayment_date', $list )
             ->sum( 'orderpayment_amount' );
             $getrecoveryamount = DB::table( 'orderpayment' )
             ->select( 'orderpayment_amount' )
             ->where( 'status_id', '=', 1 )
             ->where( 'created_by', '=', $request->id )
             ->where( 'orderpaymentstatus_id', '=', 7 )
-            ->whereBetween( 'orderpayment_recoverydate', [ $setfrom, $lists ] )
+            ->whereIn( 'orderpayment_recoverydate', $list )
             ->sum( 'orderpayment_amount' );
             $gettargetachieved = $getpaidamount + $getrecoveryamount;
             $getcommission = DB::table( 'commission' )
@@ -857,8 +857,18 @@ class reportController extends Controller
                 ->sum( 'patchqueryitem_proposalquote' );
                 $productioncost = 30/100*$paidamount;
                 $amountforcommission = $paidamount-$productioncost;
-                if ( $amountforcommission >= $managertarget ) {
-                    $managercommission = $agents*10000;
+                $maxpaid = DB::table( 'orderpayment' )
+                ->select( 'orderpayment_amount' )
+                ->where( 'status_id', '=', 1 )
+                ->where( 'orderpaymentstatus_id', '=', '3' )
+                ->whereIn( 'created_by', $agentuserids )
+                ->whereBetween( 'orderpayment_date', [ $setfrom, $setto ] )
+                ->sum( 'orderpayment_amount' );
+                $sumpaidamount = $amountforcommission+$maxpaid;
+                if ( $sumpaidamount >= $managertarget ) {
+                    $noofthousand = floor( $sumpaidamount/1000 );
+
+                    $managercommission = $noofthousand*10000;
                 } else {
                     $managercommission = 0;
                 }
@@ -866,6 +876,8 @@ class reportController extends Controller
                 $managerlist->paidamount = $paidamount;
                 $managerlist->productioncost = $productioncost;
                 $managerlist->amountforcommission = $amountforcommission;
+                $managerlist->maxpaid = $maxpaid;
+                $managerlist->sumpaidamount = $sumpaidamount;
                 $managerlist->commission = $managercommission;
                 $managerdetails[ $managerindex ] = $managerlist;
             } else {
@@ -873,6 +885,8 @@ class reportController extends Controller
                 $managerlist->paidamount = 0;
                 $managerlist->productioncost = 0;
                 $managerlist->amountforcommission = 0;
+                $managerlist->maxpaid = 0;
+                $managerlist->sumpaidamount = 0;
                 $managerlist->commission = 0;
                 $managerdetails[ $managerindex ] = $managerlist;
             }

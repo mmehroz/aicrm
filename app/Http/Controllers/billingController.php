@@ -1204,7 +1204,7 @@ class billingController extends Controller {
             ->where( 'status_id', '=', 1 )
             ->groupBy( 'mergedeal_token' )
             ->orderBy( 'orderpayment_id', 'DESC' )
-            ->paginate( 30 );
+            ->get();
         } else {
             if ( $request->orderpaymentstatus_id == 3 ) {
                 $validate = Validator::make( $request->all(), [
@@ -1224,7 +1224,7 @@ class billingController extends Controller {
                     ->where( 'status_id', '=', 1 )
                     ->groupBy( 'mergedeal_token' )
                     ->orderBy( 'orderpayment_id', 'DESC' )
-                    ->paginate( 30 );
+                    ->get();
                 } else {
                     $paymentlist = DB::table( 'mergepaymentdetails' )
                     ->select( '*' )
@@ -1237,7 +1237,7 @@ class billingController extends Controller {
                     ->where( 'status_id', '=', 1 )
                     ->groupBy( 'mergedeal_token' )
                     ->orderBy( 'orderpayment_id', 'DESC' )
-                    ->paginate( 30 );
+                    ->get();
                 }
             } else {
                 $paymentlist = DB::table( 'mergepaymentdetails' )
@@ -1250,7 +1250,7 @@ class billingController extends Controller {
                 ->where( 'status_id', '=', 1 )
                 ->groupBy( 'mergedeal_token' )
                 ->orderBy( 'orderpayment_id', 'DESC' )
-                ->paginate( 30 );
+                ->get();
             }
         }
         if ( isset( $paymentlist ) ) {

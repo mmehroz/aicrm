@@ -83,6 +83,7 @@ Route::any('/unpicklead', [leadController::class, 'unpicklead']);
 Route::any('/cancellead', [leadController::class, 'cancellead']);
 Route::any('/makelead', [leadController::class, 'makelead']);
 Route::any('/searchlead', [leadController::class, 'searchlead']);
+Route::any('/searchleadbyphone', [leadController::class, 'searchleadbyphone']);
 Route::any('/clientrevenuereport', [leadController::class, 'clientrevenuereport']);
 Route::any('/transferclient', [leadController::class, 'transferclient']);
 Route::any('/allclientlist', [leadController::class, 'allclientlist']);
