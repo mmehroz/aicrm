@@ -175,6 +175,7 @@ Route::any('/oldcrmbillingpaymentlist', [billingController::class, 'oldcrmbillin
 Route::any('/markpaidonoldcrmpayment', [billingController::class, 'markpaidonoldcrmpayment']);
 Route::any('/searchpayment', [billingController::class, 'searchpayment']);
 Route::any('/searchmergepayment', [billingController::class, 'searchmergepayment']);
+Route::any('/savenetsalary', [billingController::class, 'savenetsalary']);
 
 Route::any('/savefreshlead', [freshleadController::class, 'savefreshlead']);
 Route::any('/freshleadlist', [freshleadController::class, 'freshleadlist']);

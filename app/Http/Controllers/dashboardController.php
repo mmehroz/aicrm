@@ -241,7 +241,7 @@ class dashboardController extends Controller {
         ->orderByDesc( 'task_id' )
         ->limit( 30 )
         ->get();
-
+        
         $ppcassign = DB::table( 'assignppc' )
         ->select( 'assignppc_amount' )
         ->where( 'assignppc_month', '=', $setyearmonth )
@@ -602,7 +602,11 @@ class dashboardController extends Controller {
             $dindex++;
         }
 
-        $grosssalary = $getsalary+$getincrement;
+        $grosssalary = DB::connection( 'mysql2' )->table( 'netsalary' )
+        ->where( 'netsalary_month', '=', $request->yearmonth )
+        ->where( 'status_id', '=', 1 )
+        ->select( 'netsalary_amount' )
+        ->sum( 'netsalary_amount' );
         $salaryexpense = array(
             'grosssalary' 				=> $grosssalary,
             'netsalary' 				=> $grosssalary,
