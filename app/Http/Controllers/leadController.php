@@ -661,4 +661,48 @@ class leadController extends Controller
 			return response()->json(['data' => $emptyarray, 'message' => 'Search Lead Details'],200);
 		}
 	}
+
+	public function saveclientfollowup( Request $request ) {
+        $validate = Validator::make( $request->all(), [
+            'cllientfollowup_comment'	=> 'required',
+            'cllient_id'				    => 'required',
+        ] );
+        if ( $validate->fails() ) {
+
+            return response()->json( $validate->errors(), 400 );
+        }
+        $adds = array(
+            'cllientfollowup_comment' 	=> $request->cllientfollowup_comment,
+            'cllient_id' 				=> $request->cllient_id,
+            'status_id'		 			=> 1,
+            'created_by'	 			=> $request->user_id,
+            'created_at'	 			=> date( 'Y-m-d h:i:s' ),
+        );
+        $save = DB::table( 'cllientfollowup' )->insert( $adds );
+        if ( $save ) {
+            return response()->json( [ 'message' => 'Followup Saved Successfully' ], 200 );
+        } else {
+            return response()->json( 'Oops! Something went wrong', 400 );
+        }
+    }
+
+    public function clientfollowuplist( Request $request ) {
+        $validate = Validator::make( $request->all(), [
+            'cllient_id'	=> 'required',
+        ] );
+        if ( $validate->fails() ) {
+
+            return response()->json( $validate->errors(), 400 );
+        }
+        $followups = DB::table( 'cllientfollowupdetail' )
+        ->select( '*' )
+        ->where( 'cllient_id', '=', $request->cllient_id )
+        ->where( 'status_id', '=', 1 )
+        ->get();
+        if ( $followups ) {
+            return response()->json( [ 'data' => $followups, 'message' => 'Followup List' ], 200 );
+        } else {
+            return response()->json( 'Oops! Something Went Wrong', 400 );
+        }
+    }
 }

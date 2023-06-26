@@ -241,7 +241,7 @@ class dashboardController extends Controller {
         ->orderByDesc( 'task_id' )
         ->limit( 30 )
         ->get();
-        
+
         $ppcassign = DB::table( 'assignppc' )
         ->select( 'assignppc_amount' )
         ->where( 'assignppc_month', '=', $setyearmonth )
@@ -842,6 +842,19 @@ class dashboardController extends Controller {
             if ( date( 'm', $time ) == $getyearandmonth[ 1 ] )
             $list[] = date( 'Y-m-d', $time );
         }
+        $taskindex = 0;
+        $monthlydata = array();
+        foreach ( $list as $lists ) {
+            $taskcount = DB::table( 'task' )
+            ->select( 'task_id' )
+            ->where( 'status_id', '=', 1 )
+            ->where( 'task_workby', '=', $request->id )
+            ->where( 'task_date', '=', $lists )
+            ->where( 'brand_id', '=', $request->brand_id )
+            ->count( 'task_id' );
+            $monthlydata[ $taskindex ] = $taskcount;
+            $taskindex++;
+        }
         $monthlytotalorders = DB::table( 'task' )
         ->select( 'task_id' )
         ->where( 'brand_id', '=', $request->brand_id )
@@ -922,7 +935,7 @@ class dashboardController extends Controller {
         ->where( 'status_id', '=', 1 )
         ->first();
         if ( isset( $getuser ) ) {
-            return response()->json( [ 'userdata' => $getuser, 'orderscount' => $ordercounts, 'userpicturepath' => $userpicturepath, 'branddetail' => $branddetail, 'logopath' => $logopath, 'message' => 'Worker Dashboard Details' ], 200 );
+            return response()->json( [ 'userdata' => $getuser, 'monthlydata' => $monthlydata, 'orderscount' => $ordercounts, 'userpicturepath' => $userpicturepath, 'branddetail' => $branddetail, 'logopath' => $logopath, 'message' => 'Worker Dashboard Details' ], 200 );
         } else {
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }

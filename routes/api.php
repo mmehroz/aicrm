@@ -89,6 +89,8 @@ Route::any('/transferclient', [leadController::class, 'transferclient']);
 Route::any('/allclientlist', [leadController::class, 'allclientlist']);
 Route::any('/lockorunlocklead', [leadController::class, 'lockorunlocklead']);
 Route::any('/clientwisepaymentlist', [leadController::class, 'clientwisepaymentlist']);
+Route::any('/saveclientfollowup', [leadController::class, 'saveclientfollowup']);
+Route::any('/clientfollowuplist', [leadController::class, 'clientfollowuplist']);
 
 Route::any('/createorder', [orderController::class, 'createorder']);
 Route::any('/updateorder', [orderController::class, 'updateorder']);
