@@ -27,6 +27,7 @@ use App\Http\Controllers\patchqueryController;
 use App\Http\Controllers\rawdataController;
 use App\Http\Controllers\twilioController;
 use App\Http\Controllers\notesController;
+use App\Http\Controllers\expenseController;
 
 Route::any('/downloadclientattachment', [taskController::class, 'downloadclientattachment']);
 Route::any('/downloadworkattachment', [taskController::class, 'downloadworkattachment']);
@@ -285,5 +286,8 @@ Route::any('/sendsms', [twilioController::class, 'sendsms']);
 Route::any('/savenotes', [notesController::class, 'savenotes']);
 Route::any('/noteslist', [notesController::class, 'noteslist']);
 Route::any('/notesdetails', [notesController::class, 'notesdetails']);
+
+Route::any('/addexpense', [expenseController::class, 'addexpense']);
+Route::any('/expenselist', [expenseController::class, 'expenselist']);
 });
 });
