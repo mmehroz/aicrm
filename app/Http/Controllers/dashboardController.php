@@ -1430,14 +1430,14 @@ class dashboardController extends Controller {
         ->sum( 'patchqueryitem_proposalquote' );
         $patchreturenedcount = DB::table( 'patchquery' )
         ->select( 'patchquery_id' )
-        ->where( 'patchquerystatus_id', '=', 15 )
+        ->where( 'patchquerystatus_id', '=', 7 )
         ->whereIn( 'patchquery_date', $list )
         ->whereIn( 'created_by', $sortpatchuser )
         ->where( 'status_id', '=', 1 )
         ->count();
         $patchreturenedamount = DB::table( 'patchqueryanditem' )
         ->select( 'patchqueryitem_proposalquote' )
-        ->where( 'patchquerystatus_id', '=', 15 )
+        ->where( 'patchquerystatus_id', '=', 7 )
         ->whereIn( 'patchquery_date', $list )
         ->whereIn( 'created_by', $sortpatchuser )
         ->where( 'status_id', '=', 1 )
