@@ -292,6 +292,6 @@ Route::any('/updateexpensetype', [expenseController::class, 'updateexpensetype']
 Route::any('/expensetype', [expenseController::class, 'expensetype']);
 Route::any('/addexpenseactual', [expenseController::class, 'addexpenseactual']);
 Route::any('/addexpense', [expenseController::class, 'addexpense']);
-Route::any('/expenselist', [expenseController::class, 'expenselist']);
+Route::any('/expensereport', [expenseController::class, 'expensereport']);
 });
 });

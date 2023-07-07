@@ -149,7 +149,7 @@ class expenseController extends Controller
         }
     }
 
-    public function expenselist( Request $request ) {
+    public function expensereport( Request $request ) {
         $validate = Validator::make( $request->all(), [
             'expense_month'	=> 'required',
         ] );
@@ -163,17 +163,66 @@ class expenseController extends Controller
         } else {
             $setyearmonth = $yearmonth[ 0 ].'-'.$yearmonth[ 1 ];
         }
-        $data = DB::table( 'expensedetails' )
+        $data = DB::table( 'expensetype' )
         ->select( '*' )
-        ->where( 'expense_month', '=', $setyearmonth )
         ->where( 'status_id', '=', 1 )
         ->get();
-
+        $owner = DB::table( 'owners' )
+        ->select( 'owners_name' )
+        ->where( 'status_id', '=', 1 )
+        ->get();
+        $sortdata = array();
+        $index = 0;
+        foreach ( $data as $datas ) {
+            $actual = DB::table( 'expenseactual' )
+            ->select( 'expenseactual_amount' )
+            ->where( 'expenseactual_month', '=', $setyearmonth )
+            ->where( 'expensetype_id', '=', $datas->expensetype_id )
+            ->sum( 'expenseactual_amount' );
+            $paidarray = array();
+            $pindex = 0;
+            foreach ( $owner as $owners ) {
+                $a;
+                $paid = DB::table( 'expense' )
+                ->select( 'expense_amount' )
+                ->where( 'expense_month', '=', $setyearmonth )
+                ->where( 'expensetype_id', '=', $datas->expensetype_id )
+                ->where( 'expense_paidby', '=', $owners->owners_name )
+                ->sum( 'expense_amount' );
+                if ( $pindex == 0 ) {
+                    $datas->Salman = $paid;
+                } elseif ( $pindex == 1 ) {
+                    $datas->Nadir = $paid;
+                } elseif ( $pindex == 2 ) {
+                    $datas->Sameel = $paid;
+                } else {
+                    $datas->Aun = $paid;
+                }
+                $pindex++;
+            }
+            $sumpaid = DB::table( 'expense' )
+            ->select( 'expense_amount' )
+            ->where( 'expense_month', '=', $setyearmonth )
+            ->where( 'expensetype_id', '=', $datas->expensetype_id )
+            ->sum( 'expense_amount' );
+            $sumremaining = $actual-$sumpaid;
+            $datas->sumpaid = $sumpaid;
+            $datas->sumremaining = $sumremaining;
+            $datas->actual = $actual;
+            $detail = DB::table( 'expense' )
+            ->select( '*' )
+            ->where( 'expense_month', '=', $setyearmonth )
+            ->where( 'expensetype_id', '=', $datas->expensetype_id )
+            ->get();
+            $datas->detail = $detail;
+            $sortdata[ $index ] = $datas;
+            $index++;
+        }
         if ( $data ) {
-            return response()->json( [ 'data' => $data, 'message' => 'Expense List' ], 200 );
+            return response()->json( [ 'data' => $sortdata, 'message' => 'Expense Report' ], 200 );
         } else {
             $emptyarray = array();
-            return response()->json( [ 'data' => $emptyarray, 'message' => 'Expense List' ], 200 );
+            return response()->json( [ 'data' => $emptyarray, 'message' => 'Expense Report' ], 200 );
         }
     }
 }
