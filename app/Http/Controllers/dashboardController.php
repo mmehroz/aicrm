@@ -83,7 +83,15 @@ class dashboardController extends Controller {
             ->whereIn( 'orderpayment_date', $list )
             ->where( 'status_id', '=', 1 )
             ->sum( 'orderpayment_amount' );
-            $digitalbrands->brandachieved = $brandachieved;
+            $brandrecovery = DB::table( 'orderpayment' )
+            ->select( 'orderpayment_amount' )
+            ->where( 'brand_id', '=', $digitalbrands->brand_id )
+            ->where( 'orderpaymentstatus_id', '=', 7 )
+            ->whereIn( 'orderpayment_recoverydate', $list )
+            ->where( 'status_id', '=', 1 )
+            ->sum( 'orderpayment_amount' );
+            $brandpaid = $brandachieved+$brandrecovery;
+            $digitalbrands->brandachieved = $brandpaid;
             $digitalbrandachieved[ $dindex ] = $digitalbrands;
             $dindex++;
         }
@@ -241,7 +249,7 @@ class dashboardController extends Controller {
         ->orderByDesc( 'task_id' )
         ->limit( 30 )
         ->get();
-
+        
         $ppcassign = DB::table( 'assignppc' )
         ->select( 'assignppc_amount' )
         ->where( 'assignppc_month', '=', $setyearmonth )
@@ -289,7 +297,19 @@ class dashboardController extends Controller {
         ->whereIn( 'patchquery_date', $list )
         ->where( 'status_id', '=', 1 )
         ->sum( 'patchquery_shipmentamount' );
-        $officeexpense = 0;
+        $actual = DB::table( 'expenseactual' )
+        ->select( 'expenseactual_amount' )
+        ->where( 'expenseactual_month', $setyearmonth )
+        ->where( 'status_id', '=', 1 )
+        ->sum( 'expenseactual_amount' );
+        $expenseactual = $actual/4;
+        $expensepaid = DB::table( 'expense' )
+        ->select( 'expense_amount' )
+        ->where( 'expense_month','=', $setyearmonth )
+        ->where( 'expense_paidby','=',$request->user_id )
+        ->where( 'status_id', '=', 1 )
+        ->sum( 'expense_amount' );
+        $officeexpense = $expenseactual-$expensepaid;
         $totalpayable = $patchpayablecost+$patchshipmentcost+$officeexpense;
         $payable = array(
             'patchpayablecost' 		=> $patchpayablecost,
