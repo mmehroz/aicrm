@@ -249,7 +249,7 @@ class dashboardController extends Controller {
         ->orderByDesc( 'task_id' )
         ->limit( 30 )
         ->get();
-        
+
         $ppcassign = DB::table( 'assignppc' )
         ->select( 'assignppc_amount' )
         ->where( 'assignppc_month', '=', $setyearmonth )
@@ -291,7 +291,7 @@ class dashboardController extends Controller {
         ->whereIn( 'patch_createdate', $list )
         ->where( 'status_id', '=', 1 )
         ->sum( 'patchpayment_amount' );
-        $patchpayablecost = $patchproductioncost-$patchpaidcost;
+        $patchpayablecost = $patchproductioncost;
         $patchshipmentcost = DB::table( 'patchquery' )
         ->select( 'patchquery_shipmentamount' )
         ->whereIn( 'patchquery_date', $list )
@@ -303,13 +303,13 @@ class dashboardController extends Controller {
         ->where( 'status_id', '=', 1 )
         ->sum( 'expenseactual_amount' );
         $expenseactual = $actual/4;
-        $expensepaid = DB::table( 'expense' )
-        ->select( 'expense_amount' )
-        ->where( 'expense_month','=', $setyearmonth )
-        ->where( 'expense_paidby','=',$request->user_id )
-        ->where( 'status_id', '=', 1 )
-        ->sum( 'expense_amount' );
-        $officeexpense = $expenseactual-$expensepaid;
+        // $expensepaid = DB::table( 'expense' )
+        // ->select( 'expense_amount' )
+        // ->where( 'expense_month', '=', $setyearmonth )
+        // ->where( 'expense_paidby', '=', $request->user_id )
+        // ->where( 'status_id', '=', 1 )
+        // ->sum( 'expense_amount' );
+        $officeexpense = $expenseactual;
         $totalpayable = $patchpayablecost+$patchshipmentcost+$officeexpense;
         $payable = array(
             'patchpayablecost' 		=> $patchpayablecost,
@@ -2467,6 +2467,69 @@ class dashboardController extends Controller {
         $stats[ 'pkrshipmentprofitloss' ] = $pkrshipmentprofitloss;
         if ( $data ) {
             return response()->json( [ 'data' => $data, 'stats' => $stats, 'vendorpaymetdetail' => $vendorpaymetdetail, 'message' => 'Patch Query Profit Loss Statement' ], 200 );
+        } else {
+            return response()->json( 'Oops! Something Went Wrong', 400 );
+        }
+    }
+
+    public function expensedashboard( Request $request ) {
+        $validate = Validator::make( $request->all(), [
+            'yearmonth'	=> 'required',
+        ] );
+        if ( $validate->fails() ) {
+
+            return response()->json( $validate->errors(), 400 );
+        }
+        $yearmonth = explode( '-', $request->yearmonth );
+        if ( $yearmonth[ 1 ] <= 9 ) {
+            $setyearmonth = $yearmonth[ 0 ].'-0'.$yearmonth[ 1 ];
+        } else {
+            $setyearmonth = $yearmonth[ 0 ].'-'.$yearmonth[ 1 ];
+        }
+        $proposed = DB::table( 'expensetype' )
+        ->select( 'expensetype_proposed' )
+        ->where( 'status_id', '=', 1 )
+        ->sum( 'expensetype_proposed' );
+        $actual = DB::table( 'expenseactual' )
+        ->select( 'expenseactual_amount' )
+        ->where( 'expenseactual_month', '=', $setyearmonth )
+        ->where( 'status_id', '=', 1 )
+        ->sum( 'expenseactual_amount' );
+        $paid = DB::table( 'expense' )
+        ->select( 'expense_amount' )
+        ->where( 'expense_month', '=', $setyearmonth )
+        ->where( 'status_id', '=', 1 )
+        ->sum( 'expense_amount' );
+        $remaining = $actual-$paid;
+        $sum = array();
+        $sum[ 'proposed' ] = $proposed;
+        $sum[ 'actual' ] = $actual;
+        $sum[ 'paid' ] = $paid;
+        $sum[ 'remaining' ] = $remaining;
+
+        $owner = DB::table( 'ownerdetails' )
+        ->select( 'owners_name', 'user_name' )
+        ->where( 'status_id', '=', 1 )
+        ->get();
+        $ownerwise = array();
+        $pindex = 0;
+        foreach ( $owner as $owners ) {
+            $ownerwiseactual = $actual/4;
+            $ownerwisepaid = DB::table( 'expense' )
+            ->select( 'expense_amount' )
+            ->where( 'expense_month', '=', $setyearmonth )
+            ->where( 'expense_paidby', '=', $owners->owners_name )
+            ->where( 'status_id', '=', 1 )
+            ->sum( 'expense_amount' );
+            $ownerwiseremaining = $ownerwiseactual-$ownerwisepaid;
+            $ownerwise[ $pindex ][ 'name' ] = $owners->user_name;
+            $ownerwise[ $pindex ][ 'actual' ] = $ownerwiseactual;
+            $ownerwise[ $pindex ][ 'paid' ] = $ownerwisepaid;
+            $ownerwise[ $pindex ][ 'remaining' ] = $ownerwiseremaining;
+            $pindex++;
+        }
+        if ( $sum ) {
+            return response()->json( [ 'sum' => $sum, 'ownerwise' => $ownerwise, 'message' => 'Expense Dashboard' ], 200 );
         } else {
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }
