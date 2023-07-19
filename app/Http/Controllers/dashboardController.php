@@ -249,7 +249,7 @@ class dashboardController extends Controller {
         ->orderByDesc( 'task_id' )
         ->limit( 30 )
         ->get();
-
+        
         $ppcassign = DB::table( 'assignppc' )
         ->select( 'assignppc_amount' )
         ->where( 'assignppc_month', '=', $setyearmonth )
@@ -305,8 +305,8 @@ class dashboardController extends Controller {
         $expenseactual = $actual/4;
         // $expensepaid = DB::table( 'expense' )
         // ->select( 'expense_amount' )
-        // ->where( 'expense_month', '=', $setyearmonth )
-        // ->where( 'expense_paidby', '=', $request->user_id )
+        // ->where( 'expense_month','=', $setyearmonth )
+        // ->where( 'expense_paidby','=',$request->user_id )
         // ->where( 'status_id', '=', 1 )
         // ->sum( 'expense_amount' );
         $officeexpense = $expenseactual;
@@ -2471,7 +2471,6 @@ class dashboardController extends Controller {
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }
     }
-
     public function expensedashboard( Request $request ) {
         $validate = Validator::make( $request->all(), [
             'yearmonth'	=> 'required',
@@ -2507,13 +2506,14 @@ class dashboardController extends Controller {
         $sum[ 'paid' ] = $paid;
         $sum[ 'remaining' ] = $remaining;
 
-        $owner = DB::table( 'ownerdetails' )
-        ->select( 'owners_name', 'user_name' )
-        ->where( 'status_id', '=', 1 )
-        ->get();
+
+        $owner = DB::table('ownerdetails')
+		->select('owners_name','user_name')
+		->where('status_id','=',1)
+		->get();
         $ownerwise = array();
         $pindex = 0;
-        foreach ( $owner as $owners ) {
+        foreach($owner as $owners){
             $ownerwiseactual = $actual/4;
             $ownerwisepaid = DB::table( 'expense' )
             ->select( 'expense_amount' )
@@ -2522,10 +2522,10 @@ class dashboardController extends Controller {
             ->where( 'status_id', '=', 1 )
             ->sum( 'expense_amount' );
             $ownerwiseremaining = $ownerwiseactual-$ownerwisepaid;
-            $ownerwise[ $pindex ][ 'name' ] = $owners->user_name;
-            $ownerwise[ $pindex ][ 'actual' ] = $ownerwiseactual;
-            $ownerwise[ $pindex ][ 'paid' ] = $ownerwisepaid;
-            $ownerwise[ $pindex ][ 'remaining' ] = $ownerwiseremaining;
+            $ownerwise[$pindex]['name'] = $owners->user_name;
+            $ownerwise[$pindex]['actual'] = $ownerwiseactual;
+            $ownerwise[$pindex]['paid'] = $ownerwisepaid;
+            $ownerwise[$pindex]['remaining'] = $ownerwiseremaining;
             $pindex++;
         }
         if ( $sum ) {

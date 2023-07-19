@@ -165,7 +165,7 @@ class patchqueryController extends Controller
                         $saveattachment = array(
                             'patchqueryitemattachment_name'	=> $filename,
                             'patchqueryitem_id'				=> $patchqueryitem_id,
-                            'patchquery_id'					=> $patchquery_id,
+							'patchquery_id'					=> $patchquery_id,
                             'status_id' 					=> 1,
                             'created_by'					=> $request->user_id,
                             'created_at'					=> date( 'Y-m-d h:i:s' ),
@@ -228,7 +228,7 @@ class patchqueryController extends Controller
         if ( $request->role_id <= 2 ) {
             if ( $request->patchquerystatus_id == 1 ) {
                 $data = DB::table( 'patchquerylist' )
-                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
                 ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
                 ->where( 'patchquery_manager', '=', null )
                 ->where( 'status_id', '=', 1 )
@@ -236,10 +236,10 @@ class patchqueryController extends Controller
                 ->paginate( 30 );
             } else {
                 $data = DB::table( 'patchquerylist' )
-                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
                 ->where( 'status_id', '=', 1 )
                 ->where( 'patchquery_manager', '!=', null )
-                ->whereNotIn( 'patchquerystatus_id', [ 6, 7, 10, 11, 12 ] )
+                ->whereNotIn( 'patchquerystatus_id', [ 6, 7,10,11,12 ] )
                 ->orderBy( 'patchquery_id', 'DESC' )
                 ->paginate( 30 );
             }
@@ -255,7 +255,7 @@ class patchqueryController extends Controller
             }
             if ( $request->patchquerystatus_id == 1 ) {
                 $data = DB::table( 'patchquerylist' )
-                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
                 ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
                 ->whereIn( 'brand_id', $sortbrand )
                 ->where( 'status_id', '=', 1 )
@@ -263,9 +263,9 @@ class patchqueryController extends Controller
                 ->paginate( 30 );
             } else {
                 $data = DB::table( 'patchquerylist' )
-                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
                 ->whereIn( 'brand_id', $sortbrand )
-                ->whereNotIn( 'patchquerystatus_id', [ 6, 7, 10, 11, 12 ] )
+                ->whereNotIn( 'patchquerystatus_id', [ 6, 7,10,11,12 ] )
                 ->where( 'status_id', '=', 1 )
                 ->orderBy( 'patchquery_id', 'DESC' )
                 ->paginate( 30 );
@@ -281,7 +281,7 @@ class patchqueryController extends Controller
                 $sortbrand[] = $brands->brand_id;
             }
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->whereIn( 'brand_id', $sortbrand )
             ->where( 'patchquerystatus_id', '=', 2 )
             ->where( 'status_id', '=', 1 )
@@ -290,7 +290,7 @@ class patchqueryController extends Controller
         } elseif ( $request->role_id == 6 ) {
             if ( $request->patchquerystatus_id == 1 ) {
                 $data = DB::table( 'patchquerylist' )
-                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
                 ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
                 ->where( 'patchquery_manager', '=', null )
                 ->where( 'status_id', '=', 1 )
@@ -299,9 +299,9 @@ class patchqueryController extends Controller
 
             } else {
                 $data = DB::table( 'patchquerylist' )
-                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
                 ->where( 'patchquery_manager', '=', $request->user_id )
-                ->whereNotIn( 'patchquerystatus_id', [ 6, 7, 10, 11, 12 ] )
+                ->whereNotIn( 'patchquerystatus_id', [ 6, 7,10,11,12 ] )
                 ->where( 'status_id', '=', 1 )
                 ->orderBy( 'patchquery_id', 'DESC' )
                 ->paginate( 30 );
@@ -310,7 +310,7 @@ class patchqueryController extends Controller
         } else {
             if ( $request->patchquerystatus_id == 1 ) {
                 $data = DB::table( 'patchquerylist' )
-                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
                 ->where( 'created_by', '=', $request->user_id )
                 ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
                 ->where( 'status_id', '=', 1 )
@@ -318,7 +318,7 @@ class patchqueryController extends Controller
                 ->paginate( 30 );
             } else {
                 $data = DB::table( 'patchquerylist' )
-                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+                ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
                 ->where( 'created_by', '=', $request->user_id )
                 ->whereNotIn( 'patchquerystatus_id', [ 6, 7 ] )
                 ->where( 'status_id', '=', 1 )
@@ -343,8 +343,8 @@ class patchqueryController extends Controller
         }
         if ( $request->role_id <= 2 ) {
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
-            ->whereIn( 'patchquerystatus_id', [ 6, 10, 11 ] )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+            ->whereIn( 'patchquerystatus_id', [6,10,11] )
             ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->where( 'status_id', '=', 1 )
             ->orderBy( 'patchquery_id', 'DESC' )
@@ -360,8 +360,8 @@ class patchqueryController extends Controller
                 $sortbrand[] = $brands->brand_id;
             }
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
-            ->whereIn( 'patchquerystatus_id', [ 6, 10, 11 ] )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+            ->whereIn( 'patchquerystatus_id', [6,10,11] )
             ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->whereIn( 'brand_id', $sortbrand )
             ->where( 'status_id', '=', 1 )
@@ -378,8 +378,8 @@ class patchqueryController extends Controller
                 $sortbrand[] = $brands->brand_id;
             }
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
-            ->whereIn( 'patchquerystatus_id', [ 6, 10, 11 ] )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+            ->whereIn( 'patchquerystatus_id', [6,10,11] )
             ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->whereIn( 'brand_id', $sortbrand )
             ->where( 'status_id', '=', 1 )
@@ -387,8 +387,8 @@ class patchqueryController extends Controller
             ->paginate( 30 );
         } elseif ( $request->role_id == 6 ) {
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
-            ->whereIn( 'patchquerystatus_id', [ 6, 10, 11 ] )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+            ->whereIn( 'patchquerystatus_id', [6,10,11] )
             ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->where( 'patchquery_manager', '=', $request->user_id )
             ->where( 'status_id', '=', 1 )
@@ -397,9 +397,9 @@ class patchqueryController extends Controller
 
         } else {
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->where( 'created_by', '=', $request->user_id )
-            ->whereIn( 'patchquerystatus_id', [ 6, 10, 11 ] )
+            ->whereIn( 'patchquerystatus_id', [6,10,11] )
             ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->where( 'status_id', '=', 1 )
             ->orderBy( 'patchquery_id', 'DESC' )
@@ -423,7 +423,7 @@ class patchqueryController extends Controller
         }
         if ( $request->role_id <= 2 ) {
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
             ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->where( 'status_id', '=', 1 )
@@ -440,7 +440,7 @@ class patchqueryController extends Controller
                 $sortbrand[] = $brands->brand_id;
             }
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
             ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->whereIn( 'brand_id', $sortbrand )
@@ -458,7 +458,7 @@ class patchqueryController extends Controller
                 $sortbrand[] = $brands->brand_id;
             }
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
             ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->whereIn( 'brand_id', $sortbrand )
@@ -467,7 +467,7 @@ class patchqueryController extends Controller
             ->paginate( 30 );
         } elseif ( $request->role_id == 6 ) {
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
             ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->where( 'patchquery_manager', '=', $request->user_id )
@@ -477,7 +477,7 @@ class patchqueryController extends Controller
 
         } else {
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->where( 'created_by', '=', $request->user_id )
             ->where( 'patchquerystatus_id', '=', $request->patchquerystatus_id )
             ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
@@ -511,15 +511,15 @@ class patchqueryController extends Controller
         ->where( 'patchquery_id', '=', $request->patchquery_id )
         ->get();
         $itemdetails = array();
-        $index = 0;
-        foreach ( $items as $itemss ) {
+        $index=0;
+        foreach($items as $itemss){
             $vendor = DB::table( 'patchqueryitemvendordetails' )
-            ->select( 'patchqueryvendor_id', 'vendorproduction_id', 'vendor_name', 'patchqueryvendor_cost', 'patchqueryvendor_productiondays' )
+            ->select( 'patchqueryvendor_id','vendorproduction_id','vendor_name','patchqueryvendor_cost','patchqueryvendor_productiondays' )
             ->where( 'status_id', '=', 1 )
             ->where( 'patchqueryitem_id', '=', $itemss->patchqueryitem_id )
             ->get();
             $finalvendor = DB::table( 'patchqueryitemvendordetails' )
-            ->select( 'patchqueryvendor_id', 'vendorproduction_id', 'vendor_name', 'patchqueryvendor_cost', 'patchqueryvendor_productiondays' )
+            ->select( 'patchqueryvendor_id','vendorproduction_id','vendor_name','patchqueryvendor_cost','patchqueryvendor_productiondays' )
             ->where( 'status_id', '=', 1 )
             ->where( 'vendorproduction_id', '=', $itemss->patchqueryitem_finalvendor )
             ->where( 'patchqueryitem_id', '=', $itemss->patchqueryitem_id )
@@ -529,10 +529,10 @@ class patchqueryController extends Controller
             ->where( 'status_id', '=', 1 )
             ->where( 'patchquery_id', '=', $request->patchquery_id )
             ->get();
-            $itemdetails[ $index ][ 'itemattachments' ] = $itemattachments;
-            $itemdetails[ $index ][ 'vendor' ] = $vendor;
-            $itemdetails[ $index ][ 'finalvendor' ] = $finalvendor;
-            $itemdetails[ $index ][ 'items' ] = $itemss;
+            $itemdetails[$index]['itemattachments'] = $itemattachments;
+            $itemdetails[$index]['vendor'] = $vendor;
+            $itemdetails[$index]['finalvendor'] = $finalvendor;
+            $itemdetails[$index]['items'] = $itemss;
             $index++;
         }
         $clientattachments = DB::table( 'patchqueryattachment' )
@@ -541,30 +541,30 @@ class patchqueryController extends Controller
         ->where( 'status_id', '=', 1 )
         ->where( 'patchquery_id', '=', $request->patchquery_id )
         ->get();
-        $vendorattachments = DB::table( 'patchqueryattachment' )
+		$vendorattachments = DB::table( 'patchqueryattachment' )
         ->select( 'patchqueryattachment_id', 'patchqueryattachment_name' )
         ->where( 'patchqueryattachmenttype_id', '=', 2 )
         ->where( 'status_id', '=', 1 )
         ->where( 'patchquery_id', '=', $request->patchquery_id )
         ->get();
         $onactive = 0;
-        if ( $data->patchquerystatus_id == 9 ) {
+        if($data->patchquerystatus_id == 9){
             $onactive = 1;
-        } elseif ( $data->patchquerystatus_id == 13 ) {
+        }elseif($data->patchquerystatus_id == 13){
             $onactive = 2;
-        } elseif ( $data->patchquerystatus_id == 14 ) {
+        }elseif($data->patchquerystatus_id == 14){
             $onactive = 3;
-        } elseif ( $data->patchquerystatus_id == 2 ) {
+        }elseif($data->patchquerystatus_id == 2){
             $onactive = 4;
-        } elseif ( $data->patchquerystatus_id == 3 ) {
+        }elseif($data->patchquerystatus_id == 3){
             $onactive = 5;
-        } elseif ( $data->patchquerystatus_id == 5 ) {
+        }elseif($data->patchquerystatus_id == 5){
             $onactive = 6;
-        } elseif ( $data->patchquerystatus_id == 6 || $data->patchquerystatus_id == 7 ) {
+        }elseif($data->patchquerystatus_id == 6 || $data->patchquerystatus_id == 7){
             $onactive = 7;
-        } elseif ( $data->patchquerystatus_id == 10 ) {
+        }elseif($data->patchquerystatus_id == 10){
             $onactive = 8;
-        } else {
+        }else{
             $onactive = 0;
         }
         $data->ispicked = $data->patchquerystatus_id >= 2 ? 1 : 0;
@@ -581,7 +581,7 @@ class patchqueryController extends Controller
         $patchqueryitempath = URL::to( '/' ).'/public/patchqueryitem/'.$request->patchquery_id.'/';
         $patchquerycostpath = URL::to( '/' ).'/public/patchquerycostattachment/'.$request->patchquery_id.'/';
         if ( $data ) {
-            return response()->json( [ 'data' => $data, 'itemdetails' => $itemdetails, 'patchquerypath' => $patchquerypath, 'patchqueryitempath' => $patchqueryitempath, 'clientattachments' => $clientattachments, 'vendorattachments' => $vendorattachments, 'patchquerycostpath' => $patchquerycostpath, 'message' => 'Patch Query Details' ], 200 );
+            return response()->json( [ 'data' => $data, 'itemdetails' => $itemdetails, 'patchquerypath' => $patchquerypath , 'patchqueryitempath' => $patchqueryitempath, 'clientattachments' => $clientattachments, 'vendorattachments' => $vendorattachments, 'patchquerycostpath' => $patchquerycostpath, 'message' => 'Patch Query Details' ], 200 );
         } else {
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }
@@ -597,7 +597,7 @@ class patchqueryController extends Controller
             return response()->json( $validate->errors(), 400 );
         }
         $proposaltachment = DB::table( 'patchqueryvendor' )
-        ->select( 'patchqueryvendor_id', 'patchqueryvendor_proposal', 'patchquery_id' )
+        ->select( 'patchqueryvendor_id', 'patchqueryvendor_proposal','patchquery_id' )
         ->where( 'status_id', '=', 1 )
         ->where( 'patchqueryitem_id', '=', $request->patchqueryitem_id )
         ->where( 'vendorproduction_id', '=', $request->patchqueryitem_finalvendor )
@@ -608,10 +608,10 @@ class patchqueryController extends Controller
         ->where( 'patchqueryitem_id', '=', $request->patchqueryitem_id )
         ->first();
         $patchlogopath = URL::to( '/' ).'/public/patchlogo/logo.png';
-        if ( isset( $proposaltachment ) ) {
+        if(isset($proposaltachment)){
             $patchqueryproposalpath = URL::to( '/' ).'/public/patchqueryproposal/'.$proposaltachment->patchquery_id.'/';
-            return response()->json( [ 'item' => $item, 'proposaltachment' => $proposaltachment, 'patchqueryproposalpath' => $patchqueryproposalpath, 'patchlogopath' => $patchlogopath, 'message' => 'Patch Query Proposal Details' ], 200 );
-        } else {
+            return response()->json( [ 'item' => $item, 'proposaltachment' => $proposaltachment, 'patchqueryproposalpath' => $patchqueryproposalpath , 'patchlogopath' => $patchlogopath, 'message' => 'Patch Query Proposal Details' ], 200 );
+        }else {
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }
     }
@@ -624,8 +624,8 @@ class patchqueryController extends Controller
         if ( $validate->fails() ) {
             return response()->json( $validate->errors(), 400 );
         }
-        if ( $request->patchquerystatus_id == 10 || $request->patchquerystatus_id == 11 ) {
-            if ( isset( $request->patchquery_isorderorsample ) ) {
+        if($request->patchquerystatus_id == 10 || $request->patchquerystatus_id == 11){
+            if(isset($request->patchquery_isorderorsample)){
                 $update  = DB::table( 'patchquery' )
                 ->where( 'patchquery_id', '=', $request->patchquery_id )
                 ->update( [
@@ -635,7 +635,7 @@ class patchqueryController extends Controller
                     'updated_by'		            => $request->user_id,
                     'updated_by'		            => date( 'Y-m-d h:i:s' ),
                 ] );
-            } else {
+            }else{
                 $update  = DB::table( 'patchquery' )
                 ->where( 'patchquery_id', '=', $request->patchquery_id )
                 ->update( [
@@ -644,7 +644,7 @@ class patchqueryController extends Controller
                     'updated_by'		            => date( 'Y-m-d h:i:s' ),
                 ] );
             }
-        } else {
+        }else{
             $update  = DB::table( 'patchquery' )
             ->where( 'patchquery_id', '=', $request->patchquery_id )
             ->update( [
@@ -653,7 +653,7 @@ class patchqueryController extends Controller
                 'updated_by'		    => date( 'Y-m-d h:i:s' ),
             ] );
         }
-
+        
         if ( $update ) {
             return response()->json( [ 'message' => 'Moved Successfully' ], 200 );
         } else {
@@ -662,7 +662,7 @@ class patchqueryController extends Controller
     }
 
     public function updatepatchquery( Request $request ) {
-        if ( $request->role_id == 6 ) {
+        if($request->role_id == 6){
             $validate = Validator::make( $request->all(), [
                 'patchquery_clientname' 		    	=> 'required',
                 'patchquery_clientemail'	   			=> 'required',
@@ -704,7 +704,7 @@ class patchqueryController extends Controller
                 'patchquerystatus_id'				=> $request->patchquerystatus_id,
                 'updated_by'	 		    		=> $request->user_id,
                 'updated_at'	 		    		=> date( 'Y-m-d h:i:s' ),
-            ] );
+            ]);
         }
         $validate = Validator::make( $request->all(), [
             'patchqueryitem'	=> 'required',
@@ -714,7 +714,7 @@ class patchqueryController extends Controller
         }
         $patchqueryitem = $request->patchqueryitem;
         foreach ( $patchqueryitem as $patchqueryitems ) {
-            if ( $request->role_id == 6 ) {
+            if($request->role_id == 6){
                 DB::table( 'patchqueryitem' )
                 ->where( 'patchqueryitem_id', '=', $patchqueryitems[ 'patchqueryitem_id' ] )
                 ->update( [
@@ -728,7 +728,7 @@ class patchqueryController extends Controller
                     'patchqueryitem_otherdetails'	=> $patchqueryitems[ 'patchqueryitem_otherdetails' ],
                     'updated_by'					=> $request->user_id,
                     'updated_at'					=> date( 'Y-m-d h:i:s' ),
-                ] );
+                ]);
                 if ( isset( $patchqueryitems[ 'patchqueryitem_costattachment' ] ) ) {
                     $costattachment = $patchqueryitems[ 'patchqueryitem_costattachment' ];
                     if ( $costattachment->isValid() ) {
@@ -745,12 +745,12 @@ class patchqueryController extends Controller
                             'patchqueryitem_costattachment'	=> $costattachmentname,
                             'updated_by'					=> $request->user_id,
                             'updated_at'					=> date( 'Y-m-d h:i:s' ),
-                        ] );
+                        ]);
                     } else {
                         return response()->json( 'Invalid File', 400 );
                     }
                 }
-                if ( $request->patchquerystatus_id == 2 ) {
+                if($request->patchquerystatus_id == 2){
                     if ( isset( $patchqueryitems[ 'vendorproduction_id' ] ) ) {
                         $vendor = $patchqueryitems[ 'vendorproduction_id' ];
                         foreach ( $vendor as $vendors ) {
@@ -765,11 +765,11 @@ class patchqueryController extends Controller
                     }
                 }
             }
-            if ( $request->patchquerystatus_id == 3 ) {
-                if ( isset( $patchqueryitems[ 'patchqueryitemvendor' ] ) ) {
-                    $itemvendor = $patchqueryitems[ 'patchqueryitemvendor' ];
+            if($request->patchquerystatus_id == 3){
+                if ( isset( $patchqueryitems[ 'patchqueryitemvendor'] ) ) {
+                    $itemvendor = $patchqueryitems[ 'patchqueryitemvendor'];
                     foreach ( $itemvendor as $itemvendors ) {
-                        $proposalattachment = $itemvendors[ 'proposalattachment' ];
+                        $proposalattachment = $itemvendors['proposalattachment'];
                         $proposalname;
                         if ( $proposalattachment->isValid() ) {
                             $number = rand( 1, 999 );
@@ -783,33 +783,33 @@ class patchqueryController extends Controller
                             return response()->json( 'Invalid File', 400 );
                         }
                         DB::table( 'patchqueryvendor' )
-                        ->where( 'patchqueryvendor_id', '=', $itemvendors[ 'patchqueryvendor_id' ] )
+                        ->where( 'patchqueryvendor_id', '=', $itemvendors['patchqueryvendor_id'] )
                         ->update( [
                             'patchqueryvendor_cost'		        => $itemvendors[ 'patchqueryvendor_cost' ],
                             'patchqueryvendor_productiondays'	=> $itemvendors[ 'patchqueryvendor_productiondays' ],
                             'patchqueryvendor_proposal'	        => $proposalname,
-                        ] );
+                        ]);
                         $updatequery  = DB::table( 'patchquery' )
                         ->where( 'patchquery_id', '=', $request->patchquery_id )
                         ->update( [
                             'patchquerystatus_id'	=> $request->patchquerystatus_id,
-                        ] );
+                        ]);
                     }
                 }
             }
-            if ( $request->patchquerystatus_id == 5 ) {
+            if($request->patchquerystatus_id == 5){
                 if ( isset( $patchqueryitems[ 'patchqueryitem_finalvendor' ] ) ) {
                     $updatequery  = DB::table( 'patchqueryitem' )
                     ->where( 'patchqueryitem_id', '=', $patchqueryitems[ 'patchqueryitem_id' ] )
                     ->update( [
                         'patchqueryitem_proposalquote'	=> $patchqueryitems[ 'patchqueryitem_proposalquote' ],
                         'patchqueryitem_finalvendor'	=> $patchqueryitems[ 'patchqueryitem_finalvendor' ],
-                    ] );
+                    ]);
                     $updatequery  = DB::table( 'patchquery' )
                     ->where( 'patchquery_id', '=', $request->patchquery_id )
                     ->update( [
                         'patchquery_shipmentamount'	=> $request->patchquery_shipmentamount,
-                    ] );
+                    ]);
                 }
             }
             if ( isset( $patchqueryitems[ 'attachment' ] ) ) {
@@ -829,7 +829,7 @@ class patchqueryController extends Controller
                         $saveattachment = array(
                             'patchqueryitemattachment_name'	=> $filename,
                             'patchqueryitem_id'				=> $patchqueryitem_id,
-                            'patchquery_id'					=> $patchquery_id,
+							'patchquery_id'					=> $patchquery_id,
                             'status_id' 					=> 1,
                             'created_by'					=> $request->user_id,
                             'created_at'					=> date( 'Y-m-d h:i:s' ),
@@ -841,7 +841,7 @@ class patchqueryController extends Controller
                 }
             }
         }
-        if ( isset( $request->patchproposal_stiches ) ) {
+        if( isset( $request->patchproposal_stiches ) ) {
             DB::table( 'patchproposal' )
             ->where( 'patchquery_id', '=', $request->patchquery_id )
             ->update( [
@@ -1054,30 +1054,30 @@ class patchqueryController extends Controller
 
             return response()->json( $validate->errors(), 400 );
         }
-        $brand = DB::table( 'patchquery' )
-        ->where( 'patchquery_id', '=', $request->patchquery_id )
-        ->select( 'brand_id' )
-        ->first();
-        $getbranddetail = DB::table( 'brand' )
-        ->where( 'brand_id', '=', $brand->brand_id )
-        ->select( 'brand_cover', 'brand_email', 'brand_website', 'brand_invoicename', 'brand_currency' )
-        ->first();
+        $brand = DB::table('patchquery')
+		->where( 'patchquery_id', '=', $request->patchquery_id )
+		->select('brand_id')
+		->first();
+        $getbranddetail = DB::table('brand')
+		->where('brand_id','=',$brand->brand_id)
+		->select('brand_cover','brand_email','brand_website','brand_invoicename','brand_currency')
+		->first();
         $sumquoteamount = DB::table( 'patchqueryitem' )
         ->select( 'patchqueryitem_proposalquote' )
         ->where( 'status_id', '=', 1 )
         ->where( 'patchquery_id', '=', $request->patchquery_id )
-        ->sum( 'patchqueryitem_proposalquote' );
-
-        $coverpath = URL::to( '/' ).'/public/brand_cover/';
-        $invoiceinfo = array(
-            'brand_email' 			=> $getbranddetail->brand_email,
-            'brand_website' 		=> $getbranddetail->brand_website,
-            'brand_invoicename' 	=> $getbranddetail->brand_invoicename,
+        ->sum('patchqueryitem_proposalquote');
+        
+		$coverpath = URL::to('/')."/public/brand_cover/";
+		$invoiceinfo = array(
+			'brand_email' 			=> $getbranddetail->brand_email,
+			'brand_website' 		=> $getbranddetail->brand_website,
+			'brand_invoicename' 	=> $getbranddetail->brand_invoicename,
             'sumquoteamount' 	=> $sumquoteamount,
-            'brand_currency' 		=> $getbranddetail->brand_currency == 1 ? "$" : ' £',
-            'brand_cover' 			=> $getbranddetail->brand_cover,
-            'brand_coverpath' 		=> $coverpath,
-        );
+			'brand_currency' 		=> $getbranddetail->brand_currency == 1 ? "$" : " £",
+			'brand_cover' 			=> $getbranddetail->brand_cover,
+			'brand_coverpath' 		=> $coverpath,
+		);
         $data = DB::table( 'patchquerydetails' )
         ->select( '*' )
         ->where( 'status_id', '=', 1 )
@@ -1095,12 +1095,11 @@ class patchqueryController extends Controller
         $data->web = $patchwebpath;
         $data->location = $patchlocationpath;
         if ( $data ) {
-            return response()->json( [ 'data' => $data, 'itemdetails' => $itemdetails, 'invoiceinfo' => $invoiceinfo, 'message' => 'Patch Query Invoice Details' ], 200 );
+            return response()->json( [ 'data' => $data, 'itemdetails' => $itemdetails, 'invoiceinfo' => $invoiceinfo , 'message' => 'Patch Query Invoice Details' ], 200 );
         } else {
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }
     }
-
     public function validatepatchquery( Request $request ) {
         $validate = Validator::make( $request->all(), [
             'patchquery_clientname' 		    	=> 'required',
@@ -1139,11 +1138,10 @@ class patchqueryController extends Controller
                 );
             }
             return response()->json( [ 'message' => 'Validate Successfully' ], 200 );
-        } catch ( \Exception $e ) {
+        }catch (\Exception $e) {
             return response()->json( 'Fill All Fields To Submit ', 400 );
-        }
+		}
     }
-
     public function patchtype( Request $request ) {
         $data = DB::table( 'patchtype' )
         ->select( '*' )
@@ -1165,6 +1163,74 @@ class patchqueryController extends Controller
             return response()->json( [ 'data' => $data, 'message' => 'Patches Back' ], 200 );
         } else {
             return response()->json( [ 'data' => $emptyarray, 'message' => 'Patches Back' ], 200 );
+        }
+    }
+
+    public function patchclientlist( Request $request ) {
+        if ( $request->role_id <= 2 ) {
+            $data = DB::table( 'patchquerylist' )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+            ->whereIn( 'patchquerystatus_id', [10,11,12] )
+            ->where( 'patchquery_isorderorsample','=', "order" )
+            ->where( 'status_id', '=', 1 )
+            ->orderBy( 'patchquery_id', 'DESC' )
+            ->groupBy( 'patchquery_clientemail' )
+            ->paginate( 30 );
+        } elseif ( $request->role_id == 3 ) {
+            $brand = DB::table( 'userbarnd' )
+            ->select( 'brand_id' )
+            ->where( 'user_id', '=', $request->user_id )
+            ->where( 'status_id', '=', 1 )
+            ->get();
+            $sortbrand = array();
+            foreach ( $brand as $brands ) {
+                $sortbrand[] = $brands->brand_id;
+            }
+            $data = DB::table( 'patchquerylist' )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+            ->whereIn( 'patchquerystatus_id', [10,11,12] )
+            ->where( 'patchquery_isorderorsample','=', "order" )
+            ->whereIn( 'brand_id', $sortbrand )
+            ->where( 'status_id', '=', 1 )
+            ->orderBy( 'patchquery_id', 'DESC' )
+            ->groupBy( 'patchquery_clientemail' )
+            ->paginate( 30 );
+        } elseif ( $request->role_id == 6 ) {
+            $data = DB::table( 'patchquerylist' )
+            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+            ->whereIn( 'patchquerystatus_id', [10,11,12] )
+            ->where( 'patchquery_isorderorsample','=', "order" )
+            ->where( 'patchquery_manager', '=', $request->user_id )
+            ->where( 'status_id', '=', 1 )
+            ->orderBy( 'patchquery_id', 'DESC' )
+            ->groupBy( 'patchquery_clientemail' )
+            ->paginate( 30 );
+        }
+        if ( isset( $data ) ) {
+            return response()->json( [ 'data' => $data, 'message' => 'Patch Client List' ], 200 );
+        } else {
+            return response()->json( [ 'data' => $emptyarray, 'message' => 'Patch Client List' ], 200 );
+        }
+    }
+
+    public function clientwisequerylist( Request $request ) {
+        $validate = Validator::make( $request->all(), [
+            'patchquery_clientemail'	=> 'required',
+        ] );
+        if ( $validate->fails() ) {
+
+            return response()->json( $validate->errors(), 400 );
+        }
+        $data = DB::table( 'patchquerylist' )
+        ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+        ->where( 'patchquery_clientemail','=', $request->patchquery_clientemail )
+        ->where( 'status_id', '=', 1 )
+        ->orderBy( 'patchquery_id', 'DESC' )
+        ->paginate( 30 );
+        if ( isset( $data ) ) {
+            return response()->json( [ 'data' => $data, 'message' => 'Patch Client Query List' ], 200 );
+        } else {
+            return response()->json( [ 'data' => $emptyarray, 'message' => 'Patch Client Query List' ], 200 );
         }
     }
 }

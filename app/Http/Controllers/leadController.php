@@ -673,7 +673,7 @@ class leadController extends Controller
         }
         $adds = array(
             'cllientfollowup_comment' 	=> $request->cllientfollowup_comment,
-            'cllient_id' 				=> $request->cllient_id,
+            'lead_id' 					=> $request->cllient_id,
             'status_id'		 			=> 1,
             'created_by'	 			=> $request->user_id,
             'created_at'	 			=> date( 'Y-m-d h:i:s' ),
@@ -696,7 +696,7 @@ class leadController extends Controller
         }
         $followups = DB::table( 'cllientfollowupdetail' )
         ->select( '*' )
-        ->where( 'cllient_id', '=', $request->cllient_id )
+        ->where( 'lead_id', '=', $request->cllient_id )
         ->where( 'status_id', '=', 1 )
         ->get();
         if ( $followups ) {

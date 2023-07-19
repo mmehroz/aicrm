@@ -50,6 +50,8 @@ Route::any('/orderquestion', [settingsController::class, 'orderquestion']);
 Route::any('/orderpaymentstatus', [settingsController::class, 'orderpaymentstatus']);
 Route::any('/patchquerystatus', [settingsController::class, 'patchquerystatus']);
 Route::any('/patchpaymenttype', [settingsController::class, 'patchpaymenttype']);
+Route::any('/patchclientlist', [settingsController::class, 'patchclientlist']);
+Route::any('/clientwisequerylist', [settingsController::class, 'clientwisequerylist']);
 
 Route::any('/createbrand', [brandController::class, 'createbrand']);
 Route::any('/updatebrand', [brandController::class, 'updatebrand']);
