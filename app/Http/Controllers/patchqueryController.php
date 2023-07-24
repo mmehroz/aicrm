@@ -1169,7 +1169,7 @@ class patchqueryController extends Controller
     public function patchclientlist( Request $request ) {
         if ( $request->role_id <= 2 ) {
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+            ->select( 'patchquery_id', 'patchquery_clientname', 'patchquery_clientemail', 'patchquery_clientphone', 'patchquery_clientbussinessname', 'patchquery_clientbussinessemail', 'patchquery_clientbussinesswebsite','patchquery_clientbussinessphone','user_name' )
             ->whereIn( 'patchquerystatus_id', [10,11,12] )
             ->where( 'patchquery_isorderorsample','=', "order" )
             ->where( 'status_id', '=', 1 )
@@ -1187,7 +1187,7 @@ class patchqueryController extends Controller
                 $sortbrand[] = $brands->brand_id;
             }
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+            ->select( 'patchquery_id', 'patchquery_clientname', 'patchquery_clientemail', 'patchquery_clientphone', 'patchquery_clientbussinessname', 'patchquery_clientbussinessemail', 'patchquery_clientbussinesswebsite','patchquery_clientbussinessphone','user_name' )
             ->whereIn( 'patchquerystatus_id', [10,11,12] )
             ->where( 'patchquery_isorderorsample','=', "order" )
             ->whereIn( 'brand_id', $sortbrand )
@@ -1197,7 +1197,7 @@ class patchqueryController extends Controller
             ->paginate( 30 );
         } elseif ( $request->role_id == 6 ) {
             $data = DB::table( 'patchquerylist' )
-            ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
+            ->select( 'patchquery_id', 'patchquery_clientname', 'patchquery_clientemail', 'patchquery_clientphone', 'patchquery_clientbussinessname', 'patchquery_clientbussinessemail', 'patchquery_clientbussinesswebsite','patchquery_clientbussinessphone','user_name' )
             ->whereIn( 'patchquerystatus_id', [10,11,12] )
             ->where( 'patchquery_isorderorsample','=', "order" )
             ->where( 'patchquery_manager', '=', $request->user_id )
@@ -1215,20 +1215,57 @@ class patchqueryController extends Controller
 
     public function clientwisequerylist( Request $request ) {
         $validate = Validator::make( $request->all(), [
-            'patchquery_clientemail'	=> 'required',
+            'patchquery_id'	=> 'required',
         ] );
         if ( $validate->fails() ) {
 
             return response()->json( $validate->errors(), 400 );
         }
+        $personalinfo = DB::table( 'patchquerylist' )
+        ->select( 'patchquery_id', 'patchquery_clientname', 'patchquery_clientemail', 'patchquery_clientphone', 'patchquery_clientbussinessname', 'patchquery_clientbussinessemail', 'patchquery_clientbussinesswebsite','patchquery_clientbussinessphone','user_name' )
+        ->where( 'patchquery_id','=', $request->patchquery_id )
+        ->where( 'status_id', '=', 1 )
+        ->first();
         $data = DB::table( 'patchquerylist' )
         ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
-        ->where( 'patchquery_clientemail','=', $request->patchquery_clientemail )
+        ->where( 'patchquery_clientemail','=', $personalinfo->patchquery_clientemail )
         ->where( 'status_id', '=', 1 )
         ->orderBy( 'patchquery_id', 'DESC' )
         ->paginate( 30 );
+        $personalinfo = DB::table( 'patchquerylist' )
+        ->select( 'patchquery_id', 'patchquery_clientname', 'patchquery_clientemail', 'patchquery_clientphone', 'patchquery_clientbussinessname', 'patchquery_clientbussinessemail', 'patchquery_clientbussinesswebsite','patchquery_clientbussinessphone','user_name' )
+        ->where( 'patchquery_clientemail','=', $personalinfo->patchquery_clientemail )
+        ->where( 'status_id', '=', 1 )
+        ->first();
+        $totalquerycount = DB::table( 'patchquerylist' )
+        ->select( 'patchquery_id')
+        ->where( 'patchquery_clientemail','=', $personalinfo->patchquery_clientemail )
+        ->where( 'status_id', '=', 1 )
+        ->count();
+        $paidquerycount = DB::table( 'patchquerylist' )
+        ->select( 'patchquery_id')
+        ->whereIn( 'patchquerystatus_id', [10,11,12] )
+        ->where( 'patchquery_clientemail','=', $personalinfo->patchquery_clientemail )
+        ->where( 'status_id', '=', 1 )
+        ->count();
+        $sumtotalquery = DB::table( 'patchquerylist' )
+        ->select( 'patchquery_id')
+        ->where( 'patchquery_clientemail','=', $personalinfo->patchquery_clientemail )
+        ->where( 'status_id', '=', 1 )
+        ->count();
+        $sumpaidquery = DB::table( 'patchquerylist' )
+        ->select( 'patchquery_id')
+        ->whereIn( 'patchquerystatus_id', [10,11,12] )
+        ->where( 'patchquery_clientemail','=', $personalinfo->patchquery_clientemail )
+        ->where( 'status_id', '=', 1 )
+        ->count();
+        $stats['totalcount'] = $totalquerycount;
+        $stats['paidcount'] = $paidquerycount;
+        $stats['sumtotal'] = $sumtotalquery;
+        $stats['sumpaid'] = $sumpaidquery;
+     
         if ( isset( $data ) ) {
-            return response()->json( [ 'data' => $data, 'message' => 'Patch Client Query List' ], 200 );
+            return response()->json( [ 'data' => $data, 'personalinfo' => $personalinfo, 'stats' => $stats, 'message' => 'Patch Client Query List' ], 200 );
         } else {
             return response()->json( [ 'data' => $emptyarray, 'message' => 'Patch Client Query List' ], 200 );
         }
