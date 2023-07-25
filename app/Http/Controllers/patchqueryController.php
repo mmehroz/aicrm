@@ -1248,17 +1248,35 @@ class patchqueryController extends Controller
         ->where( 'patchquery_clientemail','=', $personalinfo->patchquery_clientemail )
         ->where( 'status_id', '=', 1 )
         ->count();
-        $sumtotalquery = DB::table( 'patchquerylist' )
+        $gettotalqueryid = DB::table( 'patchquerylist' )
         ->select( 'patchquery_id')
         ->where( 'patchquery_clientemail','=', $personalinfo->patchquery_clientemail )
         ->where( 'status_id', '=', 1 )
-        ->count();
-        $sumpaidquery = DB::table( 'patchquerylist' )
+        ->get();
+        $totalqueryid = array();
+        foreach($gettotalqueryid as $gettotalqueryids){
+            $totalqueryid[] = $gettotalqueryids->patchquery_id;
+        }
+        $getpaidqueryid = DB::table( 'patchquerylist' )
         ->select( 'patchquery_id')
+        ->where( 'patchquery_clientemail','=', $personalinfo->patchquery_clientemail )
         ->whereIn( 'patchquerystatus_id', [10,11,12] )
-        ->where( 'patchquery_clientemail','=', $personalinfo->patchquery_clientemail )
         ->where( 'status_id', '=', 1 )
-        ->count();
+        ->get();
+        $paidqueryid = array();
+        foreach($gettotalqueryid as $gettotalqueryids){
+            $paidqueryid[] = $gettotalqueryids->patchquery_id;
+        }
+        $sumtotalquery = DB::table( 'patchqueryitem' )
+        ->select( 'patchqueryitem_proposalquote')
+        ->whereIn( 'patchquery_id', $totalqueryid )
+        ->where( 'status_id', '=', 1 )
+        ->sum('patchqueryitem_proposalquote');
+        $sumpaidquery = DB::table( 'patchqueryitem' )
+        ->select( 'patchqueryitem_proposalquote')
+        ->whereIn( 'patchquery_id', $paidqueryid )
+        ->where( 'status_id', '=', 1 )
+        ->sum('patchqueryitem_proposalquote');
         $stats['totalcount'] = $totalquerycount;
         $stats['paidcount'] = $paidquerycount;
         $stats['sumtotal'] = $sumtotalquery;
