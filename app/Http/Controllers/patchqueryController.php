@@ -1232,8 +1232,8 @@ class patchqueryController extends Controller
         ->where( 'status_id', '=', 1 )
         ->orderBy( 'patchquery_id', 'DESC' )
         ->paginate( 30 );
-        $personalinfo = DB::table( 'patchquerylist' )
-        ->select( 'patchquery_id', 'patchquery_clientname', 'patchquery_clientemail', 'patchquery_clientphone', 'patchquery_clientbussinessname', 'patchquery_clientbussinessemail', 'patchquery_clientbussinesswebsite','patchquery_clientbussinessphone','user_name' )
+        $personalinfo = DB::table( 'patchquerydetails' )
+        ->select( 'patchquery_id', 'patchquery_clientname', 'patchquery_clientemail', 'patchquery_clientphone', 'patchquery_clientbussinessname', 'patchquery_clientbussinessemail', 'patchquery_clientbussinesswebsite','patchquery_clientbussinessphone','patchquery_clientzip', 'state_name', 'country_name', 'patchquery_clientaddress' )
         ->where( 'patchquery_clientemail','=', $personalinfo->patchquery_clientemail )
         ->where( 'status_id', '=', 1 )
         ->first();

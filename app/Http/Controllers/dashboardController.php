@@ -95,6 +95,27 @@ class dashboardController extends Controller {
             $digitalbrandachieved[ $dindex ] = $digitalbrands;
             $dindex++;
         }
+        $digitalbrandpaidtotal = DB::table( 'orderpayment' )
+        ->select( 'orderpayment_amount' )
+        ->where( 'orderpaymentstatus_id', '=', 3 )
+        ->whereIn( 'orderpayment_date', $list )
+        ->where( 'status_id', '=', 1 )
+        ->sum( 'orderpayment_amount' );
+        $digitalbrandrecoverytotal = DB::table( 'orderpayment' )
+        ->select( 'orderpayment_amount' )
+        ->where( 'orderpaymentstatus_id', '=', 7 )
+        ->whereIn( 'orderpayment_recoverydate', $list )
+        ->where( 'status_id', '=', 1 )
+        ->sum( 'orderpayment_amount' );
+        $sumdigitaltotal = $digitalbrandpaidtotal+$digitalbrandrecoverytotal;
+        $sumpatchtotal = DB::table( 'patchqueryanditem' )
+        ->select( 'patchqueryitem_proposalquote' )
+        ->whereIn( 'patchquerystatus_id', [ 10, 11, 12 ] )
+        ->whereIn( 'patchquery_date', $list )
+        ->where( 'status_id', '=', 1 )
+        ->sum( 'patchqueryitem_proposalquote' );
+        $totalhistory['sumdigitaltotal'] = $sumdigitaltotal;
+        $totalhistory['sumpatchtotal'] = $sumpatchtotal;
         $patchbrand = DB::table( 'brand' )
         ->select( 'brand_id', 'brand_name' )
         ->whereIn( 'brand_id', $brands )
@@ -319,7 +340,7 @@ class dashboardController extends Controller {
         );
         $userpicturepath = URL::to( '/' ).'/public/user_picture/';
         $brandlogopath = URL::to( '/' ).'/public/brand_logo/';
-        return response()->json( [ 'topdata' => $topdata, 'payable' => $payable, 'ppcverview' => $ppcverview, 'digitalbrandachieved' => $digitalbrandachieved, 'patchbrandachieved' => $patchbrandachieved, 'upcommingpayments' => $getupcommingpayments, 'sumpayments' => $sumupcommingpayments, 'pendingtask' => $pendingtask, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath, 'message' => 'Admin Dashboard' ], 200 );
+        return response()->json( [ 'topdata' => $topdata, 'payable' => $payable, 'ppcverview' => $ppcverview, 'digitalbrandachieved' => $digitalbrandachieved, 'patchbrandachieved' => $patchbrandachieved, 'totalhistory' =>$totalhistory, 'upcommingpayments' => $getupcommingpayments, 'sumpayments' => $sumupcommingpayments, 'pendingtask' => $pendingtask, 'userpicturepath' => $userpicturepath, 'brandlogopath' => $brandlogopath, 'message' => 'Admin Dashboard' ], 200 );
     }
 
     public function adminbranddetails( Request $request ) {
@@ -1360,6 +1381,7 @@ class dashboardController extends Controller {
         $patchtarget = $patchusertarget+$targetincrement;
         $patchgross = DB::table( 'patchqueryanditem' )
         ->select( 'patchqueryitem_proposalquote' )
+        ->where( 'patchquerystatus_id', '=', 5 )
         ->whereIn( 'patchquery_date', $list )
         ->whereIn( 'created_by', $sortpatchuser )
         ->where( 'status_id', '=', 1 )
@@ -1588,9 +1610,17 @@ class dashboardController extends Controller {
         ->whereIn( 'created_by', $sortpatchuser )
         ->where( 'status_id', '=', 1 )
         ->sum( 'patchqueryitem_proposalquote' );
+        $sentpatchquerylist = DB::table( 'patchquerylist' )
+        ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id', 'patchquerystatus_name', 'user_name' )
+        ->whereIn( 'patchquery_date', $list )
+        ->whereIn( 'created_by', $userids )
+        ->where( 'patchquerystatus_id','=', 5 )
+        ->where( 'status_id', '=', 1 )
+        ->orderBy( 'patchquery_id', 'DESC' )
+        ->get();
         $patchstatuswisequantity = array( $patchpickedquantity, $patchvendorquantity, $patchreturnquantity, $patchclientquantity, $patchapprovequantity, $patchrejectquantity, $patchpaidquantity, $patchdeliverquantity );
         $patchstatuswiseamount = array( $patchpickedamount, $patchvendoramount, $patchreturnamount, $patchclientamount, $patchapproveamount, $patchrejectamount, $patchpaidamount, $patchdeliveramount );
-        return response()->json( [ 'patchbillingoverview' => $patchbillingoverview, 'patchorderoverview' => $patchorderoverview, 'patchstatuswisequantity' => $patchstatuswisequantity, 'patchstatuswiseamount' => $patchstatuswiseamount, 'message' => 'Admin Patch Dashboard' ], 200 );
+        return response()->json( [ 'patchbillingoverview' => $patchbillingoverview, 'sentpatchquerylist' => $sentpatchquerylist, 'patchorderoverview' => $patchorderoverview, 'patchstatuswisequantity' => $patchstatuswisequantity, 'patchstatuswiseamount' => $patchstatuswiseamount, 'message' => 'Admin Patch Dashboard' ], 200 );
     }
 
     public function adminpatchandquerylist( Request $request ) {
@@ -2530,6 +2560,62 @@ class dashboardController extends Controller {
         }
         if ( $sum ) {
             return response()->json( [ 'sum' => $sum, 'ownerwise' => $ownerwise, 'message' => 'Expense Dashboard' ], 200 );
+        } else {
+            return response()->json( 'Oops! Something Went Wrong', 400 );
+        }
+    }
+    public function departmentwiseusers( Request $request ) {
+        $validate = Validator::make( $request->all(), [
+            'yearmonth'	=> 'required',
+        ] );
+        if ( $validate->fails() ) {
+            return response()->json( $validate->errors(), 400 );
+        }
+        $yearmonth = explode( '-', '2023-06' );
+        if ( $yearmonth[ 1 ] <= 9 ) {
+            $setyearmonth = $yearmonth[ 0 ].'-0'.$yearmonth[ 1 ];
+        } else {
+            $setyearmonth = $yearmonth[ 0 ].'-'.$yearmonth[ 1 ];
+        }
+        $brand = DB::table('brand')
+		->select('brand_id','brand_name')
+		->where('status_id','=',1)
+		->get();
+        $userinfo = array();
+        $mainindex = 0;
+        foreach($brand as $brands){
+            $index = 0;
+            $user = DB::table('userbarnd')
+            ->select('user_id')
+            ->where('brand_id','=',$brands->brand_id)
+            ->where('status_id','=',1)
+            ->get();
+            foreach($user as $users){
+                $sortuser = DB::table('user')
+                ->select('user_id','user_name','user_picture','user_batchid')
+                ->where('user_id','=',$users->user_id)
+                ->where('status_id','=',1)
+                ->first();
+                if(isset($sortuser->user_id)){
+                    $userinfo[$mainindex][$brands->brand_name][$index]['user_name'] = $sortuser->user_name;
+                    $userinfo[$mainindex][$brands->brand_name][$index]['user_picture'] = $sortuser->user_picture;
+                    $userinfo[$mainindex][$brands->brand_name][$index]['netsalary'] = DB::table('netsalary')
+                    ->select('netsalary_amount')
+                    ->where('user_id','=',$sortuser->user_id)
+                    ->where('netsalary_month','=',$setyearmonth)
+                    ->sum('netsalary_amount');
+                    $userinfo[$mainindex][$brands->brand_name][$index]['comission'] = DB::connection('mysql2')->table('adjustments')
+                    ->select('incentiveamount')
+                    ->where('EMP_BADGE_ID','=',$sortuser->user_batchid)
+                    ->where('AdjMonth','=',$setyearmonth)
+                    ->sum('incentiveamount');
+                    $index++;
+                }
+            }
+            $mainindex++;
+        }
+        if ( $userinfo ) {
+            return response()->json( [ 'userinfo' => $userinfo, 'message' => 'Departmentwise Emaployees' ], 200 );
         } else {
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }

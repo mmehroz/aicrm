@@ -151,9 +151,19 @@ class expenseController extends Controller
         } else {
             $setyearmonth = $yearmonth[ 0 ].'-'.$yearmonth[ 1 ];
         }
+		$disabledata = DB::table('expensetype')
+		->select('expensetype_id')
+		->where('status_id','=',1)
+		->where('expensetype_disabledate','<',$setyearmonth)
+		->get();
+		$sortdata = array();
+		foreach($disabledata as $disabledatas){
+			$sortdata[] = $disabledatas->expensetype_id;
+		}
 		$data = DB::table('expensetype')
 		->select('*')
 		->where('status_id','=',1)
+		->whereNotIN('expensetype_id',$sortdata)
 		->get();
 		$owner = DB::table('owners')
 		->select('owners_name')
@@ -211,6 +221,25 @@ class expenseController extends Controller
 		}else{
 			$emptyarray = array();
 			return response()->json(['data' => $emptyarray,'message' => 'Expense Report'],200);
+		}
+	}
+	public function disableeexpense(Request $request){
+		$validate = Validator::make($request->all(), [
+			'expensetype_id' 		=> 'required',
+		]);
+		if ($validate->fails()) {
+			return response()->json($validate->errors(), 400);
+		}
+		$adds = array(
+			'expensetype_disabledate'	=> date('Y-m'),
+		);
+		$save = DB::table('expensetype')
+		->where('expensetype_id','=',$request->expensetype_id)
+		->update($adds);
+		if($save){
+			return response()->json(['message' => 'Expense Disabled Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
 }

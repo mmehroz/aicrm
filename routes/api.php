@@ -33,6 +33,7 @@ Route::any('/downloadclientattachment', [taskController::class, 'downloadclienta
 Route::any('/downloadworkattachment', [taskController::class, 'downloadworkattachment']);
 
 Route::middleware('cors')->group(function(){
+    Route::any('/departmentwiseusers', [dashboardController::class, 'departmentwiseusers']);
 Route::any('/login', [loginController::class, 'login']);
 Route::middleware('login.check')->group(function(){	
 Route::any('/logout', [loginController::class, 'logout']);
@@ -50,8 +51,6 @@ Route::any('/orderquestion', [settingsController::class, 'orderquestion']);
 Route::any('/orderpaymentstatus', [settingsController::class, 'orderpaymentstatus']);
 Route::any('/patchquerystatus', [settingsController::class, 'patchquerystatus']);
 Route::any('/patchpaymenttype', [settingsController::class, 'patchpaymenttype']);
-Route::any('/patchclientlist', [settingsController::class, 'patchclientlist']);
-Route::any('/clientwisequerylist', [settingsController::class, 'clientwisequerylist']);
 
 Route::any('/createbrand', [brandController::class, 'createbrand']);
 Route::any('/updatebrand', [brandController::class, 'updatebrand']);
@@ -160,6 +159,7 @@ Route::any('/salespatchdashboard', [dashboardController::class, 'salespatchdashb
 Route::any('/adminpatchandquerylist', [dashboardController::class, 'adminpatchandquerylist']);
 Route::any('/patchqueryprofitlossstatement', [dashboardController::class, 'patchqueryprofitlossstatement']);
 Route::any('/expensedashboard', [dashboardController::class, 'expensedashboard']);
+
 
 Route::any('/forwardedpaymentlist', [billingController::class, 'forwardedpaymentlist']);
 Route::any('/pickedpaymentlist', [billingController::class, 'pickedpaymentlist']);
@@ -275,6 +275,8 @@ Route::any('/patchtype', [patchqueryController::class, 'patchtype']);
 Route::any('/patchback', [patchqueryController::class, 'patchback']);
 Route::any('/patchquerysub', [patchqueryController::class, 'patchquerysub']);
 Route::any('/validatepatchquery', [patchqueryController::class, 'validatepatchquery']);
+Route::any('/patchclientlist', [patchqueryController::class, 'patchclientlist']);
+Route::any('/clientwisequerylist', [patchqueryController::class, 'clientwisequerylist']);
 
 Route::any('/rawdatasheetlist', [rawdataController::class, 'rawdatasheetlist']);
 Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);
@@ -296,5 +298,6 @@ Route::any('/expensetype', [expenseController::class, 'expensetype']);
 Route::any('/addexpenseactual', [expenseController::class, 'addexpenseactual']);
 Route::any('/addexpense', [expenseController::class, 'addexpense']);
 Route::any('/expensereport', [expenseController::class, 'expensereport']);
+Route::any('/disableeexpense', [expenseController::class, 'disableeexpense']);
 });
 });
