@@ -2581,10 +2581,12 @@ class dashboardController extends Controller {
 		->select('brand_id','brand_name')
 		->where('status_id','=',1)
 		->get();
-        $userinfo = array();
         $mainindex = 0;
         foreach($brand as $brands){
             $index = 0;
+            $b = 'userinfo'.$brands->brand_id;
+            $a = print_r($b);
+            $a = array();
             $user = DB::table('userbarnd')
             ->select('user_id')
             ->where('brand_id','=',$brands->brand_id)
@@ -2597,14 +2599,14 @@ class dashboardController extends Controller {
                 ->where('status_id','=',1)
                 ->first();
                 if(isset($sortuser->user_id)){
-                    $userinfo[$mainindex][$brands->brand_name][$index]['user_name'] = $sortuser->user_name;
-                    $userinfo[$mainindex][$brands->brand_name][$index]['user_picture'] = $sortuser->user_picture;
-                    $userinfo[$mainindex][$brands->brand_name][$index]['netsalary'] = DB::table('netsalary')
+                    $a[$index]['user_name'] = $sortuser->user_name;
+                    $a[$index]['user_picture'] = $sortuser->user_picture;
+                    $a[$index]['netsalary'] = DB::table('netsalary')
                     ->select('netsalary_amount')
                     ->where('user_id','=',$sortuser->user_id)
                     ->where('netsalary_month','=',$setyearmonth)
                     ->sum('netsalary_amount');
-                    $userinfo[$mainindex][$brands->brand_name][$index]['comission'] = DB::connection('mysql2')->table('adjustments')
+                    $a[$index]['comission'] = DB::connection('mysql2')->table('adjustments')
                     ->select('incentiveamount')
                     ->where('EMP_BADGE_ID','=',$sortuser->user_batchid)
                     ->where('AdjMonth','=',$setyearmonth)
@@ -2614,8 +2616,39 @@ class dashboardController extends Controller {
             }
             $mainindex++;
         }
-        if ( $userinfo ) {
-            return response()->json( [ 'userinfo' => $userinfo, 'message' => 'Departmentwise Emaployees' ], 200 );
+        // dd($a);
+        //test
+        // $index=0;
+        // $user = DB::table('userbarnd')
+        // ->select('user_id')
+        // ->where('brand_id','=',1)
+        // ->where('status_id','=',1)
+        // ->get();
+        // foreach($user as $users){
+        //     $sortuser = DB::table('user')
+        //     ->select('user_id','user_name','user_picture','user_batchid')
+        //     ->where('user_id','=',$users->user_id)
+        //     ->where('status_id','=',1)
+        //     ->first();
+        //     if(isset($sortuser->user_id)){
+        //         $userinfo[$index]['user_name'] = $sortuser->user_name;
+        //         $userinfo[$index]['user_picture'] = $sortuser->user_picture;
+        //         $userinfo[$index]['netsalary'] = DB::table('netsalary')
+        //         ->select('netsalary_amount')
+        //         ->where('user_id','=',$sortuser->user_id)
+        //         ->where('netsalary_month','=',$setyearmonth)
+        //         ->sum('netsalary_amount');
+        //         $userinfo[$index]['comission'] = DB::connection('mysql2')->table('adjustments')
+        //         ->select('incentiveamount')
+        //         ->where('EMP_BADGE_ID','=',$sortuser->user_batchid)
+        //         ->where('AdjMonth','=',$setyearmonth)
+        //         ->sum('incentiveamount');
+        //         $index++;
+        //     }
+        // }
+
+        if ( $a ) {
+            return response()->json( [ 'max' => $a, 'message' => 'Departmentwise Emaployees' ], 200 );
         } else {
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }
