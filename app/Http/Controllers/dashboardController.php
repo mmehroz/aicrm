@@ -2564,91 +2564,135 @@ class dashboardController extends Controller {
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }
     }
-    public function departmentwiseusers( Request $request ) {
+    public function departmentwiseusers(Request $request) {
+        $validate = Validator::make($request->all(), [
+            'yearmonth' => 'required',
+        ]); 
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 400);
+        }
+        $yearmonth = explode('-', '2023-06');
+        if ($yearmonth[1] <= 9) {
+            $setyearmonth = $yearmonth[0] . '-0' . $yearmonth[1];
+        } else {
+            $setyearmonth = $yearmonth[0] . '-' . $yearmonth[1];
+        }
+        $brand = DB::table('brand')
+            ->select('brand_id', 'brand_name')
+            ->where('status_id', '=', 1)
+            ->get();
+        $result = []; 
+        foreach ($brand as $brands) {
+            $index = 0;
+            $brandId = $brands->brand_id;
+            $brandName = $brands->brand_name;
+            $key = 'data'.$brandId;
+            $dynamicArray = [];
+            $user = DB::table('userbarnd')
+                ->select('user_id')
+                ->where('brand_id', '=', $brands->brand_id)
+                ->where('status_id', '=', 1)
+                ->get();
+            foreach ($user as $users) {
+                $sortuser = DB::table('user')
+                    ->select('user_id', 'user_name', 'user_picture', 'user_batchid')
+                    ->where('user_id', '=', $users->user_id)
+                    ->where('status_id', '=', 1)
+                    ->first();
+                if (isset($sortuser->user_id)) {
+                    $dynamicArray[$index]['user_id'] = $sortuser->user_id;
+                    $dynamicArray[$index]['user_name'] = $sortuser->user_name;
+                    $dynamicArray[$index]['user_picture'] = $sortuser->user_picture;
+                    $dynamicArray[$index]['netsalary'] = DB::table('netsalary')
+                        ->select('netsalary_amount')
+                        ->where('user_id', '=', $sortuser->user_id)
+                        ->where('netsalary_month', '=', $setyearmonth)
+                        ->sum('netsalary_amount');
+                    $dynamicArray[$index]['comission'] = DB::connection('mysql2')->table('adjustments')
+                        ->select('incentiveamount')
+                        ->where('EMP_BADGE_ID', '=', $sortuser->user_batchid)
+                        ->where('AdjMonth', '=', $setyearmonth)
+                        ->sum('incentiveamount');
+                    $index++;
+                }
+            }
+            $result[$key] = $dynamicArray;
+        }
+        return response()->json($result, 200);
+    }
+    public function productionvendorquery(Request $request){
+        $validate = Validator::make($request->all(), [
+            'yearmonth' => 'required',
+        ]); 
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 400);
+        }
+        $yearmonth = explode('-', '2023-06');
+        if ($yearmonth[1] <= 9) {
+            $setyearmonth = $yearmonth[0] . '-0' . $yearmonth[1];
+        } else {
+            $setyearmonth = $yearmonth[0] . '-' . $yearmonth[1];
+        }
+		$data = DB::table('vendor')
+		->select('*')
+		->where('status_id','=',1)
+		->where('vendortype_id','=',1)
+		->get();
+		$index = 0;
+        $finaldata = array();
+		foreach($data as $datas){
+		    $detail = DB::table('patchqueryanditem')
+			->select('*')
+			->where('patchqueryitem_finalvendor','=',$datas->vendor_id)
+			->where('patchquery_date','=',$setyearmonth)
+			->orderBy('patchqueryitem_id','DESC')
+            ->limit(3)
+			->get();
+            foreach($detail as $details){
+                $cost = DB::table('patchqueryvendor')
+                ->select('patchqueryvendor_cost')
+                ->where('vendorproduction_id','=',$datas->vendor_id)
+                ->where('patchqueryitem_id','=',$details->patchqueryitem_id)
+                ->where('status_id','=',1)
+                ->sum('patchqueryvendor_cost');
+                $paid = DB::table('patchpayment')
+                ->select('patchpayment_amount')
+                ->where('patchpaymenttype_id','=',1)
+                ->where('patch_id','=',$details->patchqueryitem_id)
+                ->where('status_id','=',1)
+                ->sum('patchpayment_amount');
+                $remaining = $cost-$paid;
+                $details['cost'] = $cost;
+                $details['paid'] = $paid;
+                $details['remaining'] = $remaining;
+                $datas[$index] = $details;
+            }
+			$index++;
+		}
+		if($data){
+			return response()->json(['data' => $data, 'message' => 'Production Vendor Wise Patch Query List'],200);
+		}else{
+			$emptyarray = array();
+			return response()->json(['data' => $emptyarray,'message' => 'Production Vendor Wise Patch Query List'],200);
+		}
+	}
+    public function savenetsalary( Request $request ) {
         $validate = Validator::make( $request->all(), [
-            'yearmonth'	=> 'required',
+            'netsalary_amount'	=> 'required',
+            'netsalary_month'	=> 'required',
+            'emp_id'	        => 'required',
         ] );
         if ( $validate->fails() ) {
             return response()->json( $validate->errors(), 400 );
         }
-        $yearmonth = explode( '-', '2023-06' );
-        if ( $yearmonth[ 1 ] <= 9 ) {
-            $setyearmonth = $yearmonth[ 0 ].'-0'.$yearmonth[ 1 ];
-        } else {
-            $setyearmonth = $yearmonth[ 0 ].'-'.$yearmonth[ 1 ];
-        }
-        $brand = DB::table('brand')
-		->select('brand_id','brand_name')
-		->where('status_id','=',1)
-		->get();
-        $mainindex = 0;
-        foreach($brand as $brands){
-            $index = 0;
-            $b = 'userinfo'.$brands->brand_id;
-            $a = print_r($b);
-            $a = array();
-            $user = DB::table('userbarnd')
-            ->select('user_id')
-            ->where('brand_id','=',$brands->brand_id)
-            ->where('status_id','=',1)
-            ->get();
-            foreach($user as $users){
-                $sortuser = DB::table('user')
-                ->select('user_id','user_name','user_picture','user_batchid')
-                ->where('user_id','=',$users->user_id)
-                ->where('status_id','=',1)
-                ->first();
-                if(isset($sortuser->user_id)){
-                    $a[$index]['user_name'] = $sortuser->user_name;
-                    $a[$index]['user_picture'] = $sortuser->user_picture;
-                    $a[$index]['netsalary'] = DB::table('netsalary')
-                    ->select('netsalary_amount')
-                    ->where('user_id','=',$sortuser->user_id)
-                    ->where('netsalary_month','=',$setyearmonth)
-                    ->sum('netsalary_amount');
-                    $a[$index]['comission'] = DB::connection('mysql2')->table('adjustments')
-                    ->select('incentiveamount')
-                    ->where('EMP_BADGE_ID','=',$sortuser->user_batchid)
-                    ->where('AdjMonth','=',$setyearmonth)
-                    ->sum('incentiveamount');
-                    $index++;
-                }
-            }
-            $mainindex++;
-        }
-        // dd($a);
-        //test
-        // $index=0;
-        // $user = DB::table('userbarnd')
-        // ->select('user_id')
-        // ->where('brand_id','=',1)
-        // ->where('status_id','=',1)
-        // ->get();
-        // foreach($user as $users){
-        //     $sortuser = DB::table('user')
-        //     ->select('user_id','user_name','user_picture','user_batchid')
-        //     ->where('user_id','=',$users->user_id)
-        //     ->where('status_id','=',1)
-        //     ->first();
-        //     if(isset($sortuser->user_id)){
-        //         $userinfo[$index]['user_name'] = $sortuser->user_name;
-        //         $userinfo[$index]['user_picture'] = $sortuser->user_picture;
-        //         $userinfo[$index]['netsalary'] = DB::table('netsalary')
-        //         ->select('netsalary_amount')
-        //         ->where('user_id','=',$sortuser->user_id)
-        //         ->where('netsalary_month','=',$setyearmonth)
-        //         ->sum('netsalary_amount');
-        //         $userinfo[$index]['comission'] = DB::connection('mysql2')->table('adjustments')
-        //         ->select('incentiveamount')
-        //         ->where('EMP_BADGE_ID','=',$sortuser->user_batchid)
-        //         ->where('AdjMonth','=',$setyearmonth)
-        //         ->sum('incentiveamount');
-        //         $index++;
-        //     }
-        // }
-
-        if ( $a ) {
-            return response()->json( [ 'max' => $a, 'message' => 'Departmentwise Emaployees' ], 200 );
+        $adds = array(
+            'netsalary_amount' 	=> $request->netsalary_amount,
+            'netsalary_month' 	=> $request->netsalary_month,
+            'user_id'		    => $request->emp_id,
+        );
+        $save = DB::table( 'netsalary' )->insert($adds);
+        if ( $save ) {
+            return response()->json( [ 'message' => 'Net Salary Added Successfully' ], 200 );
         } else {
             return response()->json( 'Oops! Something Went Wrong', 400 );
         }

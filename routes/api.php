@@ -33,7 +33,8 @@ Route::any('/downloadclientattachment', [taskController::class, 'downloadclienta
 Route::any('/downloadworkattachment', [taskController::class, 'downloadworkattachment']);
 
 Route::middleware('cors')->group(function(){
-    Route::any('/departmentwiseusers', [dashboardController::class, 'departmentwiseusers']);
+    Route::any('/productionvendorquery', [dashboardController::class, 'productionvendorquery']);
+    
 Route::any('/login', [loginController::class, 'login']);
 Route::middleware('login.check')->group(function(){	
 Route::any('/logout', [loginController::class, 'logout']);
@@ -159,7 +160,8 @@ Route::any('/salespatchdashboard', [dashboardController::class, 'salespatchdashb
 Route::any('/adminpatchandquerylist', [dashboardController::class, 'adminpatchandquerylist']);
 Route::any('/patchqueryprofitlossstatement', [dashboardController::class, 'patchqueryprofitlossstatement']);
 Route::any('/expensedashboard', [dashboardController::class, 'expensedashboard']);
-
+Route::any('/departmentwiseusers', [dashboardController::class, 'departmentwiseusers']);
+Route::any('/savenetsalary', [dashboardController::class, 'savenetsalary']);
 
 Route::any('/forwardedpaymentlist', [billingController::class, 'forwardedpaymentlist']);
 Route::any('/pickedpaymentlist', [billingController::class, 'pickedpaymentlist']);
@@ -181,7 +183,6 @@ Route::any('/oldcrmbillingpaymentlist', [billingController::class, 'oldcrmbillin
 Route::any('/markpaidonoldcrmpayment', [billingController::class, 'markpaidonoldcrmpayment']);
 Route::any('/searchpayment', [billingController::class, 'searchpayment']);
 Route::any('/searchmergepayment', [billingController::class, 'searchmergepayment']);
-Route::any('/savenetsalary', [billingController::class, 'savenetsalary']);
 
 Route::any('/savefreshlead', [freshleadController::class, 'savefreshlead']);
 Route::any('/freshleadlist', [freshleadController::class, 'freshleadlist']);

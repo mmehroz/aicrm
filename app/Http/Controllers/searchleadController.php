@@ -40,7 +40,7 @@ class searchleadController extends Controller
 				->where('status_id','=',1)
 				->orderByDesc('lead_id')
 				->first();
-				$datebeforethreemonths = date('Y-m-d', strtotime($leaddate->lead_date . "-3 months") );
+				$datebeforethreemonths = date('Y-m-d', strtotime($leaddate->lead_date . "-2 months") );
 				$leadafterthreemonth = DB::table('orderpayment')
 				->select('lead_id')
 				->where('orderpayment_date','>',$datebeforethreemonths)
