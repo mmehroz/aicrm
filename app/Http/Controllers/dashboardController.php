@@ -2606,7 +2606,7 @@ class dashboardController extends Controller {
                     $dynamicArray[$index]['netsalary'] = DB::table('netsalary')
                         ->select('netsalary_amount')
                         ->where('user_id', '=', $sortuser->user_id)
-                        ->where('netsalary_month', '=', $setyearmonth)
+                        ->where('netsalary_month', '=', $request->yearmonth)
                         ->sum('netsalary_amount');
                     $dynamicArray[$index]['comission'] = DB::connection('mysql2')->table('adjustments')
                         ->select('incentiveamount')
@@ -2620,60 +2620,69 @@ class dashboardController extends Controller {
         }
         return response()->json($result, 200);
     }
-    public function productionvendorquery(Request $request){
+    public function patchvendorqueryoverview(Request $request){
         $validate = Validator::make($request->all(), [
-            'yearmonth' => 'required',
+            'vendortype_id' => 'required',
         ]); 
         if ($validate->fails()) {
             return response()->json($validate->errors(), 400);
         }
-        $yearmonth = explode('-', '2023-06');
-        if ($yearmonth[1] <= 9) {
-            $setyearmonth = $yearmonth[0] . '-0' . $yearmonth[1];
-        } else {
-            $setyearmonth = $yearmonth[0] . '-' . $yearmonth[1];
-        }
-		$data = DB::table('vendor')
-		->select('*')
+       $data = DB::table('vendor')
+		->select('vendor_id','vendor_name','vendor_email','vendor_contact')
 		->where('status_id','=',1)
-		->where('vendortype_id','=',1)
+		->where('vendortype_id','=',$request->vendortype_id)
 		->get();
 		$index = 0;
         $finaldata = array();
 		foreach($data as $datas){
-		    $detail = DB::table('patchqueryanditem')
-			->select('*')
-			->where('patchqueryitem_finalvendor','=',$datas->vendor_id)
-			->where('patchquery_date','=',$setyearmonth)
-			->orderBy('patchqueryitem_id','DESC')
-            ->limit(3)
-			->get();
-            foreach($detail as $details){
+            if($request->vendortype_id == 1){
+                $detail = DB::table('patchqueryanditem')
+                ->select('patchqueryitem_id')
+                ->where('patchqueryitem_finalvendor','=',$datas->vendor_id)
+                ->get();
+                $sortdetails = array();
+                foreach($detail as $details){
+                    $sortdetails[] = $details->patchqueryitem_id;
+                }
                 $cost = DB::table('patchqueryvendor')
                 ->select('patchqueryvendor_cost')
                 ->where('vendorproduction_id','=',$datas->vendor_id)
-                ->where('patchqueryitem_id','=',$details->patchqueryitem_id)
+                ->whereIn('patchqueryitem_id',$sortdetails)
                 ->where('status_id','=',1)
                 ->sum('patchqueryvendor_cost');
-                $paid = DB::table('patchpayment')
-                ->select('patchpayment_amount')
-                ->where('patchpaymenttype_id','=',1)
-                ->where('patch_id','=',$details->patchqueryitem_id)
-                ->where('status_id','=',1)
-                ->sum('patchpayment_amount');
-                $remaining = $cost-$paid;
-                $details['cost'] = $cost;
-                $details['paid'] = $paid;
-                $details['remaining'] = $remaining;
-                $datas[$index] = $details;
+            }else{
+                $detail = DB::table('patchquery')
+                ->select('patchquery_id')
+                ->where('vendordelivery_id','=',$datas->vendor_id)
+                ->get();
+                $sortdetails = array();
+                foreach($detail as $details){
+                    $sortdetails[] = $details->patchquery_id;
+                }
+                $cost = DB::table('patchquery')
+                ->select('patchquery_shipmentamount')
+                ->where('vendordelivery_id','=',$datas->vendor_id)
+                ->sum('patchquery_shipmentamount');
             }
+            $paid = DB::table('patchpayment')
+            ->select('patchpayment_amount')
+            ->where('patchpaymenttype_id','=',$request->vendortype_id)
+            ->whereIn('patch_id',$sortdetails)
+            ->where('status_id','=',1)
+            ->sum('patchpayment_amount');
+            
+            $remaining = $cost-$paid;
+            $datas->cost = $cost;
+            $datas->paid = $paid;
+            $datas->remaining = $remaining;
+            $data[$index] = $datas;
 			$index++;
 		}
 		if($data){
-			return response()->json(['data' => $data, 'message' => 'Production Vendor Wise Patch Query List'],200);
+			return response()->json(['data' => $data, 'message' => 'Patch Vendor Query Overview'],200);
 		}else{
 			$emptyarray = array();
-			return response()->json(['data' => $emptyarray,'message' => 'Production Vendor Wise Patch Query List'],200);
+			return response()->json(['data' => $emptyarray,'message' => 'Patch Vendor Query Overview'],200);
 		}
 	}
     public function savenetsalary( Request $request ) {

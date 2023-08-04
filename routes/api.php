@@ -33,7 +33,7 @@ Route::any('/downloadclientattachment', [taskController::class, 'downloadclienta
 Route::any('/downloadworkattachment', [taskController::class, 'downloadworkattachment']);
 
 Route::middleware('cors')->group(function(){
-    Route::any('/productionvendorquery', [dashboardController::class, 'productionvendorquery']);
+    Route::any('/vendorquerydetails', [patchqueryController::class, 'vendorquerydetails']);
     
 Route::any('/login', [loginController::class, 'login']);
 Route::middleware('login.check')->group(function(){	
@@ -162,6 +162,7 @@ Route::any('/patchqueryprofitlossstatement', [dashboardController::class, 'patch
 Route::any('/expensedashboard', [dashboardController::class, 'expensedashboard']);
 Route::any('/departmentwiseusers', [dashboardController::class, 'departmentwiseusers']);
 Route::any('/savenetsalary', [dashboardController::class, 'savenetsalary']);
+Route::any('/patchvendorqueryoverview', [dashboardController::class, 'patchvendorqueryoverview']);
 
 Route::any('/forwardedpaymentlist', [billingController::class, 'forwardedpaymentlist']);
 Route::any('/pickedpaymentlist', [billingController::class, 'pickedpaymentlist']);

@@ -1288,4 +1288,44 @@ class patchqueryController extends Controller
             return response()->json( [ 'data' => $emptyarray, 'message' => 'Patch Client Query List' ], 200 );
         }
     }
+    public function vendorquerydetails(Request $request){
+        $validate = Validator::make($request->all(), [
+            'vendor_id' => 'required',
+        ]); 
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 400);
+        }
+        $index = 0;
+        $data = DB::table('patchqueryanditem')
+        ->select('*')
+        ->where('patchqueryitem_finalvendor','=',$request->vendor_id)
+        ->where('status_id','=',1)
+        ->get();
+        foreach($data as $datas){
+            $cost = DB::table('patchqueryvendor')
+            ->select('patchqueryvendor_cost')
+            ->where('vendorproduction_id','=',$request->vendor_id)
+            ->where('patchqueryitem_id','=',$datas->patchqueryitem_id)
+            ->where('status_id','=',1)
+            ->sum('patchqueryvendor_cost');
+            $paid = DB::table('patchpayment')
+            ->select('patchpayment_amount')
+            ->where('patchpaymenttype_id','=',1)
+            ->where('patch_id','=',$datas->patchqueryitem_id)
+            ->where('status_id','=',1)
+            ->sum('patchpayment_amount');
+            $remaining = $cost-$paid;
+            $datas->cost = $cost;
+            $datas->paid = $paid;
+            $datas->remaining = $remaining;
+            $data[$index] = $datas;
+            $index++;
+        }
+		if($data){
+			return response()->json(['data' => $data, 'message' => 'Vendor Wise Patch Query Details'],200);
+		}else{
+			$emptyarray = array();
+			return response()->json(['data' => $emptyarray,'message' => 'Vendor Wise Patch Query Details'],200);
+		}
+	}
 }
