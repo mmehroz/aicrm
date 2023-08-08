@@ -1288,17 +1288,25 @@ class patchqueryController extends Controller
             return response()->json( [ 'data' => $emptyarray, 'message' => 'Patch Client Query List' ], 200 );
         }
     }
-    public function vendorquerydetails(Request $request){
+    public function productionvendorquerydetails(Request $request){
         $validate = Validator::make($request->all(), [
             'vendor_id' => 'required',
+            'yearmonth'	=> 'required',
         ]); 
         if ($validate->fails()) {
             return response()->json($validate->errors(), 400);
+        }
+        $yearmonth = explode( '-', $request->yearmonth );
+        if ( $yearmonth[ 1 ] <= 9 ) {
+            $setyearmonth = $yearmonth[ 0 ].'-0'.$yearmonth[ 1 ];
+        } else {
+            $setyearmonth = $yearmonth[ 0 ].'-'.$yearmonth[ 1 ];
         }
         $index = 0;
         $data = DB::table('patchqueryanditem')
         ->select('*')
         ->where('patchqueryitem_finalvendor','=',$request->vendor_id)
+        ->where('patchquery_date','like', $setyearmonth.'%')
         ->where('status_id','=',1)
         ->get();
         foreach($data as $datas){
@@ -1322,10 +1330,58 @@ class patchqueryController extends Controller
             $index++;
         }
 		if($data){
-			return response()->json(['data' => $data, 'message' => 'Vendor Wise Patch Query Details'],200);
+			return response()->json(['data' => $data, 'message' => 'Production Vendor Patch Query Details'],200);
 		}else{
 			$emptyarray = array();
-			return response()->json(['data' => $emptyarray,'message' => 'Vendor Wise Patch Query Details'],200);
+			return response()->json(['data' => $emptyarray,'message' => 'Production Vendor Patch Query Details'],200);
+		}
+	}
+    public function shippingvendorquerydetails(Request $request){
+        $validate = Validator::make($request->all(), [
+            'vendor_id' => 'required',
+            'yearmonth'	=> 'required',
+        ]); 
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 400);
+        }
+        $yearmonth = explode( '-', $request->yearmonth );
+        if ( $yearmonth[ 1 ] <= 9 ) {
+            $setyearmonth = $yearmonth[ 0 ].'-0'.$yearmonth[ 1 ];
+        } else {
+            $setyearmonth = $yearmonth[ 0 ].'-'.$yearmonth[ 1 ];
+        }
+        $index = 0;
+        $data = DB::table('patchquery')
+        ->select('*')
+        ->where('vendordelivery_id','=',$request->vendor_id)
+        ->where('patchquery_date','like', $setyearmonth.'%')
+        ->where('status_id','=',1)
+        ->get();
+        foreach($data as $datas){
+            $cost = DB::table('patchquery')
+            ->select('patchquery_shipmentamount')
+            ->where('vendordelivery_id','=',$request->vendor_id)
+            ->where('patchquery_id ','=',$datas->patchquery_id)
+            ->where('status_id','=',1)
+            ->sum('patchquery_shipmentamount');
+            $paid = DB::table('patchpayment')
+            ->select('patchpayment_amount')
+            ->where('patchpaymenttype_id','=',2)
+            ->where('patch_id','=',$datas->patchquery_id)
+            ->where('status_id','=',1)
+            ->sum('patchpayment_amount');
+            $remaining = $cost-$paid;
+            $datas->cost = $cost;
+            $datas->paid = $paid;
+            $datas->remaining = $remaining;
+            $data[$index] = $datas;
+            $index++;
+        }
+		if($data){
+			return response()->json(['data' => $data, 'message' => 'Shipping Vendor Patch Query Details'],200);
+		}else{
+			$emptyarray = array();
+			return response()->json(['data' => $emptyarray,'message' => 'Shipping Vendor Patch Query Details'],200);
 		}
 	}
 }

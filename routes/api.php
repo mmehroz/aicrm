@@ -33,8 +33,6 @@ Route::any('/downloadclientattachment', [taskController::class, 'downloadclienta
 Route::any('/downloadworkattachment', [taskController::class, 'downloadworkattachment']);
 
 Route::middleware('cors')->group(function(){
-    Route::any('/vendorquerydetails', [patchqueryController::class, 'vendorquerydetails']);
-    
 Route::any('/login', [loginController::class, 'login']);
 Route::middleware('login.check')->group(function(){	
 Route::any('/logout', [loginController::class, 'logout']);
@@ -184,6 +182,8 @@ Route::any('/oldcrmbillingpaymentlist', [billingController::class, 'oldcrmbillin
 Route::any('/markpaidonoldcrmpayment', [billingController::class, 'markpaidonoldcrmpayment']);
 Route::any('/searchpayment', [billingController::class, 'searchpayment']);
 Route::any('/searchmergepayment', [billingController::class, 'searchmergepayment']);
+Route::any('/saveexternalpayment', [billingController::class, 'saveexternalpayment']);
+Route::any('/externalpaymentlist', [billingController::class, 'externalpaymentlist']);
 
 Route::any('/savefreshlead', [freshleadController::class, 'savefreshlead']);
 Route::any('/freshleadlist', [freshleadController::class, 'freshleadlist']);
@@ -279,6 +279,9 @@ Route::any('/patchquerysub', [patchqueryController::class, 'patchquerysub']);
 Route::any('/validatepatchquery', [patchqueryController::class, 'validatepatchquery']);
 Route::any('/patchclientlist', [patchqueryController::class, 'patchclientlist']);
 Route::any('/clientwisequerylist', [patchqueryController::class, 'clientwisequerylist']);
+Route::any('/productionvendorquerydetails', [patchqueryController::class, 'productionvendorquerydetails']);
+Route::any('/shippingvendorquerydetails', [patchqueryController::class, 'shippingvendorquerydetails']);
+Route::any('/shippingvendorquerydetails', [patchqueryController::class, 'shippingvendorquerydetails']);
 
 Route::any('/rawdatasheetlist', [rawdataController::class, 'rawdatasheetlist']);
 Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);

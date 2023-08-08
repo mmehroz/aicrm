@@ -1226,4 +1226,67 @@ class billingController extends Controller
 			return response()->json("Oops! Something went wrong", 400);
 		}
 	}
+	public function saveexternalpayment(Request $request){
+		$validate = Validator::make($request->all(), [ 
+			'orderpayment_title'	=> 'required',
+			'orderpayment_amount'	=> 'required',
+			'orderpayment_date'		=> 'required',
+			'brand_id'				=> 'required',
+			'merchant_id'			=> 'required',
+		]);
+		if ($validate->fails()) {
+			return response()->json($validate->errors(), 400);
+		}
+		$order_token = openssl_random_pseudo_bytes(7);
+		$order_token = bin2hex($order_token);
+		$payment = array(
+			'orderpayment_title'		=> $request->orderpayment_title,
+			'orderpayment_amount'		=> $request->orderpayment_amount,
+			'orderpayment_duedate'		=> $request->orderpayment_date,
+			'orderpayment_date' 		=> $request->orderpayment_date,
+			'orderpayment_lastpaiddate' => $request->orderpayment_date,
+			'orderpayment_paiddate' 	=> $request->orderpayment_date,
+			'order_id'					=> 0,
+			'brand_id'					=> $request->brand_id,
+			'lead_id'					=> 0,
+			'orderpaymentstatus_id'		=> 3,
+			'order_token' 				=> $order_token,
+			'orderpayment_token' 		=> $order_token,
+			'merchant_id' 				=> $request->merchant_id,
+			'orderpayment_pickby' 		=> $request->user_id,
+			'status_id' 				=> 1,
+			'created_by'				=> $request->user_id,
+			'created_at'				=> date('Y-m-d h:i:s'),
+		);
+		$save = DB::table('orderpayment')->insert($payment);
+		if($save){
+			return response()->json(['message' => 'External Payment Save Successfully'],200);
+		}else{
+			return response()->json("Oops! Something went wrong", 400);
+		}
+	}
+	public function externalpaymentlist(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'brand_id'				=> 'required',
+		]);
+     	if ($validate->fails()) {
+			return response()->json($validate->errors(), 400);
+		}
+		$paymentlist = DB::table('orderpayment')
+		->select('*')
+		->where('orderpaymentstatus_id','=',3)
+		->where('brand_id','=',$request->brand_id)
+		->where('order_id','=',0)
+		->where('lead_id','=',0)
+		->where('status_id','=',1)
+		->orderBy('orderpayment_id','DESC')
+		->get();
+			
+		
+		if(isset($paymentlist)){
+			return response()->json(['data' => $paymentlist,'message' => 'External Payment List'],200);
+		}else{
+			return response()->json(['data' => $emptyarray, 'message' => 'External Payment List'],200);
+		}
+	}
 }

@@ -785,13 +785,21 @@ class dashboardController extends Controller {
                     $sortmerchantids[] = $merchantidss->billingmerchant_id;
                 }
                 $firstbalance = $merchatdetails->billingmerchant_openingbalance;
-                $previouspaidbalance = DB::table( 'orderpayment' )
+                $ppaidbalance = DB::table( 'orderpayment' )
                 ->select( 'orderpayment_amount' )
                 ->where( 'orderpayment_date', '<', $firstdatewithzero )
                 ->where( 'orderpaymentstatus_id', '=', 3 )
                 ->whereIn( 'merchant_id', $sortmerchantids )
                 ->where( 'status_id', '=', 1 )
                 ->sum( 'orderpayment_amount' );
+                $precoverybalance = DB::table( 'orderpayment' )
+                ->select( 'orderpayment_amount' )
+                ->where( 'orderpayment_recoverydate', '<', $firstdatewithzero )
+                ->where( 'orderpaymentstatus_id', '=', 7 )
+                ->whereIn( 'merchant_id', $sortmerchantids )
+                ->where( 'status_id', '=', 1 )
+                ->sum( 'orderpayment_amount' );
+                $previouspaidbalance = $ppaidbalance+$precoverybalance;
                 $previousfeededuction =  $merchatdetails->billingmerchant_fee / 100 * $previouspaidbalance;
                 $previoustotalwithdrawl = DB::table( 'withdrawal' )
                 ->select( 'withdrawal_amount' )
@@ -801,13 +809,21 @@ class dashboardController extends Controller {
                 ->sum( 'withdrawal_amount' );
                 $previousnetbalance = $previouspaidbalance+$firstbalance-$previoustotalwithdrawl-$previousfeededuction;
                 $openingbalance = $previousnetbalance;
-                $paidbalance = DB::table( 'orderpayment' )
+                $cpaidbalance = DB::table( 'orderpayment' )
                 ->select( 'orderpayment_amount' )
                 ->where( 'orderpayment_date', 'like', $setyearmonth.'%' )
                 ->where( 'orderpaymentstatus_id', '=', 3 )
                 ->whereIn( 'merchant_id', $sortmerchantids )
                 ->where( 'status_id', '=', 1 )
                 ->sum( 'orderpayment_amount' );
+                $crecoverybalance = DB::table( 'orderpayment' )
+                ->select( 'orderpayment_amount' )
+                ->where( 'orderpayment_recoverydate', 'like', $setyearmonth.'%' )
+                ->where( 'orderpaymentstatus_id', '=', 7 )
+                ->whereIn( 'merchant_id', $sortmerchantids )
+                ->where( 'status_id', '=', 1 )
+                ->sum( 'orderpayment_amount' );
+                $paidbalance = $cpaidbalance+$crecoverybalance;
                 $grosstotalbalance = $openingbalance+$paidbalance;
                 $totalwithdrawl = DB::table( 'withdrawal' )
                 ->select( 'withdrawal_amount' )
