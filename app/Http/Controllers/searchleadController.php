@@ -63,11 +63,18 @@ class searchleadController extends Controller
 				$search = DB::table('lead')
 				->select('lead_id as searchlead_id','lead_bussinessname as searchlead_bussinessname','lead_phone as searchlead_phone','lead_name as searchlead_name','lead_email as searchlead_email','lead_altemail as searchlead_altemail','lead_bussinessphone as searchlead_altphone')
 				->where('lead_date','<',$datebeforethreemonths)
-				->whereIn('lead_id',$sortleadbefore)
+				// ->whereIn('lead_id',$sortleadbefore)
+				->where('is_search','=',0)
 				->where('leadstatus_id','=',3)
 				->where('status_id','=',1)
 				->inRandomOrder()
 				->first();
+				$notactive = array(
+					'is_search' 	=> 1,
+				);
+				DB::table('lead')
+				->where('lead_id','=',$search->searchlead_id)
+				->update($notactive); 
 			}else{
 				$search = DB::table('searchlead')
 				->select('*')
