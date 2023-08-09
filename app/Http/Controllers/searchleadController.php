@@ -25,6 +25,7 @@ class searchleadController extends Controller
 		if ($validate->fails()) {
 			return response()->json($validate->errors(), 400);
 		}
+		$lastpaymentdate = "-";
 		$datebeforethreemonths = null;
 		if($request->role_id == 21){
 			$search = DB::connection('mysql3')->table('dmeclient')
@@ -43,39 +44,50 @@ class searchleadController extends Controller
 				$datebeforethreemonths = date('Y-m-d', strtotime($leaddate->lead_date . "-2 months") );
 				$leadafterthreemonth = DB::table('orderpayment')
 				->select('lead_id')
-				->where('orderpayment_date','<',$datebeforethreemonths)
+				->where('orderpayment_date','>',$datebeforethreemonths)
 				->where('status_id','=',1)
 				->get();
 				$sortleadafter = array();
 				foreach($leadafterthreemonth as $leadafterthreemonths){
 					$sortleadafter[] = $leadafterthreemonths->lead_id;
 				}
-				// $leadbeforethreemonth = DB::table('orderpayment')
-				// ->select('lead_id')
-				// ->where('orderpayment_date','<',$datebeforethreemonths)
-				// ->whereNotIn('lead_id',$sortleadafter)
-				// ->where('status_id','=',1)
-				// ->get();
-				// $sortleadbefore = array();
-				// foreach($leadbeforethreemonth as $leadbeforethreemonths){
-				// 	$sortleadbefore[] = $leadbeforethreemonths->lead_id;
-				// }
+				$leadbeforethreemonth = DB::table('orderpayment')
+				->select('lead_id')
+				->where('orderpayment_date','<',$datebeforethreemonths)
+				->whereNotIn('lead_id',$sortleadafter)
+				->where('status_id','=',1)
+				->get();
+				$sortleadbefore = array();
+				foreach($leadbeforethreemonth as $leadbeforethreemonths){
+					$sortleadbefore[] = $leadbeforethreemonths->lead_id;
+				}
 				$search = DB::table('lead')
 				->select('lead_id as searchlead_id','lead_bussinessname as searchlead_bussinessname','lead_phone as searchlead_phone','lead_name as searchlead_name','lead_email as searchlead_email','lead_altemail as searchlead_altemail','lead_bussinessphone as searchlead_altphone')
-				->where('lead_date','<',$datebeforethreemonths)
-				->whereIn('lead_id',$sortleadafter)
+				// ->where('lead_date','<',$datebeforethreemonths)
+				// ->whereIn('lead_id',$sortleadbefore)
 				->where('is_search','=',0)
-				->where('leadstatus_id','=',3)
+				// ->where('leadstatus_id','=',3)
 				->where('status_id','=',1)
 				->inRandomOrder()
 				->first();
+				if(isset($search->searchlead_id)){
 				$notactive = array(
 					'is_search' 	=> 1,
 				);
-				if(isset($search->searchlead_id)){
-					DB::table('lead')
-					->where('lead_id','=',$search->searchlead_id)
-					->update($notactive); 
+				DB::table('lead')
+				->where('lead_id','=',$search->searchlead_id)
+				->update($notactive); 
+				$lastpayment = DB::table('orderpayment')
+				->select('orderpayment_date')
+				->where('lead_id','=',$search->searchlead_id)
+				->orderBy('orderpayment_id','DESC')
+				->where('status_id','=',1)
+				->first();
+				if(isset($lastpayment->orderpayment_date)){
+					$lastpaymentdate = $lastpayment->orderpayment_date;
+				}else{
+					$lastpaymentdate = '-';
+				}
 				}
 			}else{
 				$search = DB::table('searchlead')
@@ -87,7 +99,7 @@ class searchleadController extends Controller
 			}
 		}
 		if($search){
-			return response()->json(['data' => $search,'id' => $datebeforethreemonths,'message' => 'Search Lead Details'],200);
+			return response()->json(['data' => $search,'lastpaymentdate' => $lastpaymentdate,'message' => 'Search Lead Details'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}	
