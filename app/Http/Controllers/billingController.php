@@ -1254,7 +1254,7 @@ class billingController extends Controller
 			'orderpayment_token' 		=> $order_token,
 			'merchant_id' 				=> $request->merchant_id,
 			'orderpayment_pickby' 		=> $request->user_id,
-			'status_id' 				=> 1,
+			'status_id' 				=> 3,
 			'created_by'				=> $request->user_id,
 			'created_at'				=> date('Y-m-d h:i:s'),
 		);
@@ -1278,7 +1278,7 @@ class billingController extends Controller
 		->where('brand_id','=',$request->brand_id)
 		->where('order_id','=',0)
 		->where('lead_id','=',0)
-		->where('status_id','=',1)
+		->where('status_id','=',3)
 		->orderBy('orderpayment_id','DESC')
 		->get();
 			

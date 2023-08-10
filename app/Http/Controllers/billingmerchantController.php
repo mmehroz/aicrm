@@ -324,7 +324,7 @@ class billingmerchantController extends Controller
             ->where('orderpayment_date','like',$setyearmonth.'%')
             ->where('orderpaymentstatus_id','=',3)
             ->where('merchant_id','=',$merchatdetails->billingmerchant_id)
-            ->where('status_id','=',1)
+            ->whereIn( 'status_id', [1,3] )
             ->sum('orderpayment_amount');
             $crecoverybalance = DB::table('orderpayment')
             ->select('orderpayment_amount')

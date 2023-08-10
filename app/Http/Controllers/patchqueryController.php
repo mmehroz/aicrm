@@ -763,6 +763,11 @@ class patchqueryController extends Controller
                             DB::table( 'patchqueryvendor' )->insert( $savevandor );
                         }
                     }
+                    DB::table( 'patchquery' )
+                    ->where( 'patchquery_id', '=', $request->patchquery_id )
+                    ->update( [
+                        'patchquery_dollarrate'		        => $request->patchquery_dollarrate,
+                    ]);
                 }
             }
             if($request->patchquerystatus_id == 3){
@@ -792,6 +797,8 @@ class patchqueryController extends Controller
                         $updatequery  = DB::table( 'patchquery' )
                         ->where( 'patchquery_id', '=', $request->patchquery_id )
                         ->update( [
+                            'patchquery_shipmentamount'	=> $request->patchquery_shipmentamount,
+                            'patchquery_shipmentinvoiceamount'	=> $request->patchquery_shipmentinvoiceamount,
                             'patchquerystatus_id'	=> $request->patchquerystatus_id,
                         ]);
                     }
@@ -809,6 +816,7 @@ class patchqueryController extends Controller
                     ->where( 'patchquery_id', '=', $request->patchquery_id )
                     ->update( [
                         'patchquery_shipmentamount'	=> $request->patchquery_shipmentamount,
+                        'patchquery_shipmentinvoiceamount'	=> $request->patchquery_shipmentinvoiceamount,
                     ]);
                 }
             }

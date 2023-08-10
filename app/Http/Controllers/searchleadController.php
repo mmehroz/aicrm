@@ -155,6 +155,7 @@ class searchleadController extends Controller
 					'searchleadstatus_id'		=> $request->searchleadstatus_id,
 					'searchlead_date'			=> date('Y-m-d'),
 					'brand_id'					=> $request->brand_id,
+					'maxlead_id'				=> $request->searchlead_id,
 					);
 					$move = DB::table('searchlead')->insert($adds);
 			}else{

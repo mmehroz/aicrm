@@ -814,7 +814,7 @@ class dashboardController extends Controller {
                 ->where( 'orderpayment_date', 'like', $setyearmonth.'%' )
                 ->where( 'orderpaymentstatus_id', '=', 3 )
                 ->whereIn( 'merchant_id', $sortmerchantids )
-                ->where( 'status_id', '=', 1 )
+                ->whereIn( 'status_id', [1,3] )
                 ->sum( 'orderpayment_amount' );
                 $crecoverybalance = DB::table( 'orderpayment' )
                 ->select( 'orderpayment_amount' )
@@ -827,7 +827,7 @@ class dashboardController extends Controller {
                 $grosstotalbalance = $openingbalance+$paidbalance;
                 $totalwithdrawl = DB::table( 'withdrawal' )
                 ->select( 'withdrawal_amount' )
-                ->where( 'withdrawaltype_id', '=', $request->withdrawal_month )
+                ->where( 'withdrawal_month', '=', $request->yearmonth )
                 ->whereIn( 'billingmerchant_id', $sortmerchantids )
                 ->where( 'status_id', '=', 1 )
                 ->sum( 'withdrawal_amount' );
