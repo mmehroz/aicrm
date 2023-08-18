@@ -282,6 +282,8 @@ Route::any('/clientwisequerylist', [patchqueryController::class, 'clientwisequer
 Route::any('/productionvendorquerydetails', [patchqueryController::class, 'productionvendorquerydetails']);
 Route::any('/shippingvendorquerydetails', [patchqueryController::class, 'shippingvendorquerydetails']);
 Route::any('/shippingvendorquerydetails', [patchqueryController::class, 'shippingvendorquerydetails']);
+Route::any('/patchquerydiscount', [patchqueryController::class, 'patchquerydiscount']);
+Route::any('/patchquerydiscountlist', [patchqueryController::class, 'patchquerydiscountlist']);
 
 Route::any('/rawdatasheetlist', [rawdataController::class, 'rawdatasheetlist']);
 Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);

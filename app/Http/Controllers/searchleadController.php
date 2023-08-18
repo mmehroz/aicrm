@@ -61,33 +61,40 @@ class searchleadController extends Controller
 				foreach($leadbeforethreemonth as $leadbeforethreemonths){
 					$sortleadbefore[] = $leadbeforethreemonths->lead_id;
 				}
+				$getsavelead = DB::table('searchlead')
+				->select('maxlead_id')
+				->get();
+				$saveleads = array();
+				foreach($getsavelead as $getsaveleads){
+					$saveleads[] = $getsaveleads->maxlead_id;
+				}
 				$search = DB::table('lead')
 				->select('lead_id as searchlead_id','lead_bussinessname as searchlead_bussinessname','lead_phone as searchlead_phone','lead_name as searchlead_name','lead_email as searchlead_email','lead_altemail as searchlead_altemail','lead_bussinessphone as searchlead_altphone')
 				// ->where('lead_date','<',$datebeforethreemonths)
 				// ->whereIn('lead_id',$sortleadbefore)
-				->where('is_search','=',0)
+				->whereNotIn('lead_id',$saveleads)
 				// ->where('leadstatus_id','=',3)
 				->where('status_id','=',1)
 				->inRandomOrder()
 				->first();
 				if(isset($search->searchlead_id)){
-				$notactive = array(
-					'is_search' 	=> 1,
-				);
-				DB::table('lead')
-				->where('lead_id','=',$search->searchlead_id)
-				->update($notactive); 
-				$lastpayment = DB::table('orderpayment')
-				->select('orderpayment_date')
-				->where('lead_id','=',$search->searchlead_id)
-				->orderBy('orderpayment_id','DESC')
-				->where('status_id','=',1)
-				->first();
-				if(isset($lastpayment->orderpayment_date)){
-					$lastpaymentdate = $lastpayment->orderpayment_date;
-				}else{
-					$lastpaymentdate = '-';
-				}
+					$notactive = array(
+						'is_search' 	=> 1,
+					);
+					DB::table('lead')
+					->where('lead_id','=',$search->searchlead_id)
+					->update($notactive); 
+					$lastpayment = DB::table('orderpayment')
+					->select('orderpayment_date')
+					->where('lead_id','=',$search->searchlead_id)
+					->orderBy('orderpayment_id','DESC')
+					->where('status_id','=',1)
+					->first();
+					if(isset($lastpayment->orderpayment_date)){
+						$lastpaymentdate = $lastpayment->orderpayment_date;
+					}else{
+						$lastpaymentdate = '-';
+					}
 				}
 			}else{
 				$search = DB::table('searchlead')
@@ -188,6 +195,7 @@ class searchleadController extends Controller
 		->where('searchleadstatus_id','=',$request->searchleadstatus_id)
 		->where('brand_id','=',$request->brand_id)
 		->where('searchlead_by','=',$request->user_id)
+		->orderBy('searchlead_id','DESC')
 		->get();
 		if($data){
 			return response()->json(['data' => $data,'message' => 'Search Lead List'],200);

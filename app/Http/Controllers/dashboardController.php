@@ -2409,21 +2409,12 @@ class dashboardController extends Controller {
         ->where( 'status_id', '=', 1 )
         ->sum( 'patchqueryitem_proposalquote' );
         $dollarshipmentquoteamount = DB::table( 'patchquery' )
-        ->select( 'patchquery_shipmentamount' )
+        ->select( 'patchquery_shipmentinvoiceamount' )
         ->where( 'patchquery_id', '=', $request->patchquery_id )
         ->where( 'status_id', '=', 1 )
-        ->sum( 'patchquery_shipmentamount' );
+        ->sum( 'patchquery_shipmentinvoiceamount' );
         $dollarnetamount = $dollarquoteamount+$dollarshipmentquoteamount;
         $pkrnetamount = $dollarnetamount*270;
-        $pkrproductioncost = DB::table( 'patchpayment' )
-        ->select( 'patchpayment_amount' )
-        ->where( 'patch_id', '=', $request->patchquery_id )
-        ->where( 'patchpaymenttype_id', '=', 1 )
-        ->where( 'status_id', '=', 1 )
-        ->sum( 'patchpayment_amount' );
-        $pkrshipmentcost = $dollarshipmentquoteamount*270;
-        $pkrnetcost = $pkrshipmentcost+$pkrproductioncost;
-        $netprofitloss = $pkrnetamount-$pkrnetcost;
         $finalvendor = DB::table( 'patchqueryitem' )
         ->select( 'patchqueryitem_finalvendor', 'patchqueryitem_quantity', 'patchqueryitem_id' )
         ->where( 'patchquery_id', '=', $request->patchquery_id )
@@ -2431,8 +2422,10 @@ class dashboardController extends Controller {
         ->get();
         $vendorpaymetdetail = array();
         $fvindex = 0;
+        $ffinalvendors = array();
         foreach ( $finalvendor as $finalvendors ) {
             if ( isset( $finalvendors->patchqueryitem_finalvendor ) ) {
+                $ffinalvendors[] = $finalvendors->patchqueryitem_finalvendor;
                 $patchcategory = DB::table( 'patchqueryitemdetails' )
                 ->select( 'patchquerycategory_name' )
                 ->where( 'patchqueryitem_id', '=', $finalvendors->patchqueryitem_id )
@@ -2475,6 +2468,15 @@ class dashboardController extends Controller {
             }
             $fvindex++;
         }
+        $pkrproductioncost = DB::table( 'patchqueryitemvendordetails' )
+        ->select( 'patchqueryvendor_cost' )
+        ->where( 'patchquery_id', '=', $request->patchquery_id )
+        ->whereIn( 'vendorproduction_id',$ffinalvendors )
+        ->where( 'status_id', '=', 1 )
+        ->sum('patchqueryvendor_cost');
+        $pkrshipmentcost = $data->patchquery_shipmentamount;
+        $pkrnetcost = $pkrshipmentcost+$pkrproductioncost;
+        $netprofitloss = $pkrnetamount-$pkrnetcost;
         $pkrshipmentquoteamount = $dollarshipmentquoteamount/270;
         $shippingid = DB::table( 'patchquery' )
         ->select( 'patchqueryshipping_id' )
