@@ -1398,7 +1398,7 @@ class patchqueryController extends Controller
             $cost = DB::table('patchquery')
             ->select('patchquery_shipmentamount')
             ->where('vendordelivery_id','=',$request->vendor_id)
-            ->where('patchquery_id ','=',$datas->patchquery_id)
+            ->where('patchquery_id','=',$datas->patchquery_id)
             ->where('status_id','=',1)
             ->sum('patchquery_shipmentamount');
             $paid = DB::table('patchpayment')
@@ -1457,6 +1457,58 @@ class patchqueryController extends Controller
             return response()->json( [ 'data' => $data, 'message' => 'Patch Discount Query List' ], 200 );
         } else {
             return response()->json( [ 'data' => $emptyarray, 'message' => 'Patch Discount Query List' ], 200 );
+        }
+    }
+    public function patchquotationhistory(Request $request){
+        $validate = Validator::make($request->all(), [
+            'patchquerycategory_id'    => 'required',
+        ]); 
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 400);
+        }
+        $data = DB::table('patchqueryanditem')
+        ->select('patchquery_title','patchqueryitem_quantity','patchqueryitem_proposalquote','patchquery_date','patchqueryitem_finalvendor')
+        ->where('patchquerycategory_id','=',$request->patchquerycategory_id)
+        ->where('patchqueryitem_proposalquote','!=', NULL)
+        ->orderBy( 'patchqueryitem_id', 'DESC' )
+        ->limit(5)
+        ->get();
+        $sortdata = array();
+        $index=0;
+        foreach($data as $datas){
+            $vendordetail = DB::table('patchqueryitemvendordetails')
+            ->select('patchqueryvendor_cost','vendor_name')
+            ->where('vendorproduction_id','=',$datas->patchqueryitem_finalvendor)
+            ->first();
+            $datas->cost = $vendordetail->patchqueryvendor_cost;
+            $datas->vendorname = $vendordetail->vendor_name;
+            $sortdata[$index] = $datas;
+            $index++;
+		}
+		if($sortdata){
+			return response()->json(['data' => $sortdata, 'message' => 'Patch Quotaion History'],200);
+		}else{
+			$emptyarray = array();
+			return response()->json(['data' => $emptyarray,'message' => 'Expense Report'],200);
+		}
+    }
+    public function savepatchcategory( Request $request ) {
+        $validate = Validator::make( $request->all(), [
+            'patchquerycategory_name'	=> 'required',
+        ] );
+        if ( $validate->fails() ) {
+
+            return response()->json( $validate->errors(), 400 );
+        }
+        $adds = array(
+            'patchquerycategory_name' 	=> $request->patchquerycategory_name,
+            'status_id'		 			=> 1,
+        );
+        $save = DB::table( 'patchquerycategory' )->insert( $adds );
+        if ( $save ) {
+            return response()->json( [ 'message' => 'Saved Successfully' ], 200 );
+        } else {
+            return response()->json( 'Oops! Something went wrong', 400 );
         }
     }
 }
