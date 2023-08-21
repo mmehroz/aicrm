@@ -61,7 +61,9 @@ class searchleadController extends Controller
 				foreach($leadbeforethreemonth as $leadbeforethreemonths){
 					$sortleadbefore[] = $leadbeforethreemonths->lead_id;
 				}
+				$addsevendays =date('Y-m-d', strtotime(date('Y-m-d'). ' +7 days'));
 				$getsavelead = DB::table('searchlead')
+				->where('searchlead_date','>',$addsevendays)
 				->select('maxlead_id')
 				->get();
 				$saveleads = array();

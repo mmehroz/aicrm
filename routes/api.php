@@ -285,6 +285,7 @@ Route::any('/patchquerydiscount', [patchqueryController::class, 'patchquerydisco
 Route::any('/patchquerydiscountlist', [patchqueryController::class, 'patchquerydiscountlist']);
 Route::any('/patchquotationhistory', [patchqueryController::class, 'patchquotationhistory']);
 Route::any('/savepatchcategory', [patchqueryController::class, 'savepatchcategory']);
+Route::any('/testupdatepatchquery', [patchqueryController::class, 'testupdatepatchquery']);
 
 Route::any('/rawdatasheetlist', [rawdataController::class, 'rawdatasheetlist']);
 Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);

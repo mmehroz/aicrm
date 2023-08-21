@@ -283,7 +283,7 @@ class patchqueryController extends Controller
             $data = DB::table( 'patchquerylist' )
             ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquery_discount', 'patchquerystatus_id','patchquerystatus_name','user_name' )
             ->whereIn( 'brand_id', $sortbrand )
-            ->where( 'patchquerystatus_id', '=', 2 )
+            ->whereIn( 'patchquerystatus_id', [2,3] )
             ->where( 'status_id', '=', 1 )
             ->orderBy( 'patchquery_id', 'DESC' )
             ->paginate( 30 );
@@ -1511,4 +1511,254 @@ class patchqueryController extends Controller
             return response()->json( 'Oops! Something went wrong', 400 );
         }
     }
+    // test start
+    public function testupdatepatchquery( Request $request ) {
+        if($request->role_id == 6){
+            $validate = Validator::make( $request->all(), [
+                'patchquery_clientname' 		    	=> 'required',
+                'patchquery_clientemail'	   			=> 'required',
+                'patchquery_clientphone'		    	=> 'required',
+                'patchquery_clientzip'		    		=> 'required',
+                'country_id'		    				=> 'required',
+                'state_id'								=> 'required',
+                'patchquery_clientaddress'		    	=> 'required',
+                'patchquery_clientbussinessname'		=> 'required',
+                'patchquery_clientbussinessemail'		=> 'required',
+                'patchquery_clientbussinesswebsite'		=> 'required',
+                'patchquery_clientbussinessphone'		=> 'required',
+                'patchquery_title'						=> 'required',
+                'patchquery_shippingaddress'			=> 'required',
+                'patchquery_otherdetails'				=> 'required',
+            ] );
+            if ( $validate->fails() ) {
+                return response()->json( $validate->errors(), 400 );
+            }
+            $updatequery  = DB::table( 'patchquery' )
+            ->where( 'patchquery_id', '=', $request->patchquery_id )
+            ->update( [
+                'patchquery_clientname' 			=> $request->patchquery_clientname,
+                'patchquery_clientemail' 			=> $request->patchquery_clientemail,
+                'patchquery_clientphone' 			=> $request->patchquery_clientphone,
+                'patchquery_clientzip' 				=> $request->patchquery_clientzip,
+                'country_id' 						=> $request->country_id,
+                'state_id' 							=> $request->state_id,
+                'patchquery_clientaddress' 			=> $request->patchquery_clientaddress,
+                'patchquery_clientbussinessname' 	=> $request->patchquery_clientbussinessname,
+                'patchquery_clientbussinessemail' 	=> $request->patchquery_clientbussinessemail,
+                'patchquery_clientbussinesswebsite' => $request->patchquery_clientbussinesswebsite,
+                'patchquery_clientbussinessphone'	=> $request->patchquery_clientbussinessphone,
+                'patchquery_title' 					=> $request->patchquery_title,
+                'patchquery_shippingaddress'		=> $request->patchquery_shippingaddress,
+                'patchquery_otherdetails'			=> $request->patchquery_otherdetails,
+                'patchqueryshipping_id'			    => $request->patchqueryshipping_id,
+                'vendordelivery_id' 	            => $request->vendordelivery_id,
+                'patchquerystatus_id'				=> $request->patchquerystatus_id,
+                'updated_by'	 		    		=> $request->user_id,
+                'updated_at'	 		    		=> date( 'Y-m-d h:i:s' ),
+            ]);
+        }
+        $validate = Validator::make( $request->all(), [
+            'patchqueryitem'	=> 'required',
+        ] );
+        if ( $validate->fails() ) {
+            return response()->json( $validate->errors(), 400 );
+        }
+        $patchqueryitem = $request->patchqueryitem;
+        foreach ( $patchqueryitem as $patchqueryitems ) {
+            if($request->role_id == 6 || $request->role_id ==20){
+                if ( isset( $patchqueryitems[ 'patchqueryitem_costattachment' ] ) ) {
+                    $costattachment = $patchqueryitems[ 'patchqueryitem_costattachment' ];
+                    if ( $costattachment->isValid() ) {
+                        $number = rand( 1, 999 );
+                        $numb = $number / 7 ;
+                        $foldername = $request->patchquery_id;
+                        $extension = $costattachment->getClientOriginalExtension();
+                        $costattachmentname = $numb.$costattachment->getClientOriginalName();
+                        $costattachmentname = $costattachment->move( public_path( 'patchquerycostattachment/'.$foldername ), $costattachmentname );
+                        $costattachmentname = $numb.$costattachment->getClientOriginalName();
+                        DB::table( 'patchqueryitem' )
+                        ->where( 'patchqueryitem_id', '=', $patchqueryitems[ 'patchqueryitem_id' ] )
+                        ->update( [
+                            'patchqueryitem_costattachment'	=> $costattachmentname,
+                            'updated_by'					=> $request->user_id,
+                            'updated_at'					=> date( 'Y-m-d h:i:s' ),
+                        ]);
+                    } else {
+                        return response()->json( 'Invalid File', 400 );
+                    }
+                }
+                if($request->patchquerystatus_id == 3){
+                    if ( isset( $patchqueryitems[ 'vendorproduction_id' ] ) ) {
+                        $vendor = $patchqueryitems[ 'vendorproduction_id' ];
+                        foreach ( $vendor as $vendors ) {
+                            $savevandor = array(
+                                'vendorproduction_id'	=> $vendors,
+                                'patchqueryitem_id'		=> $patchqueryitems[ 'patchqueryitem_id' ],
+                                'patchquery_id'			=> $request->patchquery_id,
+                                'status_id' 			=> 1,
+                            );
+                            DB::table( 'patchqueryvendor' )->insert( $savevandor );
+                        }
+                    }
+                    DB::table( 'patchquery' )
+                    ->where( 'patchquery_id', '=', $request->patchquery_id )
+                    ->update( [
+                        'patchquery_dollarrate'		        => $request->patchquery_dollarrate,
+                        'patchquerystatus_id'		        => $request->patchquerystatus_id,
+                    ]);
+                }
+            }
+            if($request->patchquerystatus_id == 4){
+                if ( isset( $patchqueryitems[ 'patchqueryitemvendor'] ) ) {
+                    $itemvendor = $patchqueryitems[ 'patchqueryitemvendor'];
+                    foreach ( $itemvendor as $itemvendors ) {
+                        $proposalattachment = $itemvendors['proposalattachment'];
+                        $proposalname;
+                        if ( $proposalattachment->isValid() ) {
+                            $number = rand( 1, 999 );
+                            $numb = $number / 7 ;
+                            $foldername = $request->patchquery_id;
+                            $extension = $proposalattachment->getClientOriginalExtension();
+                            $proposalname = $proposalattachment->getClientOriginalName();
+                            $proposalname = $proposalattachment->move( public_path( 'patchqueryproposal/'.$foldername ), $proposalname );
+                            $proposalname = $proposalattachment->getClientOriginalName();
+                        } else {
+                            return response()->json( 'Invalid File', 400 );
+                        }
+                        DB::table( 'patchqueryvendor' )
+                        ->where( 'patchqueryvendor_id', '=', $itemvendors['patchqueryvendor_id'] )
+                        ->update( [
+                            'patchqueryvendor_cost'		        => $itemvendors[ 'patchqueryvendor_cost' ],
+                            'patchqueryvendor_productiondays'	=> $itemvendors[ 'patchqueryvendor_productiondays' ],
+                            'patchqueryvendor_proposal'	        => $proposalname,
+                        ]);
+                        $updatequery  = DB::table( 'patchquery' )
+                        ->where( 'patchquery_id', '=', $request->patchquery_id )
+                        ->update( [
+                            'vendordelivery_id' 	            => $request->vendordelivery_id,
+                            'patchquery_shipmentamount'	=> $request->patchquery_shipmentamount,
+                            'patchquery_shipmentinvoiceamount'	=> $request->patchquery_shipmentinvoiceamount,
+                            'patchquerystatus_id'	=> $request->patchquerystatus_id,
+                        ]);
+                    }
+                }
+                $proposalcost = DB::table('patchqueryvendor')
+                ->select('patchqueryvendor_cost')
+                ->where('vendorproduction_id','=',$patchqueryitems[ 'patchqueryitem_finalvendor' ])
+                ->where('patchqueryitem_id','=',$patchqueryitems[ 'patchqueryitem_id' ])
+                ->where('status_id','=',1)
+                ->sum('patchqueryvendor_cost');
+                $dollarrate = DB::table('patchquery')
+                ->select('patchquery_dollarrate')
+                ->where('patchquery_id','=',$request->patchquery_id)
+                ->sum('patchquery_dollarrate');
+                $itemqty = DB::table('patchqueryitem')
+                ->select('patchqueryitem_quantity')
+                ->where('patchqueryitem_id','=',$patchqueryitems[ 'patchqueryitem_id' ])
+                ->sum('patchqueryitem_quantity');
+                $finalproposalcost = $proposalcost*$dollarrate*$itemqty;
+                DB::table( 'patchqueryitem' )
+                ->where( 'patchqueryitem_id', '=', $patchqueryitems[ 'patchqueryitem_id' ] )
+                ->update( [
+                    'patchqueryitem_finalvendor'	=> $patchqueryitems[ 'patchqueryitem_finalvendor' ],
+                    'patchqueryitem_proposalquote'	=> $finalproposalcost,
+                ]);
+            }
+            if($request->patchquerystatus_id == 5){
+                if ( isset( $request->patchqueryitem_discount ) ) {
+                    foreach($request->patchqueryitem_discount as $discounts){
+                        $updatequery  = DB::table( 'patchqueryitem' )
+                        ->where( 'patchqueryitem_id', '=', $discounts )
+                        ->update( [
+                            'patchqueryitem_discount'	=> 1,
+                        ]);
+                    }
+                    $updatequery  = DB::table( 'patchquery' )
+                    ->where( 'patchquery_id', '=', $request->patchquery_id )
+                    ->update( [
+                        'patchquerystatus_id'	=> 3,
+                        'patchquery_discount'	=> $request->patchquery_discount,
+                     ]);
+                }else{
+                    $updatequery  = DB::table( 'patchquery' )
+                    ->where( 'patchquery_id', '=', $request->patchquery_id )
+                    ->update( [
+                        'patchquerystatus_id'	=> $request->patchquerystatus_id,
+                    ]);
+                }
+            }
+            if ( isset( $patchqueryitems[ 'attachment' ] ) ) {
+                $attachment = $patchqueryitems[ 'attachment' ];
+                $index = 0 ;
+                $filename = array();
+                foreach ( $attachment as $attachments ) {
+                    $saveattachment = array();
+                    if ( $attachments->isValid() ) {
+                        $number = rand( 1, 999 );
+                        $numb = $number / 7 ;
+                        $foldername = $request->patchquery_id;
+                        $extension = $attachments->getClientOriginalExtension();
+                        $filename = $attachments->getClientOriginalName();
+                        $filename = $attachments->move( public_path( 'patchqueryitem/'.$foldername ), $filename );
+                        $filename = $attachments->getClientOriginalName();
+                        $saveattachment = array(
+                            'patchqueryitemattachment_name'	=> $filename,
+                            'patchqueryitem_id'				=> $patchqueryitem_id,
+							'patchquery_id'					=> $request->patchquery_id,
+                            'status_id' 					=> 1,
+                            'created_by'					=> $request->user_id,
+                            'created_at'					=> date( 'Y-m-d h:i:s' ),
+                        );
+                    } else {
+                        return response()->json( 'Invalid File', 400 );
+                    }
+                    DB::table( 'patchqueryitemattachment' )->insert( $saveattachment );
+                }
+            }
+        }
+        if( isset( $request->patchproposal_stiches ) ) {
+            DB::table( 'patchproposal' )
+            ->where( 'patchquery_id', '=', $request->patchquery_id )
+            ->update( [
+                'patchproposal_stiches' 		=> $request->patchproposal_stiches,
+                'patchproposal_colors'			=> $request->patchproposal_colors,
+                'patchproposal_colorchanges' 	=> $request->patchproposal_colorchanges,
+                'patchproposal_stops'			=> $request->patchproposal_stops,
+                'patchproposal_machine'			=> $request->patchproposal_machine,
+                'patchproposal_trims'	        => $request->patchproposal_trims,
+                'created_by'			    	=> $request->user_id,
+                'created_at'			    	=> date( 'Y-m-d h:i:s' ),
+            ] );
+        }
+        if ( isset( $request->patchqueryattachment ) ) {
+            $patchqueryattachment = $request->patchqueryattachment;
+            $index = 0 ;
+            $filename = array();
+            foreach ( $patchqueryattachment as $patchqueryattachments ) {
+                $saveattachment = array();
+                if ( $patchqueryattachments->isValid() ) {
+                    $number = rand( 1, 999 );
+                    $numb = $number / 7 ;
+                    $foldername = $request->patchquery_id;
+                    $extension = $patchqueryattachments->getClientOriginalExtension();
+                    $filename = $patchqueryattachments->getClientOriginalName();
+                    $filename = $patchqueryattachments->move( public_path( 'patchquery/'.$foldername ), $filename );
+                    $filename = $patchqueryattachments->getClientOriginalName();
+                    $saveattachment = array(
+                        'patchqueryattachment_name'		=> $filename,
+                        'patchquery_id'					=> $request->patchquery_id,
+                        'patchqueryattachmenttype_id' 	=> 2,
+                        'status_id' 			   		=> 1,
+                        'created_by'			    	=> $request->user_id,
+                        'created_at'			    	=> date( 'Y-m-d h:i:s' ),
+                    );
+                } else {
+                    return response()->json( 'Invalid File', 400 );
+                }
+                DB::table( 'patchqueryattachment' )->insert( $saveattachment );
+            }
+        }
+        return response()->json( [ 'message' => 'Updated Successfully' ], 200 );
+    }
+    // test end
 }

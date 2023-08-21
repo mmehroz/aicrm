@@ -310,7 +310,7 @@ class leadController extends Controller
 			->select('*')
 			->where('brand_id','=',$request->brand_id)
 			->where('leadstatus_id','=',3)
-			->where('lead_email','like','%'.$request->lead_email.'%')
+			->where($request->search_type,'like','%'.$request->lead_email.'%')
 			->where('status_id','!=',2)
 			->orderBy('lead_id','DESC')
 			->get();
@@ -320,7 +320,7 @@ class leadController extends Controller
 			->where('lead_pickby','=',$request->user_id)
 			->where('brand_id','=',$request->brand_id)
 			->where('leadstatus_id','=',3)
-			->where('lead_email','like','%'.$request->lead_email.'%')
+			->where($request->search_type,'like','%'.$request->lead_email.'%')
 			->where('status_id','!=',2)
 			->orderBy('lead_id','DESC')
 			->get();
