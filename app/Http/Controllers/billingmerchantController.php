@@ -215,13 +215,15 @@ class billingmerchantController extends Controller
 	}
     public function addwithdrawalamount(Request $request){
 		$validate = Validator::make($request->all(), [ 
-            'withdrawal_amount' => 'required',
+            'withdrawal_amount'        => 'required',
+            'withdrawal_billingdate'   => 'required',
         ]);
         if ($validate->fails()) {    
             return response()->json($validate->errors(), 400);
         }
         $adds[] = array(
-		'withdrawal_amount'     => $request->withdrawal_amount,
+		'withdrawal_amount'      => $request->withdrawal_amount,
+		'withdrawal_billingdate' => $request->withdrawal_billingdate,
 		'withdrawal_date' 	    => date('Y-m-d'),
         'withdrawal_month' 	    => $request->withdrawal_month,
         'withdrawal_comment' 	=> $request->withdrawal_comment,
@@ -370,6 +372,20 @@ class billingmerchantController extends Controller
             ->where('billingmerchant_id','=',$merchatdetails->billingmerchant_id)
             ->where('status_id','=',1)
             ->sum('withdrawal_amount');
+            $hold = DB::table('withdrawal')
+            ->select('withdrawal_amount')
+            ->where('withdrawaltype_id','=',6)
+            ->where('withdrawal_month','=',$request->yearmonth)
+            ->where('billingmerchant_id','=',$merchatdetails->billingmerchant_id)
+            ->where('status_id','=',1)
+            ->sum('withdrawal_amount');
+            $unhold = DB::table('withdrawal')
+            ->select('withdrawal_amount')
+            ->where('withdrawaltype_id','=',7)
+            ->where('withdrawal_month','=',$request->yearmonth)
+            ->where('billingmerchant_id','=',$merchatdetails->billingmerchant_id)
+            ->where('status_id','=',1)
+            ->sum('withdrawal_amount');
             $netcurrentbalance = $paidbalance+$openingbalance-$loan-$feededuction;
             $grosstotalbalance = $openingbalance+$paidbalance;
             $netbalance = $grosstotalbalance-$totalwithdrawl-$feededuction;
@@ -377,13 +393,15 @@ class billingmerchantController extends Controller
             $merchatdetails->billingmerchant_openingbalance 	= $openingbalance;
             $merchatdetails->paidbalance 		                = $paidbalance;
 			$merchatdetails->feededuction 		                = $feededuction;
-			$merchatdetails->loandeduction 	                    = $loan;
+			$merchatdetails->loandeduction 	                    = $loandeduction;
 			$merchatdetails->netcurrentbalance                  = $netcurrentbalance;
 			$merchatdetails->grosstotalbalance                  = $grosstotalbalance;
 			$merchatdetails->cash 			                    = $cash;
 			$merchatdetails->loan 		                        = $loandeduction;
 			$merchatdetails->vendor	 	                        = $vendor;
 			$merchatdetails->subscription 	                    = $subscription;
+			$merchatdetails->hold 	                            = $hold;
+			$merchatdetails->unhold 	                        = $unhold;
 			$merchatdetails->totalwithdrawl                     = $totalwithdrawl;
 			$merchatdetails->netbalance 		                = $netbalance;
             $stats[$index] 		                                = $merchatdetails;

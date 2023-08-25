@@ -824,6 +824,7 @@ class dashboardController extends Controller {
                 ->where( 'status_id', '=', 1 )
                 ->sum( 'orderpayment_amount' );
                 $paidbalance = $cpaidbalance+$crecoverybalance;
+                $loandeduction = 30 / 100 * $paidbalance;
                 $grosstotalbalance = $openingbalance+$paidbalance;
                 $totalwithdrawl = DB::table( 'withdrawal' )
                 ->select( 'withdrawal_amount' )
@@ -831,17 +832,34 @@ class dashboardController extends Controller {
                 ->whereIn( 'billingmerchant_id', $sortmerchantids )
                 ->where( 'status_id', '=', 1 )
                 ->sum( 'withdrawal_amount' );
+                $hold = DB::table('withdrawal')
+                ->select('withdrawal_amount')
+                ->where('withdrawaltype_id','=',6)
+                ->where('withdrawal_month','=',$request->yearmonth)
+                ->where('billingmerchant_id','=',$merchatdetails->billingmerchant_id)
+                ->where('status_id','=',1)
+                ->sum('withdrawal_amount');
+                $unhold = DB::table('withdrawal')
+                ->select('withdrawal_amount')
+                ->where('withdrawaltype_id','=',7)
+                ->where('withdrawal_month','=',$request->yearmonth)
+                ->where('billingmerchant_id','=',$merchatdetails->billingmerchant_id)
+                ->where('status_id','=',1)
+                ->sum('withdrawal_amount');
                 $feededuction =  $merchatdetails->billingmerchant_fee / 100 * $paidbalance;
                 $netbalance = $grosstotalbalance-$totalwithdrawl-$feededuction;
 
                 $merchatdetails->billingmerchant_openingbalance 	 = $openingbalance;
                 $merchatdetails->paidbalance 		 = $paidbalance;
                 $merchatdetails->feededuction 		 = $feededuction;
+                $merchatdetails->loandeduction 		 = $loandeduction;
+                $merchatdetails->hold 		         = $hold;
+                $merchatdetails->unhold 		     = $unhold;
                 $merchatdetails->totalwithdrawl 	 = $totalwithdrawl;
-                $merchatdetails->grosstotalbalance  = $grosstotalbalance;
+                $merchatdetails->grosstotalbalance   = $grosstotalbalance;
                 $merchatdetails->netbalance  		 = $netbalance;
-                $merchantnetamount[ $index ] 			 = $netbalance;
-                $stats[ $index ] 		                = $merchatdetails;
+                $merchantnetamount[ $index ] 		 = $netbalance;
+                $stats[ $index ] 		             = $merchatdetails;
                 $index++;
             }
             $billingmerchanttitle = DB::table( 'billingmerchant' )
@@ -2383,11 +2401,17 @@ class dashboardController extends Controller {
             ->orderBy( 'patchquery_id', 'DESC' )
             ->get();
         }
+        $data = DB::table('patchquerylist')
+        ->select('*')
+        ->where('created_by','=',$id)
+        ->where('patchquerystatus_id','=',5)
+        ->where('status_id','=',1)
+        ->get();
         $patchstatuswisequantity = array( $patchpickedquantity, $patchvendorquantity, $patchreturnquantity, $patchclientquantity, $patchapprovequantity, $patchrejectquantity, $patchpaidquantity, $patchdeliverquantity );
         $patchstatuswiseamount = array( $patchpickedamount, $patchvendoramount, $patchreturnamount, $patchclientamount, $patchapproveamount, $patchrejectamount, $patchpaidamount, $patchdeliveramount );
         $userpicturepath = URL::to( '/' ).'/public/user_picture/';
         $logopath = URL::to( '/' ).'/public/brand_logo/';
-        return array( 'branddetail' => $branddetail, 'userdata' => $getuser, 'patchorderoverview' => $convertionoverview, 'commissionoverview' => $commissionoverview, 'patchquerylist' => $patchquerylist, 'patchstatuswisequantity' => $patchstatuswisequantity, 'patchstatuswiseamount' => $patchstatuswiseamount, 'userpicturepath' => $userpicturepath, 'logopath' => $logopath );
+        return array( 'branddetail' => $branddetail, 'userdata' => $getuser, 'patchorderoverview' => $convertionoverview, 'commissionoverview' => $commissionoverview, 'patchquerylist' => $patchquerylist, 'patchstatuswisequantity' => $patchstatuswisequantity, 'patchstatuswiseamount' => $patchstatuswiseamount, 'data' => $data, 'userpicturepath' => $userpicturepath, 'logopath' => $logopath );
     }
 
     public function patchqueryprofitlossstatement( Request $request ) {
@@ -2414,7 +2438,7 @@ class dashboardController extends Controller {
         ->where( 'status_id', '=', 1 )
         ->sum( 'patchquery_shipmentinvoiceamount' );
         $dollarnetamount = $dollarquoteamount+$dollarshipmentquoteamount;
-        $pkrnetamount = $dollarnetamount*270;
+        $pkrnetamount = $dollarnetamount*$data->patchquery_dollarrate;
         $finalvendor = DB::table( 'patchqueryitem' )
         ->select( 'patchqueryitem_finalvendor', 'patchqueryitem_quantity', 'patchqueryitem_id' )
         ->where( 'patchquery_id', '=', $request->patchquery_id )
@@ -2443,8 +2467,8 @@ class dashboardController extends Controller {
                 ->where( 'patchpaymenttype_id', '=', 1 )
                 ->where( 'status_id', '=', 1 )
                 ->sum( 'patchpayment_amount' );
-                $costperpiece = $vendornameandcost->patchqueryvendor_cost/$finalvendors->patchqueryitem_quantity;
-                $vendorremainingamount = $vendornameandcost->patchqueryvendor_cost-$paidcost;
+                $costperpiece = $vendornameandcost->patchqueryvendor_cost;
+                $vendorremainingamount = $vendornameandcost->patchqueryvendor_cost*$finalvendors->patchqueryitem_quantity-$paidcost;
 
                 $vendorpaymetdetail[ $fvindex ][ 'patchqueryitem_id' ] = $finalvendors->patchqueryitem_id;
                 $vendorpaymetdetail[ $fvindex ][ 'productiondays' ] = $vendornameandcost->patchqueryvendor_productiondays;
@@ -2452,7 +2476,7 @@ class dashboardController extends Controller {
                 $vendorpaymetdetail[ $fvindex ][ 'categoryname' ] = $patchcategory->patchquerycategory_name;
                 $vendorpaymetdetail[ $fvindex ][ 'name' ] = $vendornameandcost->vendor_name;
                 $vendorpaymetdetail[ $fvindex ][ 'quantity' ] = $finalvendors->patchqueryitem_quantity;
-                $vendorpaymetdetail[ $fvindex ][ 'vendorcosttotal' ] = $vendornameandcost->patchqueryvendor_cost;
+                $vendorpaymetdetail[ $fvindex ][ 'vendorcosttotal' ] = $vendornameandcost->patchqueryvendor_cost*$finalvendors->patchqueryitem_quantity;
                 $vendorpaymetdetail[ $fvindex ][ 'paidcost' ] = $paidcost;
                 $vendorpaymetdetail[ $fvindex ][ 'costperpiece' ] = $costperpiece;
                 $vendorpaymetdetail[ $fvindex ][ 'remainingamount' ] = $vendorremainingamount;
@@ -2468,16 +2492,25 @@ class dashboardController extends Controller {
             }
             $fvindex++;
         }
-        $pkrproductioncost = DB::table( 'patchqueryitemvendordetails' )
-        ->select( 'patchqueryvendor_cost' )
+        $patchitem = DB::table( 'patchqueryitem' )
+        ->select( 'patchqueryitem_quantity' )
         ->where( 'patchquery_id', '=', $request->patchquery_id )
-        ->whereIn( 'vendorproduction_id',$ffinalvendors )
         ->where( 'status_id', '=', 1 )
-        ->sum('patchqueryvendor_cost');
+        ->get();
+        $pkrproductioncost = 0;
+        foreach($patchitem as $patchitems){
+            $pkrproductioncostt = DB::table( 'patchqueryitemvendordetails' )
+            ->select( 'patchqueryvendor_cost' )
+            ->where( 'patchquery_id', '=', $request->patchquery_id )
+            ->whereIn( 'vendorproduction_id',$ffinalvendors )
+            ->where( 'status_id', '=', 1 )
+            ->sum('patchqueryvendor_cost');
+            $pkrproductioncost += $pkrproductioncostt*$patchitems->patchqueryitem_quantity;
+        }
         $pkrshipmentcost = $data->patchquery_shipmentamount;
         $pkrnetcost = $pkrshipmentcost+$pkrproductioncost;
         $netprofitloss = $pkrnetamount-$pkrnetcost;
-        $pkrshipmentquoteamount = $dollarshipmentquoteamount/270;
+        $pkrshipmentquoteamount = $dollarshipmentquoteamount*$data->patchquery_dollarrate;
         $shippingid = DB::table( 'patchquery' )
         ->select( 'patchqueryshipping_id' )
         ->where( 'patchquery_id', '=', $request->patchquery_id )
@@ -2492,6 +2525,7 @@ class dashboardController extends Controller {
         } else {
             $shippingcost = 0;
         }
+        $shippingcost = $data->patchquery_shipmentamount;
         $pkrshipmentpaidamount = DB::table( 'patchpayment' )
         ->select( 'patchpayment_amount' )
         ->where( 'patch_id', '=', $request->patchquery_id )
