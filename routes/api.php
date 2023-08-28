@@ -286,6 +286,8 @@ Route::any('/patchquerydiscountlist', [patchqueryController::class, 'patchqueryd
 Route::any('/patchquotationhistory', [patchqueryController::class, 'patchquotationhistory']);
 Route::any('/savepatchcategory', [patchqueryController::class, 'savepatchcategory']);
 Route::any('/testupdatepatchquery', [patchqueryController::class, 'testupdatepatchquery']);
+Route::any('/patchfilterlist', [patchqueryController::class, 'patchfilterlist']);
+Route::any('/patchquotationlist', [patchqueryController::class, 'patchquotationlist']);
 
 Route::any('/rawdatasheetlist', [rawdataController::class, 'rawdatasheetlist']);
 Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);
@@ -306,6 +308,7 @@ Route::any('/updateexpensetype', [expenseController::class, 'updateexpensetype']
 Route::any('/expensetype', [expenseController::class, 'expensetype']);
 Route::any('/addexpenseactual', [expenseController::class, 'addexpenseactual']);
 Route::any('/addexpense', [expenseController::class, 'addexpense']);
+Route::any('/deleteeexpense', [expenseController::class, 'deleteeexpense']);
 Route::any('/expensereport', [expenseController::class, 'expensereport']);
 Route::any('/disableeexpense', [expenseController::class, 'disableeexpense']);
 });

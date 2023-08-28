@@ -105,13 +105,12 @@ class expenseController extends Controller
 	}
 	public function addexpense(Request $request){
 		$validate = Validator::make($request->all(), [
-			'expense_for' 				=> 'required',
 			'expense_description' 		=> 'required',
 		    'expense_modeofpayment' 	=> 'required',
 		    'expense_amount' 			=> 'required',
 		    'expense_paidby' 			=> 'required',
 		  	'expense_date' 				=> 'required',
-	    	'expensetype_id'  				=> 'required',
+	    	'expensetype_id'  			=> 'required',
 		]);
 		if ($validate->fails()) {    
 			return response()->json($validate->errors(), 400);
@@ -119,7 +118,7 @@ class expenseController extends Controller
 		$expensemonth = explode('-', $request->expense_date);
 		$expense_month = $expensemonth[0].'-'.$expensemonth[1];
 		$adds = array(
-			'expense_for'				=> $request->expense_for,
+			'expense_for'				=> $request->expense_paidby,
 			'expense_description'		=> $request->expense_description,
 			'expense_modeofpayment' 	=> $request->expense_modeofpayment,
 			'expense_amount' 			=> $request->expense_amount,
@@ -186,6 +185,7 @@ class expenseController extends Controller
 				->where('expense_month','=',$setyearmonth)
 				->where('expensetype_id','=',$datas->expensetype_id)
 				->where('expense_paidby','=',$owners->owners_name)
+				->where('status_id','=',1)
 				->sum('expense_amount');
 				if($pindex == 0){
 					$datas->Salman = $paid;
@@ -202,6 +202,7 @@ class expenseController extends Controller
 			->select('expense_amount')
 			->where('expense_month','=',$setyearmonth)
 			->where('expensetype_id','=',$datas->expensetype_id)
+			->where('status_id','=',1)
 			->sum('expense_amount');
 			$sumremaining = $actual-$sumpaid;
 			$datas->sumpaid = $sumpaid;
@@ -211,6 +212,7 @@ class expenseController extends Controller
 			->select('*')
 			->where('expense_month','=',$setyearmonth)
 			->where('expensetype_id','=',$datas->expensetype_id)
+			->where('status_id','=',1)
 			->get();
 			$datas->detail = $detail;
 			$sortdata[$index] = $datas;
@@ -238,6 +240,25 @@ class expenseController extends Controller
 		->update($adds);
 		if($save){
 			return response()->json(['message' => 'Expense Disabled Successfully'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
+		}
+	}
+	public function deleteeexpense(Request $request){
+		$validate = Validator::make($request->all(), [
+			'expense_id' 		=> 'required',
+		]);
+		if ($validate->fails()) {
+			return response()->json($validate->errors(), 400);
+		}
+		$adds = array(
+			'status_id'	=> 2,
+		);
+		$save = DB::table('expense')
+		->where('expense_id','=',$request->expense_id)
+		->update($adds);
+		if($save){
+			return response()->json(['message' => 'Expense Deleted Successfully'],200);
 		}else{
 			return response()->json("Oops! Something Went Wrong", 400);
 		}

@@ -284,27 +284,27 @@ class brandController extends Controller
 		if ($request->role_id < 2) {
 			if($request->isdashboard == 1){
 				$brandlist = DB::table('brand')
-				->select('brand_id','brand_name','brand_email','created_at')
+				->select('brand_id','brand_name','brand_email','brandtype_id','created_at')
 				->where('brandtype_id','=',1)
 				->where('status_id','=',1)
 				->get();
 			}else{
 				$brandlist = DB::table('brand')
-				->select('brand_id','brand_name','brand_email','created_at')
+				->select('brand_id','brand_name','brand_email','brandtype_id','created_at')
 				->where('status_id','=',1)
 				->get();
 			}
 		}else{
 			if($request->isdashboard == 1){
 				$brandlist = DB::table('brand')
-				->select('brand_id','brand_name','brand_email','created_at')
+				->select('brand_id','brand_name','brand_email','brandtype_id','created_at')
 				->whereIn('brand_id',$sortbrandid)
 				->where('brandtype_id','=',1)
 				->where('status_id','=',1)
 				->get();
 			}else{
 				$brandlist = DB::table('brand')
-				->select('brand_id','brand_name','brand_email','created_at')
+				->select('brand_id','brand_name','brand_email','brandtype_id','created_at')
 				->whereIn('brand_id',$sortbrandid)
 				->where('status_id','=',1)
 				->get();

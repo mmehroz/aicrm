@@ -274,23 +274,47 @@ class leadController extends Controller
 		}
 	}
 	public function pickedleadlist(Request $request){
-		if($request->role_id == 1 || $request->role_id == 2 || $request->role_id == 3){
-			$getleadlist = DB::table('leaddetail')
-			->select('*')
-			->where('brand_id','=',$request->brand_id)
-			->where('leadstatus_id','=',$request->leadstatus_id)
-			->where('status_id','!=',2)
-			->orderBy('lead_id','DESC')
-			->paginate(30);
+		$brandtype = DB::table('brand')
+		->select('brandtype_id')
+		->where('brand_id','=',$request->brand_id)
+		->where('status_id','=',1)
+		->first();
+		if($brandtype->brandtype_id == 2){
+			if($request->role_id == 1 || $request->role_id == 2 || $request->role_id == 3){
+				$getleadlist = DB::table( 'patchquerylist' )
+				->select( 'patchquery_id as lead_id', 'patchquery_clientname as lead_name', 'patchquery_clientemail as lead_email', 'patchquery_clientbussinessname as lead_businessname', 'patchquery_clientbussinessemail as lead_businessemail', 'patchquery_clientphone as lead_phone', 'brand_id' )
+				->whereIn( 'patchquerystatus_id', [10,11,12] )
+				->where( 'status_id', '=', 1 )
+				->groupBy('patchquery_clientemail')
+				->paginate(30);
+			}else{
+				$getleadlist = DB::table( 'patchquerylist' )
+				->select( 'patchquery_id as lead_id', 'patchquery_clientname as lead_name', 'patchquery_clientemail as lead_email', 'patchquery_clientbussinessname as lead_businessname', 'patchquery_clientbussinessemail as lead_businessemail', 'patchquery_clientphone as lead_phone', 'brand_id' )
+				->whereIn( 'patchquerystatus_id', [10,11,12] )
+				->where( 'created_by', '=', $request->user_id )
+				->where( 'status_id', '=', 1 )
+				->groupBy('patchquery_clientemail')
+				->paginate(30);
+			}
 		}else{
-			$getleadlist = DB::table('leaddetail')
-			->select('*')
-			->where('lead_pickby','=',$request->user_id)
-			->where('brand_id','=',$request->brand_id)
-			->where('leadstatus_id','=',$request->leadstatus_id)
-			->where('status_id','!=',2)
-			->orderBy('lead_id','DESC')
-			->paginate(30);
+			if($request->role_id == 1 || $request->role_id == 2 || $request->role_id == 3){
+				$getleadlist = DB::table('leaddetail')
+				->select('*')
+				->where('brand_id','=',$request->brand_id)
+				->where('leadstatus_id','=',$request->leadstatus_id)
+				->where('status_id','!=',2)
+				->orderBy('lead_id','DESC')
+				->paginate(30);
+			}else{
+				$getleadlist = DB::table('leaddetail')
+				->select('*')
+				->where('lead_pickby','=',$request->user_id)
+				->where('brand_id','=',$request->brand_id)
+				->where('leadstatus_id','=',$request->leadstatus_id)
+				->where('status_id','!=',2)
+				->orderBy('lead_id','DESC')
+				->paginate(30);
+			}
 		}
 		if(isset($getleadlist)){
 			return response()->json(['data' => $getleadlist,'message' => 'Picked Lead List'],200);

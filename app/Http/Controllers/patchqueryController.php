@@ -1533,7 +1533,6 @@ class patchqueryController extends Controller
             return response()->json( 'Oops! Something went wrong', 400 );
         }
     }
-    // test start
     public function testupdatepatchquery( Request $request ) {
         if($request->role_id == 6){
             $validate = Validator::make( $request->all(), [
@@ -1662,62 +1661,6 @@ class patchqueryController extends Controller
                     ]);
                 }
             }
-            // if($request->patchquerystatus_id == 4){
-            //     if ( isset( $patchqueryitems[ 'patchqueryitemvendor'] ) ) {
-            //         $itemvendor = $patchqueryitems[ 'patchqueryitemvendor'];
-            //         foreach ( $itemvendor as $itemvendors ) {
-            //             $proposalattachment = $itemvendors['proposalattachment'];
-            //             $proposalname;
-            //             if ( $proposalattachment->isValid() ) {
-            //                 $number = rand( 1, 999 );
-            //                 $numb = $number / 7 ;
-            //                 $foldername = $request->patchquery_id;
-            //                 $extension = $proposalattachment->getClientOriginalExtension();
-            //                 $proposalname = $proposalattachment->getClientOriginalName();
-            //                 $proposalname = $proposalattachment->move( public_path( 'patchqueryproposal/'.$foldername ), $proposalname );
-            //                 $proposalname = $proposalattachment->getClientOriginalName();
-            //             } else {
-            //                 return response()->json( 'Invalid File', 400 );
-            //             }
-            //             DB::table( 'patchqueryvendor' )
-            //             ->where( 'patchqueryvendor_id', '=', $itemvendors['patchqueryvendor_id'] )
-            //             ->update( [
-            //                 'patchqueryvendor_cost'		        => $itemvendors[ 'patchqueryvendor_cost' ],
-            //                 'patchqueryvendor_productiondays'	=> $itemvendors[ 'patchqueryvendor_productiondays' ],
-            //                 'patchqueryvendor_proposal'	        => $proposalname,
-            //             ]);
-            //             $updatequery  = DB::table( 'patchquery' )
-            //             ->where( 'patchquery_id', '=', $request->patchquery_id )
-            //             ->update( [
-            //                 'vendordelivery_id' 	            => $request->vendordelivery_id,
-            //                 'patchquery_shipmentamount'	=> $request->patchquery_shipmentamount,
-            //                 'patchquery_shipmentinvoiceamount'	=> $request->patchquery_shipmentinvoiceamount,
-            //                 'patchquerystatus_id'	=> $request->patchquerystatus_id,
-            //             ]);
-            //         }
-            //     }
-            //     $proposalcost = DB::table('patchqueryvendor')
-            //     ->select('patchqueryvendor_cost')
-            //     ->where('vendorproduction_id','=',$patchqueryitems[ 'patchqueryitem_finalvendor' ])
-            //     ->where('patchqueryitem_id','=',$patchqueryitems[ 'patchqueryitem_id' ])
-            //     ->where('status_id','=',1)
-            //     ->sum('patchqueryvendor_cost');
-            //     $dollarrate = DB::table('patchquery')
-            //     ->select('patchquery_dollarrate')
-            //     ->where('patchquery_id','=',$request->patchquery_id)
-            //     ->sum('patchquery_dollarrate');
-            //     $itemqty = DB::table('patchqueryitem')
-            //     ->select('patchqueryitem_quantity')
-            //     ->where('patchqueryitem_id','=',$patchqueryitems[ 'patchqueryitem_id' ])
-            //     ->sum('patchqueryitem_quantity');
-            //     $finalproposalcost = $proposalcost*$itemqty/$dollarrate;
-            //     DB::table( 'patchqueryitem' )
-            //     ->where( 'patchqueryitem_id', '=', $patchqueryitems[ 'patchqueryitem_id' ] )
-            //     ->update( [
-            //         'patchqueryitem_finalvendor'	=> $patchqueryitems[ 'patchqueryitem_finalvendor' ],
-            //         'patchqueryitem_proposalquote'	=> $finalproposalcost,
-            //     ]);
-            // }
             if($request->patchquerystatus_id == 5){
                 if ( isset( $request->patchqueryitem_discount ) ) {
                     foreach($request->patchqueryitem_discount as $discounts){
@@ -1814,5 +1757,44 @@ class patchqueryController extends Controller
         }
         return response()->json( [ 'message' => 'Updated Successfully' ], 200 );
     }
-    // test end
+    public function patchfilterlist( Request $request ) {
+        $data = DB::table('patchfilter')
+        ->select('*')
+        ->where('status_id','=',1)
+        ->get();
+        if ( $data ) {
+            return response()->json( ['data' => $data, 'message' => 'Patch Filter List' ], 200 );
+        } else {
+            return response()->json( 'Oops! Something went wrong', 400 );
+        }
+    }
+    public function patchquotationlist( Request $request ) {
+        $validate = Validator::make( $request->all(), [
+            'patchfilter_id'	    => 'required',
+            'patchquotation_size'	=> 'required',
+            'patchquotation_qty'	=> 'required',
+        ] );
+        if ( $validate->fails() ) {
+            return response()->json( $validate->errors(), 400 );
+        }
+        if($request->patchfilter_id == "-"){
+            $data = DB::table('patchquotation')
+            ->select('*')
+            ->where('status_id','=',1)
+            ->get();
+        }else{
+            $data = DB::table('patchquotation')
+            ->select('*')
+            ->where('patchfilter_id','=',$request->patchfilter_id)
+            ->where('patchquotation_size','=',$request->patchquotation_size)
+            ->where('patchquotation_qty','=',$request->patchquotation_qty)
+            ->where('status_id','=',1)
+            ->get();
+        }
+        if ( $data ) {
+            return response()->json( ['data' => $data, 'message' => 'Patch Quotation List' ], 200 );
+        } else {
+            return response()->json( 'Oops! Something went wrong', 400 );
+        }
+    }
 }
