@@ -1272,7 +1272,7 @@ class billingController extends Controller
      	if ($validate->fails()) {
 			return response()->json($validate->errors(), 400);
 		}
-		$paymentlist = DB::table('orderpayment')
+		$paymentlist = DB::table('externalpayment')
 		->select('*')
 		->where('orderpaymentstatus_id','=',3)
 		->where('brand_id','=',$request->brand_id)

@@ -1585,6 +1585,7 @@ class patchqueryController extends Controller
             return response()->json( $validate->errors(), 400 );
         }
         $patchqueryitem = $request->patchqueryitem;
+        $iindex=0;
         foreach ( $patchqueryitem as $patchqueryitems ) {
             if($request->role_id == 6 || $request->role_id ==20){
                 if ( isset( $patchqueryitems[ 'patchqueryitem_costattachment' ] ) ) {
@@ -1646,12 +1647,21 @@ class patchqueryController extends Controller
                         'patchquery_shipmentinvoiceamount'	=> $request->patchquery_shipmentinvoiceamount,
                         'patchquerystatus_id'	            => $request->patchquerystatus_id,
                     ]);
+                    $a = "proposalcost";
+                    $b = $iindex;
+                    $proposalcost = $a.$b;
                     $proposalcost = $patchqueryitems[ 'patchqueryvendor_cost' ];
                     $dollarrate = $request->patchquery_dollarrate;
+                    $e = "itemqty";
+                    $f = $iindex;
+                    $itemqty = $e.$f;
                     $itemqty = DB::table('patchqueryitem')
                     ->select('patchqueryitem_quantity')
                     ->where('patchqueryitem_id','=',$patchqueryitems[ 'patchqueryitem_id' ])
                     ->sum('patchqueryitem_quantity');
+                    $c = "finalproposalcost";
+                    $d = $iindex;
+                    $finalproposalcost = $c.$d;
                     $finalproposalcost = $proposalcost*$itemqty/$dollarrate;
                     DB::table( 'patchqueryitem' )
                     ->where( 'patchqueryitem_id', '=', $patchqueryitems[ 'patchqueryitem_id' ] )
@@ -1659,6 +1669,7 @@ class patchqueryController extends Controller
                         'patchqueryitem_finalvendor'	=> $patchqueryitems[ 'vendorproduction_id' ],
                         'patchqueryitem_proposalquote'	=> $finalproposalcost,
                     ]);
+                    $iindex++;
                 }
             }
             if($request->patchquerystatus_id == 5){
