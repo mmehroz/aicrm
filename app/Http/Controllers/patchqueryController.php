@@ -121,7 +121,7 @@ class patchqueryController extends Controller
             'patchquery_medium' 				=> $request->patchquery_medium,
             'patchquery_otherdetails'			=> $request->patchquery_otherdetails,
             'patchquery_islead'					=> $request->patchquery_islead,
-            'patchquery_date'					=> date( 'Y-m-d' ),
+            'patchquery_date'					=> $request->patchquery_date,
             'patchquerystatus_id'				=> 2,
             'brand_id'				    		=> $request->brand_id,
             'status_id'		 		    		=> 1,
@@ -140,14 +140,33 @@ class patchqueryController extends Controller
                 'patchtype_id'					=> $patchqueryitems[ 'patchtype_id' ],
                 'patchback_id'					=> $patchqueryitems[ 'patchback_id' ],
                 'patchqueryitem_otherdetails'	=> $patchqueryitems[ 'patchqueryitem_otherdetails' ],
+                'patchqueryitem_istask'	        => 1,
                 'patchquery_id' 				=> $patchquery_id,
-                'patchqueryitem_date' 			=> date( 'Y-m-d' ),
+                'patchqueryitem_date' 			=> $request->patchquery_date,
                 'status_id'						=> 1,
                 'created_by'					=> $request->user_id,
                 'created_at'					=> date( 'Y-m-d h:i:s' ),
             );
             DB::table( 'patchqueryitem' )->insert( $basic );
             $patchqueryitem_id = DB::getPdo()->lastInsertId();
+            $task_token = openssl_random_pseudo_bytes(7);
+    	    $task_token = bin2hex($task_token);
+            $task = array(
+                'task_title' 		=> $request->patchquery_title,
+                'task_description' 	=> $request->patchquery_otherdetails,
+                'task_deadlinedate' => date( 'Y-m-d' ),
+                'task_manager' 		=> $request->user_id,
+                'task_token' 		=> $task_token,
+                'task_date' 		=> date('Y-m-d'),
+                'taskstatus_id'		=> 1,
+                'order_id'			=> $patchqueryitem_id,
+                'order_token'		=> $patchqueryitem_id,
+                'brand_id'		    => $request->brand_id,
+                'status_id'			=> 3,
+                'created_by'		=> $request->user_id,
+                'created_at'		=> date('Y-m-d h:i:s'),
+            );
+            DB::table('task')->insert($task);
             if ( isset( $patchqueryitems[ 'attachment' ] ) ) {
                 $attachment = $patchqueryitems[ 'attachment' ];
                 $index = 0 ;
@@ -344,7 +363,7 @@ class patchqueryController extends Controller
         if ( $request->role_id <= 2 ) {
             $data = DB::table( 'patchquerylist' )
             ->select( 'patchquery_id', 'patchquery_clientemail', 'patchquery_clientname', 'patchquery_title', 'patchquery_date', 'patchquery_clientbudget', 'patchquery_islead', 'patchquerystatus_id','patchquerystatus_name','user_name' )
-            ->whereIn( 'patchquerystatus_id', [6,10,11] )
+            ->whereIn( 'patchquerystatus_id', [5,6,10,11] )
             ->whereIn( 'patchquery_isorderorsample', $request->patchquery_isorderorsample )
             ->where( 'status_id', '=', 1 )
             ->orderBy( 'patchquery_id', 'DESC' )
@@ -643,6 +662,7 @@ class patchqueryController extends Controller
                 ->where( 'patchquery_id', '=', $request->patchquery_id )
                 ->update( [
                     'patchquerystatus_id' 	        => $request->patchquerystatus_id,
+                    'patchquery_shipmentamount' 	=> $request->patchquery_shipmentamount,
                     'updated_by'		            => $request->user_id,
                     'updated_by'		            => date( 'Y-m-d h:i:s' ),
                 ] );
@@ -1826,6 +1846,119 @@ class patchqueryController extends Controller
 			return response()->json(['data' => $data,'message' => 'Search Patch Client'],200);
 		}else{
 			return response()->json(['message' => 'Search Patch Client'],200);
+		}
+	}
+    public function adminupdatepatchquery( Request $request ) {
+        $validate = Validator::make( $request->all(), [
+            'patchquery_clientname' 		    	=> 'required',
+            'patchquery_clientemail'	   			=> 'required',
+            'patchquery_clientphone'		    	=> 'required',
+            'patchquery_clientzip'		    		=> 'required',
+            'country_id'		    				=> 'required',
+            'state_id'								=> 'required',
+            'patchquery_clientaddress'		    	=> 'required',
+            'patchquery_clientbussinessname'		=> 'required',
+            'patchquery_clientbussinessemail'		=> 'required',
+            'patchquery_clientbussinesswebsite'		=> 'required',
+            'patchquery_clientbussinessphone'		=> 'required',
+            'patchquery_shippingaddress'			=> 'required',
+            'patchquery_dollarrate'				    => 'required',
+            'patchquery_shipmentamount'				=> 'required',
+            'patchquery_shipmentinvoiceamount'		=> 'required',
+            'patchqueryshipping_id'		            => 'required',
+            'patchqueryitem'	                    => 'required',
+        ] );
+        if ( $validate->fails() ) {
+            return response()->json( $validate->errors(), 400 );
+        }
+        $updatequery  = DB::table( 'patchquery' )
+        ->where( 'patchquery_id', '=', $request->patchquery_id )
+        ->update( [
+            'patchquery_clientname' 			=> $request->patchquery_clientname,
+            'patchquery_clientemail' 			=> $request->patchquery_clientemail,
+            'patchquery_clientphone' 			=> $request->patchquery_clientphone,
+            'patchquery_clientzip' 				=> $request->patchquery_clientzip,
+            'country_id' 						=> $request->country_id,
+            'state_id' 							=> $request->state_id,
+            'patchquery_clientaddress' 			=> $request->patchquery_clientaddress,
+            'patchquery_clientbussinessname' 	=> $request->patchquery_clientbussinessname,
+            'patchquery_clientbussinessemail' 	=> $request->patchquery_clientbussinessemail,
+            'patchquery_clientbussinesswebsite' => $request->patchquery_clientbussinesswebsite,
+            'patchquery_clientbussinessphone'	=> $request->patchquery_clientbussinessphone,
+            'patchquery_shippingaddress'		=> $request->patchquery_shippingaddress,
+            'patchquery_dollarrate'		        => $request->patchquery_dollarrate,
+            'patchquery_shipmentamount'	        => $request->patchquery_shipmentamount,
+            'patchqueryshipping_id'	            => $request->patchqueryshipping_id,
+            'patchquery_shipmentinvoiceamount'	=> $request->patchquery_shipmentinvoiceamount,
+            'updated_by'	 		    		=> $request->user_id,
+            'updated_at'	 		    		=> date( 'Y-m-d h:i:s' ),
+        ]);
+        $patchqueryitem = $request->patchqueryitem;
+        foreach ( $patchqueryitem as $patchqueryitems ) {
+            DB::table( 'patchqueryitem' )
+            ->where( 'patchqueryitem_id', '=', $patchqueryitems[ 'patchqueryitem_id' ] )
+            ->update( [
+                'patchquerycategory_id' 		=> $patchqueryitems[ 'patchquerycategory_id' ],
+                'patchqueryitem_quantity' 		=> $patchqueryitems[ 'patchqueryitem_quantity' ],
+                'patchqueryitem_height' 		=> $patchqueryitems[ 'patchqueryitem_height' ],
+                'patchqueryitem_width'			=> $patchqueryitems[ 'patchqueryitem_width' ],
+                'patchtype_id'					=> $patchqueryitems[ 'patchtype_id' ],
+                'patchback_id'					=> $patchqueryitems[ 'patchback_id' ],
+                'patchqueryitem_marketcost'		=> $patchqueryitems[ 'patchqueryitem_marketcost' ],
+                'patchqueryitem_proposalquote'	=> $patchqueryitems[ 'patchqueryitem_proposalquote' ],
+                'patchqueryitem_finalvendor'	=> $patchqueryitems[ 'patchqueryitem_finalvendor' ],
+                'updated_by'					=> $request->user_id,
+                'updated_at'					=> date( 'Y-m-d h:i:s' ),
+            ]);
+        }
+        return response()->json( [ 'message' => 'Updated Successfully' ], 200 );
+    }
+    public function patchtaskdetail(Request $request){
+		$validate = Validator::make($request->all(), [ 
+	      'patchqueryitem_id'	=> 'required',
+	    ]);
+     	if ($validate->fails()) {    
+			return response()->json("Task Id Required", 400);
+		}
+		$basicdetail = DB::table('tasklist')
+		->select('*')
+		->where('order_id','=',$request->patchqueryitem_id)
+		->where('status_id','=',3)
+		->first();
+        if(isset($basicdetail->task_id)){
+            $attachmentdetail = DB::table('taskattachment')
+            ->select('*')
+            ->where('task_id','=',$basicdetail->task_id)
+            ->where('attachmenttype','=',1)
+            ->where('status_id','=',1)
+            ->get();
+            $forwardedattachmentdetail = DB::table('taskattachment')
+            ->select('*')
+            ->where('task_id','=',$basicdetail->task_id)
+            ->where('attachmenttype','=',3)
+            ->where('status_id','=',1)
+            ->get();
+            $workattachmentdetail = DB::table('taskattachmentdetails')
+            ->select('*')
+            ->where('task_id','=',$basicdetail->task_id)
+            ->where('attachmenttype','=',2)
+            ->where('status_id','=',1)
+            ->get();
+            $taskpath = URL::to('/')."/public/task/".$basicdetail->task_token."/";
+            $forwardedtaskpath = URL::to('/')."/public/order/".$basicdetail->order_token."/";
+        }else{
+            $attachmentdetail = array();
+            $forwardedattachmentdetail = array();
+            $workattachmentdetail = array();
+            $taskpath = "";
+            $forwardedtaskpath = "";
+        }
+		$taskworkpath = URL::to('/')."/public/taskwork/";
+		$memberpath = URL::to('/')."/public/user_picture/";
+		if($basicdetail){
+			return response()->json(['basicdetail' => $basicdetail, 'attachmentdetail' => $attachmentdetail, 'forwardedattachmentdetail' => $forwardedattachmentdetail, 'workattachmentdetail' => $workattachmentdetail, 'taskworkpath' => $taskworkpath, 'taskpath' => $taskpath, 'forwardedtaskpath' => $forwardedtaskpath, 'memberpath' => $memberpath,'message' => 'Task Detail'],200);
+		}else{
+			return response()->json("Oops! Something Went Wrong", 400);
 		}
 	}
 }

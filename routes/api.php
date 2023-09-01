@@ -289,6 +289,8 @@ Route::any('/testupdatepatchquery', [patchqueryController::class, 'testupdatepat
 Route::any('/patchfilterlist', [patchqueryController::class, 'patchfilterlist']);
 Route::any('/patchquotationlist', [patchqueryController::class, 'patchquotationlist']);
 Route::any('/searcpatchclient', [patchqueryController::class, 'searcpatchclient']);
+Route::any('/adminupdatepatchquery', [patchqueryController::class, 'adminupdatepatchquery']);
+Route::any('/patchtaskdetail', [patchqueryController::class, 'patchtaskdetail']);
 
 Route::any('/rawdatasheetlist', [rawdataController::class, 'rawdatasheetlist']);
 Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);

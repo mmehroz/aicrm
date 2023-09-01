@@ -2623,7 +2623,7 @@ class dashboardController extends Controller {
         if ($validate->fails()) {
             return response()->json($validate->errors(), 400);
         }
-        $yearmonth = explode('-', '2023-06');
+        $yearmonth = explode('-', $request->yearmonth);
         if ($yearmonth[1] <= 9) {
             $setyearmonth = $yearmonth[0] . '-0' . $yearmonth[1];
         } else {
@@ -2675,9 +2675,16 @@ class dashboardController extends Controller {
     public function patchvendorqueryoverview(Request $request){
         $validate = Validator::make($request->all(), [
             'vendortype_id' => 'required',
+            // 'yearmonth' => 'required',
         ]); 
         if ($validate->fails()) {
             return response()->json($validate->errors(), 400);
+        }
+        $yearmonth = explode('-', $request->yearmonth);
+        if ($yearmonth[1] <= 9) {
+            $setyearmonth = $yearmonth[0] . '-0' . $yearmonth[1];
+        } else {
+            $setyearmonth = $yearmonth[0] . '-' . $yearmonth[1];
         }
        $data = DB::table('vendor')
 		->select('vendor_id','vendor_name','vendor_email','vendor_contact')
@@ -2691,6 +2698,7 @@ class dashboardController extends Controller {
                 $detail = DB::table('patchqueryanditem')
                 ->select('patchqueryitem_id')
                 ->where('patchqueryitem_finalvendor','=',$datas->vendor_id)
+                // ->where('patchquery_date','like',$setyearmonth.'%')
                 ->get();
                 $sortdetails = array();
                 foreach($detail as $details){
