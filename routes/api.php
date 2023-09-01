@@ -288,6 +288,7 @@ Route::any('/savepatchcategory', [patchqueryController::class, 'savepatchcategor
 Route::any('/testupdatepatchquery', [patchqueryController::class, 'testupdatepatchquery']);
 Route::any('/patchfilterlist', [patchqueryController::class, 'patchfilterlist']);
 Route::any('/patchquotationlist', [patchqueryController::class, 'patchquotationlist']);
+Route::any('/searcpatchclient', [patchqueryController::class, 'searcpatchclient']);
 
 Route::any('/rawdatasheetlist', [rawdataController::class, 'rawdatasheetlist']);
 Route::any('/rawdatalist', [rawdataController::class, 'rawdatalist']);
