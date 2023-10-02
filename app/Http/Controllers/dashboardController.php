@@ -2680,12 +2680,12 @@ class dashboardController extends Controller {
         if ($validate->fails()) {
             return response()->json($validate->errors(), 400);
         }
-        $yearmonth = explode('-', $request->yearmonth);
-        if ($yearmonth[1] <= 9) {
-            $setyearmonth = $yearmonth[0] . '-0' . $yearmonth[1];
-        } else {
-            $setyearmonth = $yearmonth[0] . '-' . $yearmonth[1];
-        }
+        // $yearmonth = explode('-', $request->yearmonth);
+        // if ($yearmonth[1] <= 9) {
+        //     $setyearmonth = $yearmonth[0] . '-0' . $yearmonth[1];
+        // } else {
+        //     $setyearmonth = $yearmonth[0] . '-' . $yearmonth[1];
+        // }
        $data = DB::table('vendor')
 		->select('vendor_id','vendor_name','vendor_email','vendor_contact')
 		->where('status_id','=',1)

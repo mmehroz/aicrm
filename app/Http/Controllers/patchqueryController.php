@@ -92,6 +92,7 @@ class patchqueryController extends Controller
             'patchquery_otherdetails'				=> 'required',
             'brand_id'								=> 'required',
             'patchqueryitem'	    				=> 'required',
+            'patchquery_shipmentinvoiceamount'	    => 'required',
         ] );
         if ( $validate->fails() ) {
 
@@ -120,6 +121,7 @@ class patchqueryController extends Controller
             'patchquery_clientbudget' 			=> $request->patchquery_clientbudget,
             'patchquery_medium' 				=> $request->patchquery_medium,
             'patchquery_otherdetails'			=> $request->patchquery_otherdetails,
+            'patchquery_shipmentinvoiceamount'	=> $request->patchquery_shipmentinvoiceamount,
             'patchquery_islead'					=> $request->patchquery_islead,
             'patchquery_date'					=> $request->patchquery_date,
             'patchquerystatus_id'				=> 2,
@@ -630,6 +632,12 @@ class patchqueryController extends Controller
         ->where( 'patchqueryitem_id', '=', $request->patchqueryitem_id )
         ->first();
         $patchlogopath = URL::to( '/' ).'/public/patchlogo/logo.png';
+        $patchcallpath = URL::to( '/' ).'/public/patchlogo/call.png';
+        $patchwebpath = URL::to( '/' ).'/public/patchlogo/web.png';
+        $patchlocationpath = URL::to( '/' ).'/public/patchlogo/location.png';
+        $item->call = $patchcallpath;
+        $item->web = $patchwebpath;
+        $item->location = $patchlocationpath;
         if(isset($proposaltachment)){
             $patchqueryproposalpath = URL::to( '/' ).'/public/patchqueryproposal/'.$proposaltachment->patchquery_id.'/';
             return response()->json( [ 'item' => $item, 'proposaltachment' => $proposaltachment, 'patchqueryproposalpath' => $patchqueryproposalpath , 'patchlogopath' => $patchlogopath, 'message' => 'Patch Query Proposal Details' ], 200 );
